@@ -12,12 +12,13 @@
     <div class="output-container" v-show="outputContent">
       <pre class="output-text" v-if="outputContent.output">{{ outputContent.output }}</pre>
       <div class="plot-container" v-if="outputContent.plot" v-html="outputContent.plot"></div>
+      <div class="plotly-container" :id="`plotly-container-${cellId}`" v-if="outputContent.plotly_html" v-html="outputContent.plotly_html"></div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, inject, computed } from 'vue'
+import { ref, inject, computed, onMounted, watch, nextTick } from 'vue'
 import MonacoEditor from './MonacoEditor.vue'
 
 const props = defineProps({
@@ -34,6 +35,7 @@ const props = defineProps({
     default: () => ({
       output: '',
       plot: '',
+      plotly_html: '',
       status: 'idle'
     })
   }
@@ -106,6 +108,7 @@ const executeCode = async () => {
         `错误: ${result.error.type}\n${result.error.message}` : 
         result.output || '',
       plot: result.plot || '',
+      plotly_html: result.plotly_html || '',
       status: result.status || 'idle'
     })
       
@@ -117,12 +120,58 @@ const executeCode = async () => {
     emit('update:output', {
       output: `请求错误: ${error.message}`,
       plot: '',
+      plotly_html: '',
       status: 'error'
     })
   } finally {
     isExecuting.value = false
   }
 }
+
+// 在组件挂载时初始化图表
+onMounted(() => {
+  // 如果初始化时就有 plotly_html，立即渲染
+  if (props.outputContent?.plotly_html) {
+    console.log('[Plotly] 初始化时发现 plotly_html 内容，开始渲染');
+    renderPlotly(props.outputContent.plotly_html);
+  }
+});
+
+// 提取渲染 Plotly 图表的函数
+const renderPlotly = (htmlContent) => {
+  if (!htmlContent) return;
+  
+  nextTick(() => {
+    const container = document.getElementById(`plotly-container-${props.cellId}`);
+    if (container) {
+      console.log('[Plotly] 找到容器，开始更新内容');
+      // 先清空容器
+      container.innerHTML = '';
+
+      // 解析HTML字符串为DOM
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = htmlContent;
+      
+      // 提取脚本内容
+      const scriptContent = tempDiv.querySelector('script').textContent;
+      
+      // 创建并执行新的脚本
+      const script = document.createElement('script');
+      script.textContent = scriptContent;
+      container.appendChild(script);
+    } else {
+      console.error('[Plotly] 未找到容器元素:', `plotly-container-${props.cellId}`);
+    }
+  });
+};
+
+// 监听 plotly_html 的变化
+watch(() => props.outputContent?.plotly_html, (newVal) => {
+  console.log('[Plotly] plotly_html 发生变化:', newVal ? '有内容' : '无内容');
+  if (newVal && window.Plotly) {
+    renderPlotly(newVal);
+  }
+});
 
 defineExpose({
   executeCode
@@ -163,13 +212,14 @@ defineExpose({
 
 .output-text {
   padding: 12px;
-  font-family: 'Fira Code', monospace;
-  font-size: 13px;
-  line-height: 1.5;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.6;
   white-space: pre-wrap;
   background-color: var(--code-background);
   color: var(--text-color);
   transition: all 0.3s ease;
+  letter-spacing: 0.3px;
 }
 
 .plot-container {
@@ -183,5 +233,30 @@ defineExpose({
   max-width: 100%;
   height: auto;
   border-radius: 4px;
+}
+
+.plotly-container {
+  padding: 12px;
+  background: var(--cell-background);
+  border-radius: 4px;
+  overflow: visible;
+  transition: all 0.3s ease;
+  height: 500px;
+  position: relative;
+}
+
+.plotly-container :deep(.plotly-graph-div) {
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 auto;
+}
+
+.plotly-container :deep(.modebar) {
+  background: var(--cell-background) !important;
+  z-index: 1;
+}
+
+.plotly-container :deep(.main-svg) {
+  background: transparent !important;
 }
 </style> 

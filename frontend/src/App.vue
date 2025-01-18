@@ -158,6 +158,7 @@ const saveNotebook = async () => {
       output: cellTypes.value[cellId] === 'code' ? (cellOutputs.value[cellId] || {
         output: '',
         plot: '',
+        plotly_html: '',
         status: 'idle'
       }) : null
     }))
@@ -201,6 +202,7 @@ const openNotebook = async (file) => {
             cellOutputs.value[cell.id] = {
               output: cell.output?.output || '',
               plot: cell.output?.plot || '',
+              plotly_html: cell.output?.plotly_html || '',
               status: cell.output?.status || 'idle'
             }
           }
@@ -233,6 +235,7 @@ const addCell = (type = 'code') => {
     cellOutputs.value[newCellId] = {
       output: '',
       plot: '',
+      plotly_html: '',
       status: 'idle'
     }
   } else if (type === 'markdown') {
