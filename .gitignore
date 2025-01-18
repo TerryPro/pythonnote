@@ -33,8 +33,18 @@ ENV/
 *.swp
 *.swo
 
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env.*.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
 # Project specific
 backend/export/
 backend/logs/
+backend/notebooks/
 notebooks/*.ipynb
 !notebooks/example.ipynb 

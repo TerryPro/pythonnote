@@ -1,7 +1,10 @@
 <template>
   <div id="app">
     <nav class="navbar">
-      <h1>Python 交互式编程环境</h1>
+      <div class="navbar-left">
+        <h1>Python 交互式编程环境</h1>
+        <span class="version">v0.0.1</span>
+      </div>
       <div class="toolbar">
         <div class="theme-selector">
           <select v-model="currentTheme" @change="changeTheme" class="theme-select">
@@ -26,11 +29,26 @@
         <div class="file-list">
           <div v-for="file in files" 
                :key="file.path" 
-               @click="openNotebook(file)"
                class="file-item"
                :class="{ active: currentFile === file.path }">
-            <i class="fas fa-file-code file-icon"></i>
-            <span class="file-name">{{ file.name }}</span>
+            <div class="file-content" @click="openNotebook(file)">
+              <i class="fas fa-file-code file-icon"></i>
+              <span class="file-name">{{ file.name }}</span>
+            </div>
+            <div class="file-actions">
+              <button 
+                @click="renameNotebook(file)"
+                class="icon-btn"
+                title="重命名">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button 
+                @click="confirmDelete(file)"
+                class="icon-btn delete-btn"
+                title="删除">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -83,6 +101,13 @@
                 >
                   <i class="fas fa-arrow-down"></i>
                 </button>
+                <button 
+                  @click="() => confirmDeleteCell(cellId)" 
+                  class="icon-btn delete-btn" 
+                  title="删除单元格"
+                >
+                  <i class="fas fa-trash"></i>
+                </button>
               </div>
             </div>
             <CodeCell
@@ -106,6 +131,85 @@
         </div>
       </div>
     </main>
+
+    <!-- 添加重命名对话框 -->
+    <el-dialog
+      v-model="renameDialogVisible"
+      title="重命名笔记本"
+      width="30%"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+    >
+      <el-form :model="renameForm" label-width="0px">
+        <el-form-item>
+          <el-input
+            v-model="renameForm.newName"
+            placeholder="请输入新的文件名"
+            @keyup.enter="handleRename"
+          >
+            <template #append>.ipynb</template>
+          </el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="renameDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleRename">确认</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 添加删除确认对话框 -->
+    <el-dialog
+      v-model="deleteDialogVisible"
+      title="删除笔记本"
+      width="30%"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+    >
+      <div class="delete-dialog-content">
+        <el-alert
+          title="此操作将永久删除该笔记本，是否继续？"
+          type="warning"
+          :closable="false"
+          show-icon
+        />
+        <div class="file-info">
+          <span class="label">文件名：</span>
+          <span class="value">{{ deleteFile?.name }}</span>
+        </div>
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="deleteDialogVisible = false">取消</el-button>
+          <el-button type="danger" @click="handleDelete">确定删除</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 添加删除单元格确认对话框 -->
+    <el-dialog
+      v-model="deleteCellDialogVisible"
+      title="删除单元格"
+      width="30%"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+    >
+      <div class="delete-dialog-content">
+        <el-alert
+          title="确定要删除这个单元格吗？此操作不可恢复。"
+          type="warning"
+          :closable="false"
+          show-icon
+        />
+      </div>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="deleteCellDialogVisible = false">取消</el-button>
+          <el-button type="danger" @click="handleDeleteCell">确定删除</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -115,6 +219,7 @@ import CodeCell from './components/CodeCell.vue'
 import MarkdownCell from './components/MarkdownCell.vue'
 import { v4 as uuidv4 } from 'uuid'
 import { themes, applyTheme } from './themes'
+import { ElMessage } from 'element-plus'
 
 const cells = ref([])
 const files = ref([])
@@ -124,6 +229,21 @@ const cellOutputs = ref({})
 const cellTypes = ref({})
 const markdownEditStates = ref({})
 const currentTheme = ref('light')
+
+// 添加重命名相关的响应式变量
+const renameDialogVisible = ref(false)
+const renameForm = ref({
+  newName: '',
+  file: null
+})
+
+// 添加删除相关的响应式变量
+const deleteDialogVisible = ref(false)
+const deleteFile = ref(null)
+
+// 添加删除单元格相关的响应式变量
+const deleteCellDialogVisible = ref(false)
+const deleteCellId = ref(null)
 
 // 提供主题变量给子组件
 provide('currentTheme', currentTheme)
@@ -355,6 +475,113 @@ const changeTheme = () => {
   })
 }
 
+// 修改重命名笔记本函数
+const renameNotebook = (file) => {
+  renameForm.value.newName = file.name.replace('.ipynb', '')
+  renameForm.value.file = file
+  renameDialogVisible.value = true
+}
+
+// 处理重命名确认
+const handleRename = async () => {
+  if (!renameForm.value.newName.trim()) {
+    ElMessage.warning('文件名不能为空')
+    return
+  }
+  
+  const newFilename = renameForm.value.newName.endsWith('.ipynb') 
+    ? renameForm.value.newName 
+    : `${renameForm.value.newName}.ipynb`
+  
+  try {
+    const response = await fetch('http://localhost:8000/rename_notebook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        old_filename: renameForm.value.file.path,
+        new_filename: newFilename
+      })
+    })
+    
+    const result = await response.json()
+    if (result.status === 'success') {
+      // 如果当前打开的文件被重命名，更新currentFile
+      if (currentFile.value === renameForm.value.file.path) {
+        currentFile.value = newFilename
+      }
+      // 重新加载文件列表
+      await loadFileList()
+      renameDialogVisible.value = false
+      ElMessage.success('重命名成功')
+    } else {
+      ElMessage.error(result.message || '重命名失败')
+    }
+  } catch (error) {
+    console.error('重命名失败:', error)
+    ElMessage.error('重命名失败: ' + error.message)
+  }
+}
+
+// 确认删除
+const confirmDelete = (file) => {
+  deleteFile.value = file
+  deleteDialogVisible.value = true
+}
+
+// 处理删除
+const handleDelete = async () => {
+  try {
+    const response = await fetch(`http://localhost:8000/delete_notebook?filename=${deleteFile.value.path}`, {
+      method: 'DELETE'
+    })
+    
+    const result = await response.json()
+    if (result.status === 'success') {
+      // 如果删除的是当前打开的文件，创建新笔记本
+      if (currentFile.value === deleteFile.value.path) {
+        await createNewNotebook()
+      }
+      // 重新加载文件列表
+      await loadFileList()
+      deleteDialogVisible.value = false
+      ElMessage.success(result.message)
+    } else {
+      ElMessage.error(result.message || '删除失败')
+    }
+  } catch (error) {
+    console.error('删除失败:', error)
+    ElMessage.error('删除失败: ' + error.message)
+  }
+}
+
+// 确认删除单元格
+const confirmDeleteCell = (cellId) => {
+  deleteCellId.value = cellId
+  deleteCellDialogVisible.value = true
+}
+
+// 处理删除单元格
+const handleDeleteCell = () => {
+  const index = cells.value.indexOf(deleteCellId.value)
+  if (index > -1) {
+    // 从数组中移除单元格ID
+    cells.value.splice(index, 1)
+    // 删除相关的内容和状态
+    delete cellContents.value[deleteCellId.value]
+    delete cellOutputs.value[deleteCellId.value]
+    delete cellTypes.value[deleteCellId.value]
+    delete markdownEditStates.value[deleteCellId.value]
+    
+    // 如果删除后没有单元格了，添加一个新的代码单元格
+    if (cells.value.length === 0) {
+      addCell('code')
+    }
+    
+    deleteCellDialogVisible.value = false
+    ElMessage.success('单元格已删除')
+  }
+}
+
 // 在组件挂载时应用默认主题
 onMounted(async () => {
   await loadFileList()
@@ -393,9 +620,10 @@ body {
 #app {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
   margin: 0;
   padding: 0;
+  overflow: hidden;
 }
 
 .navbar {
@@ -407,6 +635,8 @@ body {
   justify-content: space-between;
   align-items: center;
   transition: all 0.3s ease;
+  z-index: 100;
+  flex-shrink: 0;
 }
 
 .navbar h1 {
@@ -483,7 +713,8 @@ body {
 .main-container {
   flex: 1;
   display: flex;
-  min-height: calc(100vh - 64px);
+  height: calc(100vh - 72px); /* 减去navbar的高度 */
+  overflow: hidden;
 }
 
 .file-panel {
@@ -493,6 +724,7 @@ body {
   display: flex;
   flex-direction: column;
   transition: background-color 0.3s ease;
+  flex-shrink: 0;
 }
 
 .file-panel-header {
@@ -500,6 +732,7 @@ body {
   border-bottom: 1px solid var(--border-color);
   background: var(--filePanel);
   transition: background-color 0.3s ease;
+  flex-shrink: 0;
 }
 
 .file-panel-header h3 {
@@ -522,6 +755,7 @@ body {
   color: var(--filePanelText);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
 }
 
@@ -560,10 +794,38 @@ body {
 
 .notebook {
   flex: 1;
-  padding: 1rem;
   background: var(--background);
   overflow-y: auto;
   transition: background-color 0.3s ease;
+  position: relative;
+}
+
+.notebook-cells {
+  padding: 1rem;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* 添加滚动条样式 */
+.notebook-cells::-webkit-scrollbar,
+.file-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.notebook-cells::-webkit-scrollbar-track,
+.file-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.notebook-cells::-webkit-scrollbar-thumb,
+.file-list::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
+
+.notebook-cells::-webkit-scrollbar-thumb:hover,
+.file-list::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.2);
 }
 
 .cell-wrapper {
@@ -750,5 +1012,97 @@ body {
 
 .icon-btn:active:not(:disabled) {
   background: var(--button-active);
+}
+
+.file-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.file-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.file-item:hover .file-actions {
+  opacity: 1;
+}
+
+.file-actions .icon-btn {
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+}
+
+/* 添加对话框相关样式 */
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.el-dialog__body {
+  padding: 20px;
+}
+
+.delete-btn {
+  color: #f56c6c;
+}
+
+.delete-btn:hover {
+  background: #fef0f0;
+  border-color: #f56c6c;
+  color: #f56c6c;
+}
+
+.delete-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.file-info {
+  margin-top: 8px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.file-info .label {
+  color: #606266;
+  margin-right: 8px;
+}
+
+.file-info .value {
+  color: #303133;
+  font-weight: 500;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.version {
+  font-size: 0.9em;
+  opacity: 0.8;
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  cursor: help;
+  transition: all 0.3s ease;
+}
+
+.version:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.2);
 }
 </style>
