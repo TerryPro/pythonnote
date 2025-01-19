@@ -2,11 +2,30 @@
   <div class="code-cell" :id="`codeCell${cellId}`">
     <div class="editor-container">
       <MonacoEditor
-        :value="content"
-        @update:value="updateContent"
-        language="python"
-        :options="editorOptions"
-        :theme="editorTheme"
+        v-model:value="localContent"
+        :options="{
+          language: 'python',
+          theme: currentTheme === 'dark' ? 'vs-dark' : 'vs',
+          automaticLayout: true,
+          minimap: { enabled: false },
+          scrollBeyondLastLine: false,
+          overviewRulerBorder: false,
+          lineNumbers: 'on',
+          renderLineHighlight: 'all',
+          autoHeight: true,
+          wordWrap: 'on',
+          fontSize: 14,
+          tabSize: 4,
+          lineHeight: 20,
+          fontFamily: 'Fira Code, Source Code Pro, JetBrains Mono, Consolas, monospace',
+          fontLigatures: true,
+          quickSuggestions: true,
+          suggestOnTriggerCharacters: true,
+          wordBasedSuggestions: true,
+          parameterHints: { enabled: true }
+        }"
+        @change="handleEditorChange"
+        class="monaco-editor-auto-height"
       />
     </div>
     <div class="output-container" v-show="outputContent">
@@ -18,7 +37,7 @@
 </template>
 
 <script setup>
-import { ref, inject, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, inject, onMounted, watch, nextTick } from 'vue'
 import MonacoEditor from './MonacoEditor.vue'
 
 const props = defineProps({
@@ -43,48 +62,22 @@ const props = defineProps({
 
 // 注入主题
 const currentTheme = inject('currentTheme', ref('light'))
-const editorTheme = computed(() => {
-  switch (currentTheme.value) {
-    case 'dark':
-      return 'vs-dark'
-    case 'sepia':
-    case 'ocean':
-    default:
-      return 'vs'
-  }
+
+// 本地内容状态
+const localContent = ref(props.content)
+
+// 监听 props.content 的变化
+watch(() => props.content, (newValue) => {
+  localContent.value = newValue
 })
 
 const emit = defineEmits(['execution-complete', 'update:content', 'update:output'])
 
 const isExecuting = ref(false)
 
-const editorOptions = {
-  minimap: { enabled: false },
-  scrollBeyondLastLine: false,
-  lineNumbers: 'on',
-  lineHeight: 18,
-  fontSize: 13,
-  automaticLayout: true,
-  wordWrap: 'on',
-  renderLineHighlight: 'all',
-  scrollbar: {
-    vertical: 'hidden',
-    horizontal: 'hidden'
-  },
-  fontFamily: "'Fira Code', 'Source Code Pro', 'JetBrains Mono', Consolas, monospace",
-  fontLigatures: true,
-  tabSize: 4,
-  insertSpaces: true,
-  quickSuggestions: true,
-  suggestOnTriggerCharacters: true,
-  wordBasedSuggestions: true,
-  parameterHints: {
-    enabled: true
-  }
-}
-
-const updateContent = (newValue) => {
-  emit('update:content', newValue || '')
+// 处理编辑器内容变化
+const handleEditorChange = (value) => {
+  emit('update:content', value || '')
 }
 
 const executeCode = async () => {
@@ -191,15 +184,46 @@ defineExpose({
   border: 1px solid var(--border-color);
   border-radius: 4px;
   transition: all 0.3s ease;
+  position: relative;
 }
 
-.editor-container :deep(.monaco-editor) {
-  padding: 3px 0;
-  background-color: var(--code-background);
+.monaco-editor-auto-height {
+  width: 100%;
+  min-height: 20px;
 }
 
-.editor-container :deep(.monaco-editor .overflow-guard) {
-  border-radius: 0 !important;
+:deep(.monaco-editor) {
+  padding: 8px 0;
+}
+
+:deep(.monaco-editor .overflow-guard) {
+  position: static !important;
+}
+
+:deep(.monaco-editor .monaco-scrollable-element) {
+  position: static !important;
+}
+
+:deep(.monaco-editor-background) {
+  background-color: var(--editor-background) !important;
+}
+
+:deep(.monaco-editor .editor-scrollable) {
+  position: static !important;
+}
+
+:deep(.monaco-editor .lines-content) {
+  position: static !important;
+}
+
+:deep(.monaco-editor .view-lines) {
+  position: static !important;
+  white-space: pre;
+}
+
+:deep(.monaco-editor .view-line) {
+  position: static !important;
+  width: 100% !important;
 }
 
 .output-container {

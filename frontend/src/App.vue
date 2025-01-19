@@ -3,25 +3,73 @@
     <nav class="navbar">
       <div class="navbar-left">
         <h1>Python 交互式编程环境</h1>
-        <span class="version">v0.0.1</span>
+        <span class="version">v0.0.3</span>
       </div>
       <div class="toolbar">
-        <div class="theme-selector">
-          <select v-model="currentTheme" @change="changeTheme" class="theme-select">
-            <option v-for="(theme, key) in themes" :key="key" :value="key">
-              {{ theme.name }}
-            </option>
-          </select>
-        </div>
-        <button @click="createNewNotebook" class="toolbar-btn">新建笔记本</button>
-        <button @click="saveNotebook" class="toolbar-btn">保存笔记本</button>
-        <button @click="exportPDF" class="toolbar-btn">导出PDF</button>
-        <button @click="addCell('code')" class="toolbar-btn">添加代码单元格</button>
-        <button @click="addCell('markdown')" class="toolbar-btn">添加Markdown单元格</button>
-        <button @click="triggerFileUpload" class="toolbar-btn upload-btn">
-          <i class="el-icon-upload"></i>
-          上传数据文件
-        </button>
+        <el-dropdown @command="handleThemeChange" trigger="click">
+          <el-button class="toolbar-btn" type="primary" plain>
+            <i class="fas fa-palette"></i>
+            <el-tooltip
+              class="box-item"
+              effect="light"
+              content="选择主题"
+              placement="bottom"
+            >
+              <template #default>
+                <span class="el-dropdown-link"></span>
+              </template>
+            </el-tooltip>
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item 
+                v-for="(theme, key) in themes" 
+                :key="key"
+                :command="key"
+                :class="{ 'is-active': currentTheme === key }"
+              >
+                <i class="fas fa-check" v-if="currentTheme === key"></i>
+                {{ theme.name }}
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+        
+        <el-tooltip content="新建笔记本" placement="bottom" :hide-after="0">
+          <button @click="createNewNotebook" class="toolbar-btn">
+            <i class="fas fa-plus"></i>
+          </button>
+        </el-tooltip>
+
+        <el-tooltip content="保存笔记本" placement="bottom" :hide-after="0">
+          <button @click="saveNotebook" class="toolbar-btn">
+            <i class="fas fa-save"></i>
+          </button>
+        </el-tooltip>
+
+        <el-tooltip content="导出PDF" placement="bottom" :hide-after="0">
+          <button @click="exportPDF" class="toolbar-btn">
+            <i class="fas fa-file-pdf"></i>
+          </button>
+        </el-tooltip>
+
+        <el-tooltip content="添加代码单元格" placement="bottom" :hide-after="0">
+          <button @click="addCell('code')" class="toolbar-btn">
+            <i class="fas fa-code"></i>
+          </button>
+        </el-tooltip>
+
+        <el-tooltip content="添加Markdown单元格" placement="bottom" :hide-after="0">
+          <button @click="addCell('markdown')" class="toolbar-btn">
+            <i class="fas fa-markdown"></i>
+          </button>
+        </el-tooltip>
+
+        <el-tooltip content="上传数据文件" placement="bottom" :hide-after="0">
+          <button @click="triggerFileUpload" class="toolbar-btn upload-btn">
+            <i class="fas fa-upload"></i>
+          </button>
+        </el-tooltip>
       </div>
     </nav>
     
@@ -101,8 +149,8 @@
                 @change="(e) => changeCellType(cellId, e.target.value)"
                 class="type-select"
               >
-                <option value="code">Python</option>
-                <option value="markdown">Markdown</option>
+                <option value="code">代码单元格</option>
+                <option value="markdown">Markdown单元格</option>
               </select>
               <div class="cell-actions">
                 <button 
@@ -121,11 +169,29 @@
                 >
                   <i :class="markdownEditStates[cellId] ? 'fas fa-eye' : 'fas fa-edit'"></i>
                 </button>
-                <button @click="() => addCell(cellId)" class="icon-btn" title="添加单元格">
-                  <i class="fas fa-plus"></i>
+                <button 
+                  @click="copyCell(cellId)"
+                  class="icon-btn"
+                  title="复制内容"
+                >
+                  <i class="fas fa-copy"></i>
                 </button>
                 <button 
-                  @click="() => moveCellUp(cellId)" 
+                  @click="addCellAbove(cellId)"
+                  class="icon-btn"
+                  title="在上方添加单元格"
+                >
+                  <i class="fas fa-file-circle-plus" style="transform: rotate(-90deg);"></i>
+                </button>
+                <button 
+                  @click="addCellBelow(cellId)"
+                  class="icon-btn"
+                  title="在下方添加单元格"
+                >
+                  <i class="fas fa-file-circle-plus" style="transform: rotate(90deg);"></i>
+                </button>
+                <button 
+                  @click="moveCellUp(cellId)" 
                   class="icon-btn" 
                   title="向上移动"
                   :disabled="cells.indexOf(cellId) === 0"
@@ -133,7 +199,7 @@
                   <i class="fas fa-arrow-up"></i>
                 </button>
                 <button 
-                  @click="() => moveCellDown(cellId)" 
+                  @click="moveCellDown(cellId)" 
                   class="icon-btn" 
                   title="向下移动"
                   :disabled="cells.indexOf(cellId) === cells.length - 1"
@@ -275,7 +341,19 @@ import CodeCell from './components/CodeCell.vue'
 import MarkdownCell from './components/MarkdownCell.vue'
 import { v4 as uuidv4 } from 'uuid'
 import { themes, applyTheme } from './themes'
-import { ElMessage } from 'element-plus'
+import { 
+  ElMessage, 
+  ElDropdown, 
+  ElDropdownMenu, 
+  ElDropdownItem,
+  ElDialog,
+  ElButton,
+  ElInput,
+  ElForm,
+  ElFormItem,
+  ElAlert,
+  ElTooltip
+} from 'element-plus'
 import DataImport from './components/DataExplorer/DataImport.vue'
 
 const cells = ref([])
@@ -540,16 +618,11 @@ const moveCellDown = (cellId) => {
   }
 }
 
-const changeTheme = () => {
-  const editorTheme = applyTheme(currentTheme.value)
-  // 更新所有代码编辑器的主题
-  cells.value.forEach(cellId => {
-    const codeCell = document.querySelector(`#codeCell${cellId} .monaco-editor`)
-    if (codeCell) {
-      // 触发 Monaco Editor 主题更新
-      window.monaco?.editor?.setTheme(editorTheme)
-    }
-  })
+// 修改主题切换处理方法
+const handleThemeChange = (themeKey) => {
+  currentTheme.value = themeKey
+  applyTheme(themeKey)
+  ElMessage.success(`已切换到${themes[themeKey].name}`)
 }
 
 // 修改重命名笔记本函数
@@ -828,6 +901,52 @@ const handleFileSelect = async (event) => {
 const triggerFileUpload = () => {
   fileInput.value.click()
 }
+
+// 在当前单元格上方添加新单元格
+const addCellAbove = (cellId) => {
+  const currentIndex = cells.value.indexOf(cellId)
+  const newCellId = uuidv4()
+  
+  // 在当前单元格前插入新单元格
+  cells.value.splice(currentIndex, 0, newCellId)
+  cellContents.value[newCellId] = ''
+  cellTypes.value[newCellId] = 'code'
+  cellOutputs.value[newCellId] = {
+    output: '',
+    plot: '',
+    plotly_html: '',
+    status: 'idle'
+  }
+}
+
+// 在当前单元格下方添加新单元格
+const addCellBelow = (cellId) => {
+  const currentIndex = cells.value.indexOf(cellId)
+  const newCellId = uuidv4()
+  
+  // 在当前单元格后插入新单元格
+  cells.value.splice(currentIndex + 1, 0, newCellId)
+  cellContents.value[newCellId] = ''
+  cellTypes.value[newCellId] = 'code'
+  cellOutputs.value[newCellId] = {
+    output: '',
+    plot: '',
+    plotly_html: '',
+    status: 'idle'
+  }
+}
+
+// 添加复制功能
+const copyCell = (cellId) => {
+  const content = cellContents.value[cellId]
+  if (content) {
+    navigator.clipboard.writeText(content).then(() => {
+      ElMessage.success('内容已复制到剪贴板')
+    }).catch(() => {
+      ElMessage.error('复制失败')
+    })
+  }
+}
 </script>
 
 <style>
@@ -877,6 +996,7 @@ body {
   transition: all 0.3s ease;
   z-index: 100;
   flex-shrink: 0;
+  background: #1e88e5;
 }
 
 .navbar h1 {
@@ -889,65 +1009,56 @@ body {
 
 .toolbar {
   display: flex;
-  gap: 0.5rem;
   align-items: center;
+  padding: 8px;
+  background: transparent;
+  gap: 12px;
 }
 
 .toolbar-btn {
-  height: 36px;
-  padding: 0 1rem;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--toolbarText);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.9em;
+  background: transparent !important;
+  border: none !important;
+  color: white !important;
+  width: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .toolbar-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1) !important;
 }
 
-.toolbar-btn:active {
-  background-color: rgba(255, 255, 255, 0.3);
+.toolbar-btn i {
+  font-size: 18px;
+  margin: 0;
 }
 
-.theme-selector {
-  margin-right: 1rem;
+.el-dropdown-menu {
+  padding: 5px 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
-.theme-select {
-  height: 36px;
-  padding: 0 1rem;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--toolbarText);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 0.9em;
+.el-dropdown-menu__item {
+  padding: 8px 20px;
+  font-size: 14px;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.theme-select:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
+.el-dropdown-menu__item.is-active {
+  color: var(--el-color-primary);
+  background-color: var(--el-dropdown-menuItem-hover-fill);
 }
 
-.theme-select:focus {
-  outline: none;
-  border-color: rgba(255, 255, 255, 0.4);
-  background-color: rgba(255, 255, 255, 0.15);
-}
-
-.theme-select option {
-  background-color: var(--background);
-  color: var(--text);
-  padding: 8px;
+.el-dropdown-menu__item .fa-check {
+  font-size: 12px;
 }
 
 .main-container {
@@ -1138,8 +1249,7 @@ body {
 
 .cell-actions {
   display: flex;
-  gap: 0.5rem;
-  align-items: center;
+  gap: 4px;
 }
 
 .cell-action-btn {
@@ -1251,8 +1361,17 @@ body {
   color: var(--primary-color);
 }
 
+.icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .icon-btn:active:not(:disabled) {
   background: var(--button-active);
+}
+
+.icon-btn i {
+  font-size: 14px;
 }
 
 .file-content {
@@ -1489,5 +1608,34 @@ body {
 
 .file-actions .delete-btn:hover {
   color: #f56c6c;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  background: #1e88e5;
+  gap: 8px;
+}
+
+.header .el-button {
+  background: transparent;
+  border: none;
+  color: white;
+  padding: 8px;
+  height: 40px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header .el-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.header .el-button i {
+  font-size: 20px;
+  margin-right: 4px;
 }
 </style>
