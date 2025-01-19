@@ -6,6 +6,7 @@ import logging
 from typing import Dict, Optional
 from openai import OpenAI
 from dotenv import load_dotenv
+from .prompt_builder import PromptBuilder
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
@@ -36,13 +37,21 @@ class DeepSeekClient:
             logger.error(f"OpenAI 客户端初始化失败: {str(e)}")
             raise
 
-    async def generate_code(self, prompt: str, context: Optional[Dict] = None) -> str:
+    async def generate_code(
+        self, 
+        prompt: str, 
+        dataframe_info: Optional[Dict] = None,
+        dataframe_name: Optional[str] = None,
+        notebook_context: Optional[Dict] = None
+    ) -> str:
         """
         生成代码的异步方法
         
         Args:
             prompt: 用户的提示词
-            context: 可选的上下文信息
+            dataframe_info: DataFrame的详细信息
+            dataframe_name: DataFrame变量名
+            notebook_context: 笔记本上下文信息
             
         Returns:
             str: 生成的代码
@@ -51,23 +60,30 @@ class DeepSeekClient:
             Exception: API调用失败时抛出异常
         """
         try:
-            # 构建系统提示词
-            system_content = "你是一个Python专家，按照用户的要求生成Python代码。"
-            if context:
-                system_content += f"\nContext: {context}"
+            # 使用提示词构建器生成系统提示词
+            system_content = PromptBuilder.build_system_prompt(dataframe_info)
+            
+            # 如果有笔记本上下文，添加到系统提示词中
+            if notebook_context:
+                system_content += f"\n\n笔记本上下文：\n{notebook_context}"
+            
+            # 构建用户提示词
+            user_content = prompt
+            if dataframe_name:
+                user_content = PromptBuilder.build_user_prompt(prompt, dataframe_name)
             
             # 构建请求
             logger.info("准备发送请求到 DeepSeek API")
-            logger.info(f"提示词: {prompt}")
             logger.info(f"系统提示词: {system_content}")
+            logger.info(f"用户提示词: {user_content}")
             
             response = self.client.chat.completions.create(
                 model="deepseek-chat",
                 messages=[
                     {"role": "system", "content": system_content},
-                    {"role": "user", "content": prompt}
+                    {"role": "user", "content": user_content}
                 ],
-                temperature=0.7,
+                temperature=0.3,  # 降低温度以获得更确定的输出
                 stream=False
             )
             logger.info("收到 DeepSeek API 响应")
@@ -80,7 +96,7 @@ class DeepSeekClient:
             
         except Exception as e:
             logger.error(f"代码生成失败: {str(e)}", exc_info=True)
-            raise Exception(f"Failed to generate code: {str(e)}")
+            raise Exception(f"代码生成失败: {str(e)}")
         
     async def close(self):
         """关闭客户端（保持方法签名一致）"""

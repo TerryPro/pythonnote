@@ -9,6 +9,7 @@ from code_executor import CodeExecutor
 from services.pdf.code_formatter import format_python_code
 from services.pdf.exporter import NotebookPDFExporter
 from routes import data_explorer, data_files, ai_routes, dataframe_routes
+from routes.dataframe_routes import router as dataframe_router
 
 # 配置日志
 logging.basicConfig(
@@ -17,7 +18,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="AI Code Generator API")
+app = FastAPI(title="数据分析助手API")
 code_executor = CodeExecutor()
 
 # 配置CORS
@@ -44,7 +45,7 @@ logger.info("注册路由...")
 app.include_router(data_explorer.router)
 app.include_router(data_files.router)
 app.include_router(ai_routes.router)
-app.include_router(dataframe_routes.router, prefix="/api/dataframe", tags=["dataframe"])
+app.include_router(dataframe_router)
 logger.info("路由注册完成")
 
 @app.on_event("startup")
@@ -194,3 +195,7 @@ async def export_pdf(request: Request):
 async def root():
     logger.info("访问根路径")
     return {"message": "Welcome to AI Code Generator API"} 
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info("应用程序关闭...") 

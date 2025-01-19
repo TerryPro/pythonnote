@@ -1,129 +1,147 @@
-# Python 交互式编程环境
+# Python数据分析笔记本
 
-当前版本: v0.0.3
-
-## 最新更新
-
-- 优化了工具栏按钮的样式，使用圆形图标按钮
-- 为所有工具栏按钮添加了悬浮提示
-- 实现了主题切换的下拉菜单功能
-- 为单元格添加了复制内容功能
-- 优化了代码编辑器的自适应高度
-
-## 功能特点
-
-- 支持Python代码的交互式执行
-- Markdown单元格支持
-- 数据文件管理和预览
-- 笔记本保存和加载
-- PDF导出功能
-- 多主题支持
-- 实时代码执行
-- 数据可视化支持
-- 文件管理系统
-
-一个基于Web的Python数据分析工具，集成了数据导入、分析和可视化功能。
+一个基于Web的Python数据分析工具，集成了Jupyter笔记本的功能和AI辅助代码生成能力。
 
 ## 功能特性
 
-### 1. 数据文件管理
-- 支持上传CSV和Excel格式的数据文件
-- 文件列表显示，包含文件名、大小和修改时间
-- 支持删除已上传的数据文件
-- 数据文件预览功能
-
-### 2. 数据预览
-- 显示文件基本信息（文件名、大小、修改时间等）
-- 显示数据基本信息（行数、列数、数据类型等）
-- 表格形式预览数据内容
-- 紧凑的信息展示布局
-
-### 3. 代码生成
-- 自动生成数据加载代码
-  - 支持CSV和Excel文件的读取
-  - 自动显示数据基本信息
-- 自动生成数据分析代码
-  - 基本统计分析
-  - 缺失值检查
-  - 数据类型信息
-- 自动生成数据可视化代码
-  - 数值型数据分布图
-  - 相关性热力图
-- 支持一键生成所有代码
-
-### 4. 交互式编程
+### 1. 笔记本基础功能
 - Markdown和代码单元格支持
-- 代码执行结果实时显示
-- 支持数据可视化展示
+- 实时代码执行
+- 执行结果实时显示
+- 单元格操作（添加、删除、移动）
+- 代码自动补全和语法高亮
+
+### 2. 数据管理功能
+- 支持CSV和Excel格式文件上传
+- 文件管理（预览、删除）
+- 数据基本信息显示
+- 数据内容预览
+- DataFrame操作和管理
+
+### 3. AI代码生成助手
+- 智能代码生成
+- DataFrame信息实时展示
+- 自然语言转Python代码
+- 代码示例一键插入
+- 支持数据分析常用操作
+
+### 4. 数据可视化支持
+- 集成Matplotlib和Seaborn
+- 支持多种图表类型
+- 可视化代码智能生成
+- 图表实时预览
 
 ## 技术栈
-- 前端：Vue 3 + Element Plus
-- 后端：FastAPI + Pandas
-- 数据可视化：Matplotlib + Seaborn
 
-## 开始使用
+### 前端
+- Vue 3
+- Element Plus
+- Monaco Editor
+- TypeScript
+- Vite
 
+### 后端
+- FastAPI
+- Python 3.10+
+- Pandas
+- NumPy
+- Matplotlib
+- DeepSeek API
+
+## 安装说明
+
+### 环境要求
+- Python 3.10 或更高版本
+- Node.js 16 或更高版本
+- npm 8 或更高版本
+
+### 后端安装
+1. 创建虚拟环境：
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+.venv\Scripts\activate     # Windows
+```
+
+2. 安装依赖：
+```bash
+pip install -r requirements.txt
+```
+
+3. 配置环境变量：
+```bash
+cp .env.example .env
+# 编辑 .env 文件，设置必要的环境变量
+```
+
+### 前端安装
+1. 安装依赖：
+```bash
+cd frontend
+npm install
+```
+
+## 启动服务
+
+### 开发环境
 1. 启动后端服务：
 ```bash
 cd backend
-python main.py
+uvicorn main:app --reload --port 8000
 ```
 
 2. 启动前端服务：
 ```bash
 cd frontend
-npm install
-npm run serve
+npm run dev
 ```
 
-3. 访问应用：
-打开浏览器访问 http://localhost:8080
+### 生产环境
+1. 构建前端：
+```bash
+cd frontend
+npm run build
+```
 
-## 使用说明
+2. 启动服务：
+```bash
+cd backend
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
 
-1. 数据导入：
-   - 点击顶部导航栏的"上传数据文件"按钮
-   - 选择CSV或Excel文件上传
-   - 上传成功后可以在文件列表中查看
+## 使用指南
 
-2. 数据预览：
-   - 在文件列表中点击"预览"按钮
-   - 查看文件信息、数据信息和数据预览
+### 1. 数据导入
+1. 点击工具栏的"上传文件"按钮
+2. 选择CSV或Excel文件
+3. 等待文件上传和预处理完成
 
-3. 代码生成：
-   - 在预览界面选择需要生成的代码类型
-   - 点击对应按钮生成代码
-   - 或使用"生成全部代码"一次性生成所有代码
+### 2. 数据分析
+1. 在代码单元格中编写Python代码
+2. 使用AI助手生成代码：
+   - 点击AI助手按钮
+   - 选择要操作的DataFrame
+   - 输入自然语言描述
+   - 获取生成的代码
 
-4. 代码执行：
-   - 代码会自动插入到新的代码单元格中
-   - 点击运行按钮执行代码
-   - 查看执行结果和可视化图表
+### 3. 数据可视化
+1. 使用内置的可视化库创建图表
+2. 通过AI助手生成可视化代码
+3. 在笔记本中实时查看图表效果
 
 ## 版本历史
 
-查看 [CHANGELOG.md](./CHANGELOG.md) 了解详细的版本历史。
-
-## 开发计划
-
-- [ ] 支持更多图表库
-- [ ] 代码自动补全
-- [ ] 变量查看器
-- [ ] 协作编辑
-- [ ] 导入/导出更多格式
-- [ ] 单元测试支持
+查看 [CHANGELOG.md](./CHANGELOG.md) 了解详细的版本更新历史。
 
 ## 贡献指南
 
-欢迎提交问题和功能建议！如果您想贡献代码，请：
-
-1. Fork 项目
-2. 创建您的特性分支
-3. 提交您的改动
-4. 确保代码符合规范
+1. Fork 本仓库
+2. 创建特性分支：`git checkout -b feature/AmazingFeature`
+3. 提交改动：`git commit -m 'Add some AmazingFeature'`
+4. 推送分支：`git push origin feature/AmazingFeature`
 5. 提交 Pull Request
 
 ## 许可证
 
-MIT License - 详见 [LICENSE](./LICENSE) 文件
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
 

@@ -1,11 +1,78 @@
 """
-Prompt builder for AI code generation.
+提示词构建服务，用于生成更好的AI提示词
 """
-from typing import Dict, List, Optional
+from typing import Dict, Any, Optional
 
 class PromptBuilder:
     """提示词构建器类"""
     
+    @staticmethod
+    def build_system_prompt(dataframe_info: Optional[Dict[str, Any]] = None) -> str:
+        """
+        构建系统提示词
+        
+        Args:
+            dataframe_info: DataFrame的详细信息
+            
+        Returns:
+            str: 构建好的系统提示词
+        """
+        system_prompt = [
+            "你是一个Python数据分析专家，精通pandas库的使用。",
+            "你需要根据用户的需求，生成准确的Python代码。",
+            "生成的代码应该：",
+            "1. 代码简洁易懂，有必要的注释",
+            "2. 使用pandas的最佳实践",
+            "3. 考虑数据处理的性能",
+            "4. 包含适当的错误处理"
+        ]
+        
+        if dataframe_info:
+            # 添加DataFrame的基本信息
+            basic_info = dataframe_info.get('basic_info', {})
+            system_prompt.extend([
+                "\n当前DataFrame信息：",
+                f"- 行数：{basic_info.get('行数', 0)}",
+                f"- 列数：{basic_info.get('列数', 0)}",
+                f"- 内存占用：{basic_info.get('内存占用', '0 MB')}"
+            ])
+            
+            # 添加列信息
+            columns = dataframe_info.get('columns', [])
+            if columns:
+                system_prompt.append("\n列信息：")
+                for col in columns:
+                    system_prompt.append(
+                        f"- {col['name']}: 类型={col['type']}, 空值数={col['null_count']}"
+                    )
+        
+        return "\n".join(system_prompt)
+    
+    @staticmethod
+    def build_user_prompt(prompt: str, dataframe_name: str) -> str:
+        """
+        构建用户提示词
+        
+        Args:
+            prompt: 用户原始提示词
+            dataframe_name: DataFrame变量名
+            
+        Returns:
+            str: 构建好的用户提示词
+        """
+        return f"""请针对名为 '{dataframe_name}' 的DataFrame生成Python代码，执行以下操作：
+
+{prompt}
+
+严格遵循以下要求：
+1. 只返回可以直接执行的Python代码
+2. 不要使用任何Markdown格式
+3. 不要使用```python或```等代码块标记
+4. 不要包含任何自然语言解释
+5. 代码中包含必要的注释（使用#号注释）
+6. 使用变量名 '{dataframe_name}'
+7. 如果需要导入包，请在代码开头导入"""
+
     @staticmethod
     def build_code_generation_prompt(
         user_request: str,

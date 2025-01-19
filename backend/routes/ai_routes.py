@@ -1,80 +1,103 @@
 """
-AI service routes for code generation.
+AI相关的路由处理
 """
-from typing import Dict, Optional
-import logging
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-
+from typing import Optional, Dict, Any
+import logging
+import numpy as np
+import math
+import json
 from services.ai.deepseek_client import get_client
-from services.ai.prompt_builder import PromptBuilder
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/ai", tags=["ai"])
+class NumpyJSONEncoder(json.JSONEncoder):
+    """处理 NumPy 和特殊浮点数值的 JSON 编码器"""
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            if np.isnan(obj) or np.isinf(obj):
+                return None
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super().default(obj)
 
-class CodeGenerationRequest(BaseModel):
+def handle_special_floats(obj):
+    """处理特殊浮点数值的JSON序列化"""
+    if isinstance(obj, (float, np.floating)):
+        if math.isnan(obj) or np.isnan(obj):
+            return None
+        if math.isinf(obj) or np.isinf(obj):
+            return None
+    if isinstance(obj, (np.integer, np.floating)):
+        return float(obj)
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    if isinstance(obj, dict):
+        return {k: handle_special_floats(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [handle_special_floats(v) for v in obj]
+    return obj
+
+class GenerateCodeRequest(BaseModel):
     """代码生成请求模型"""
     prompt: str
-    notebook_context: Optional[Dict] = None
-    dataframe_info: Optional[Dict] = None
+    notebook_context: Optional[Dict[str, Any]] = None
+    dataframe_info: Optional[Dict[str, Any]] = None
+    dataframe_name: Optional[str] = None
 
-class CodeGenerationResponse(BaseModel):
-    """代码生成响应模型"""
-    code: str
-    status: str = "success"
-    message: Optional[str] = None
+router = APIRouter(prefix="/api/ai", tags=["ai"])
 
-@router.post("/generate_code", response_model=CodeGenerationResponse)
-async def generate_code(request: CodeGenerationRequest) -> CodeGenerationResponse:
+@router.post("/generate_code")
+async def generate_code(request: GenerateCodeRequest):
     """
-    生成代码的API端点
+    生成Python代码
     
     Args:
         request: 包含提示词和上下文信息的请求对象
         
     Returns:
-        包含生成的代码的响应对象
-        
-    Raises:
-        HTTPException: 当代码生成失败时抛出异常
+        JSONResponse: 包含生成的代码的响应对象
     """
     try:
-        logger.info(f"收到代码生成请求: {request.prompt}")
-        logger.info(f"笔记本上下文: {request.notebook_context}")
-        logger.info(f"DataFrame信息: {request.dataframe_info}")
+        logger.info("收到代码生成请求")
+        logger.info(f"提示词: {request.prompt}")
+        if request.dataframe_name:
+            logger.info(f"DataFrame: {request.dataframe_name}")
         
-        # 获取AI客户端
+        # 处理请求中的特殊浮点数值
+        if request.dataframe_info:
+            request.dataframe_info = handle_special_floats(request.dataframe_info)
+        
         client = get_client()
-        logger.info("成功获取AI客户端")
-        
-        # 构建提示词
-        prompt = PromptBuilder.build_code_generation_prompt(
-            user_request=request.prompt,
-            notebook_context=request.notebook_context,
-            dataframe_info=request.dataframe_info
+        generated_code = await client.generate_code(
+            prompt=request.prompt,
+            dataframe_info=request.dataframe_info,
+            dataframe_name=request.dataframe_name,
+            notebook_context=request.notebook_context
         )
-        logger.info(f"构建的提示词: {prompt}")
         
-        # 生成代码
-        logger.info("开始生成代码...")
-        response = await client.generate_code(prompt)
-        logger.info("代码生成完成")
+        # 使用自定义 JSON 编码器处理响应
+        response_data = {
+            "status": "success",
+            "code": generated_code,
+            "message": None
+        }
         
-        # 从响应中提取代码
-        code = PromptBuilder.extract_code_from_response(response)
-        logger.info(f"提取的代码: {code}")
-        
-        return CodeGenerationResponse(
-            code=code,
-            status="success"
+        return JSONResponse(
+            content=handle_special_floats(response_data),
+            status_code=200
         )
         
     except Exception as e:
         logger.error(f"代码生成失败: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=500,
-            detail=f"代码生成失败: {str(e)}"
+        return JSONResponse(
+            content={"status": "error", "message": str(e)},
+            status_code=500
         ) 

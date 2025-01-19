@@ -15,38 +15,51 @@
       <p>{{ error }}</p>
     </div>
     <div v-else class="data-preview">
+      <!-- 基本信息 -->
       <div class="data-info">
         <div class="info-item">
           <span class="label">行数：</span>
-          <span class="value">{{ previewData.shape?.[0] || 0 }}</span>
+          <span class="value">{{ previewData.basic_info?.行数 || 0 }}</span>
         </div>
         <div class="info-item">
           <span class="label">列数：</span>
-          <span class="value">{{ previewData.shape?.[1] || 0 }}</span>
+          <span class="value">{{ previewData.basic_info?.列数 || 0 }}</span>
         </div>
         <div class="info-item">
           <span class="label">内存占用：</span>
-          <span class="value">{{ formatMemoryUsage(previewData.memory_usage) }}</span>
+          <span class="value">{{ previewData.basic_info?.内存占用 || '0 MB' }}</span>
         </div>
       </div>
 
-      <div class="data-table">
+      <!-- 列信息表格 -->
+      <div class="columns-info">
+        <h4>列信息</h4>
+        <el-table :data="previewData.columns || []" border style="width: 100%; margin-bottom: 20px">
+          <el-table-column prop="name" label="列名" />
+          <el-table-column prop="type" label="数据类型" />
+          <el-table-column prop="null_count" label="空值数量" />
+        </el-table>
+      </div>
+
+      <!-- 数据预览表格 -->
+      <div class="preview-data">
+        <h4>数据预览（前5行）</h4>
         <el-table
-          :data="tableData"
+          :data="previewData.preview?.head || []"
           border
           style="width: 100%"
-          height="400"
+          height="300"
           :cell-class-name="getCellClass"
         >
           <el-table-column
-            v-for="(type, col) in previewData.columns"
-            :key="col"
-            :prop="col"
-            :label="`${col} (${type})`"
+            v-for="col in previewData.columns || []"
+            :key="col.name"
+            :prop="col.name"
+            :label="col.name"
             :min-width="120"
           >
             <template #default="scope">
-              <span :title="scope.row[col]">{{ formatCellValue(scope.row[col]) }}</span>
+              <span :title="scope.row[col.name]">{{ formatCellValue(scope.row[col.name]) }}</span>
             </template>
           </el-table-column>
         </el-table>
@@ -73,8 +86,7 @@ export default {
     return {
       loading: false,
       error: null,
-      previewData: {},
-      tableData: []
+      previewData: {}
     }
   },
   computed: {
@@ -96,18 +108,6 @@ export default {
       this.loading = false
       this.error = null
       this.previewData = {}
-      this.tableData = []
-    },
-    formatMemoryUsage(bytes) {
-      if (!bytes) return '0 B'
-      const units = ['B', 'KB', 'MB', 'GB']
-      let size = bytes
-      let unitIndex = 0
-      while (size >= 1024 && unitIndex < units.length - 1) {
-        size /= 1024
-        unitIndex++
-      }
-      return `${size.toFixed(2)} ${units[unitIndex]}`
     },
     formatCellValue(value) {
       if (value === null || value === undefined) return 'null'
@@ -133,26 +133,14 @@ export default {
       this.loading = true
       this.error = null
       try {
-        const response = await fetch(`http://localhost:8000/api/dataframe/preview/${name}`)
+        const response = await fetch(`http://localhost:8000/api/dataframes/info/${name}`)
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
         const data = await response.json()
-        if (data.status === 'success') {
-          this.previewData = data
-          this.tableData = Object.keys(data.sample_data).length > 0
-            ? Array.from({ length: Object.values(data.sample_data)[0].length }, (_, i) => {
-                const row = {}
-                Object.keys(data.sample_data).forEach(col => {
-                  row[col] = data.sample_data[col][i]
-                })
-                return row
-              })
-            : []
-        } else {
-          throw new Error(data.message || '加载数据失败')
-        }
+        this.previewData = data
       } catch (err) {
+        console.error('加载DataFrame预览失败:', err)
         this.error = err.message
       } finally {
         this.loading = false
@@ -207,9 +195,16 @@ export default {
   color: #606266;
 }
 
-.data-table {
-  flex: 1;
-  overflow: auto;
+.columns-info,
+.preview-data {
+  margin-top: 1rem;
+}
+
+.columns-info h4,
+.preview-data h4 {
+  margin: 0 0 10px 0;
+  color: #606266;
+  font-size: 14px;
 }
 
 :deep(.null-cell) {

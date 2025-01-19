@@ -135,16 +135,47 @@ class DataFrameManager:
     
     def __init__(self):
         self._dataframes: Dict[str, pd.DataFrame] = {}
+        self._dataframe_info: Dict[str, Dict] = {}
     
     def register_dataframe(self, name: str, df: pd.DataFrame) -> None:
         """
-        注册一个DataFrame变量
+        注册一个DataFrame变量并更新其信息
         
         Args:
             name: DataFrame变量名
             df: DataFrame对象
         """
         self._dataframes[name] = df
+        self._update_dataframe_info(name)
+    
+    def _update_dataframe_info(self, name: str) -> None:
+        """
+        更新指定DataFrame的信息
+        
+        Args:
+            name: DataFrame变量名
+        """
+        df = self._dataframes.get(name)
+        if df is not None:
+            self._dataframe_info[name] = {
+                "basic_info": {
+                    "行数": len(df),
+                    "列数": len(df.columns),
+                    "内存占用": f"{df.memory_usage().sum() / 1024**2:.2f} MB"
+                },
+                "columns": [
+                    {
+                        "name": str(col),
+                        "type": str(df[col].dtype),
+                        "null_count": int(df[col].isnull().sum())
+                    }
+                    for col in df.columns
+                ],
+                "preview": {
+                    "head": df.head().to_dict('records'),
+                    "summary": df.describe().to_dict()
+                }
+            }
     
     def get_dataframe(self, name: str) -> Optional[pd.DataFrame]:
         """
@@ -158,17 +189,19 @@ class DataFrameManager:
         """
         return self._dataframes.get(name)
     
-    def get_dataframe_info(self, name: str) -> Optional[str]:
+    def get_dataframe_info(self, name: str) -> Optional[Dict]:
         """
-        获取指定DataFrame的信息
+        获取指定DataFrame的详细信息
         
         Args:
             name: DataFrame变量名
             
         Returns:
-            Optional[str]: DataFrame变量名，如果不存在则返回None
+            Optional[Dict]: DataFrame的详细信息，如果不存在则返回None
         """
-        return name if name in self._dataframes else None
+        if name not in self._dataframe_info:
+            self._update_dataframe_info(name)
+        return self._dataframe_info.get(name)
     
     def get_all_dataframes(self) -> List[str]:
         """
@@ -182,6 +215,7 @@ class DataFrameManager:
     def clear(self):
         """清空所有注册的DataFrame信息"""
         self._dataframes.clear()
+        self._dataframe_info.clear()
 
 # 创建单例实例
 _manager: Optional[DataFrameManager] = None

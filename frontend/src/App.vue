@@ -1017,12 +1017,12 @@ const copyCell = (cellId) => {
 // 添加获取DataFrame信息的方法
 const fetchDataFrameInfo = async () => {
   try {
-    const response = await fetch('http://localhost:8000/api/dataframe/info')
+    const response = await fetch('http://localhost:8000/api/dataframes/list')
     if (!response.ok) {
       throw new Error('获取DataFrame信息失败')
     }
     const data = await response.json()
-    dataframes.value = data.dataframes
+    dataframes.value = data  // 直接使用返回的数组
   } catch (err) {
     console.error('获取DataFrame信息失败:', err)
   }
