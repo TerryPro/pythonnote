@@ -123,3 +123,72 @@ class DataLoader:
             "info": self.data_info,
             "summary": self.current_data.describe().to_dict()
         } 
+
+"""
+DataFrame变量管理服务
+"""
+from typing import Dict, List, Optional
+import pandas as pd
+
+class DataFrameManager:
+    """DataFrame变量管理器"""
+    
+    def __init__(self):
+        self._dataframes: Dict[str, pd.DataFrame] = {}
+    
+    def register_dataframe(self, name: str, df: pd.DataFrame) -> None:
+        """
+        注册一个DataFrame变量
+        
+        Args:
+            name: DataFrame变量名
+            df: DataFrame对象
+        """
+        self._dataframes[name] = df
+    
+    def get_dataframe(self, name: str) -> Optional[pd.DataFrame]:
+        """
+        获取指定名称的DataFrame对象
+        
+        Args:
+            name: DataFrame变量名
+            
+        Returns:
+            Optional[pd.DataFrame]: DataFrame对象，如果不存在则返回None
+        """
+        return self._dataframes.get(name)
+    
+    def get_dataframe_info(self, name: str) -> Optional[str]:
+        """
+        获取指定DataFrame的信息
+        
+        Args:
+            name: DataFrame变量名
+            
+        Returns:
+            Optional[str]: DataFrame变量名，如果不存在则返回None
+        """
+        return name if name in self._dataframes else None
+    
+    def get_all_dataframes(self) -> List[str]:
+        """
+        获取所有已注册的DataFrame变量名
+        
+        Returns:
+            List[str]: 所有DataFrame变量名列表
+        """
+        return list(self._dataframes.keys())
+    
+    def clear(self):
+        """清空所有注册的DataFrame信息"""
+        self._dataframes.clear()
+
+# 创建单例实例
+_manager: Optional[DataFrameManager] = None
+
+def get_manager() -> DataFrameManager:
+    """获取DataFrameManager的单例实例"""
+    global _manager
+    if _manager is None:
+        _manager = DataFrameManager()
+    return _manager 

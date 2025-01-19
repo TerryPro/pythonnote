@@ -1,6 +1,6 @@
 import sys
 import io
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import traceback
 import builtins
 import numpy as np
@@ -17,6 +17,7 @@ from contextlib import redirect_stdout, redirect_stderr
 import base64
 from io import BytesIO
 import uuid
+from services.data_explorer.data_loader import get_manager
 
 # 过滤掉特定的警告
 warnings.filterwarnings('ignore', category=UserWarning, message='FigureCanvasAgg is non-interactive')
@@ -36,7 +37,7 @@ class CodeExecutor:
                 
     def _capture_plot(self) -> str:
         """捕获matplotlib图形并转换为base64字符串"""
-        if plt.get_fignums() and hasattr(self, '_show_called') and self._show_called:
+        if plt.get_fignums():  # 只要有图形就捕获
             buf = BytesIO()
             plt.savefig(buf, format='png', bbox_inches='tight')
             plt.close()  # 清除当前图形
@@ -120,78 +121,85 @@ class CodeExecutor:
         except Exception as e:
             return ''
 
-    def execute(self, code: str) -> dict:
-        """执行代码并返回结果
+    def execute(self, code: str) -> Dict[str, Any]:
+        """
+        执行Python代码
         
         Args:
-            code: 要执行的代码字符串
+            code: 要执行的Python代码
             
         Returns:
-            dict: 包含执行结果的字典，包括：
-                - status: 执行状态 ('success' 或 'error')
-                - output: 标准输出和错误输出
-                - error: 如果发生错误，包含错误详情
-                - plot: 如果有matplotlib图形输出，包含base64编码的图像
-                - plotly_html: 如果有plotly图形输出，包含HTML
+            Dict包含执行结果：
+            {
+                "output": str,  # 标准输出和错误
+                "error": Optional[str],  # 如果有错误，则包含错误信息
+                "status": str  # 执行状态：'success' 或 'error'
+            }
         """
+        # 清空已注册的DataFrame变量
+        get_manager().clear()
+        
+        # 捕获标准输出和错误
         stdout = io.StringIO()
         stderr = io.StringIO()
         
         result = {
-            'status': 'success',
-            'output': '',
-            'error': None,
-            'plot': None,
-            'plotly_html': None
+            "output": "",
+            "error": None,
+            "status": "success",
+            "has_dataframes": False,  # 添加标志位表示是否有新的DataFrame变量
+            "plot": "",  # 添加matplotlib图像输出
+            "plotly_html": ""  # 添加plotly图像输出
         }
         
-        # 重置上一个plotly图形
-        self._last_plotly_fig = None
-        
         try:
-            # 重定向标准输出和错误
+            # 执行代码并捕获输出
             with redirect_stdout(stdout), redirect_stderr(stderr):
-                # 编译代码
-                compiled_code = compile(code, '<string>', 'exec')
-                # 执行代码
-                exec(compiled_code, self.globals_dict, self.locals_dict)
+                exec(code, self.globals_dict, self.locals_dict)
+                
+            # 注册所有DataFrame变量
+            self._register_dataframes()
+            # 检查是否有DataFrame变量
+            result["has_dataframes"] = len(get_manager().get_all_dataframes()) > 0
+            
+            # 捕获matplotlib图像
+            result["plot"] = self._capture_plot()
+            # 捕获plotly图像
+            result["plotly_html"] = self._capture_plotly()
             
             # 获取输出
             output = stdout.getvalue()
-            if output:
-                result['output'] = output
-                
-            # 捕获错误输出
-            error_output = stderr.getvalue()
-            if error_output:
-                result['output'] += f'\n{error_output}'
-                
-            # 捕获matplotlib图形输出
-            plot_output = self._capture_plot()
-            if plot_output:
-                result['plot'] = plot_output
-
-            # 捕获plotly图形输出
-            plotly_output = self._capture_plotly()
-            if plotly_output:
-                result['plotly_html'] = plotly_output
-                
+            errors = stderr.getvalue()
+            
+            if errors:
+                result["error"] = errors
+                result["status"] = "error"
+            
+            result["output"] = output if output else errors
+            
         except Exception as e:
-            result['status'] = 'error'
-            result['error'] = {
-                'type': type(e).__name__,
-                'message': str(e),
-                'traceback': traceback.format_exc()
-            }
-
+            # 获取完整的错误追踪
+            error_msg = traceback.format_exc()
+            result["error"] = str(error_msg)
+            result["status"] = "error"
+            result["output"] = error_msg
+        
+        finally:
+            stdout.close()
+            stderr.close()
+        
         return result
 
     def reset(self):
-        """完全重置执行器状态"""
+        """重置执行器状态"""
         # 清除所有图形
         plt.close('all')
         self._last_plotly_fig = None
         self._show_called = False  # 添加标志
+        
+        # 清除所有已注册的DataFrame对象
+        manager = get_manager()
+        manager.clear()
         
         # 初始化全局和局部命名空间
         self.globals_dict = {
@@ -230,3 +238,20 @@ class CodeExecutor:
             return None
         
         plotly.io.show = custom_plotly_show 
+
+    def _register_dataframes(self):
+        """注册所有DataFrame变量到管理器"""
+        manager = get_manager()
+        
+        # 遍历所有局部变量
+        for var_name, var_value in self.locals_dict.items():
+            if isinstance(var_value, pd.DataFrame):
+                manager.register_dataframe(var_name, var_value)
+        
+        # 遍历所有全局变量
+        for var_name, var_value in self.globals_dict.items():
+            # 跳过模块和内置变量
+            if var_name.startswith('__') or isinstance(var_value, type(pd)):
+                continue
+            if isinstance(var_value, pd.DataFrame):
+                manager.register_dataframe(var_name, var_value) 

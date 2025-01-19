@@ -1,9 +1,10 @@
+# 完整的FileExplore.vue内容
 <template>
-  <div class="data-import">
+  <div class="file-explore">
     <!-- 数据预览对话框 -->
     <el-dialog
       v-model="dialogVisible"
-      title="数据预览"
+      title="文件预览"
       width="80%"
       :close-on-click-modal="false"
       :close-on-press-escape="true"
@@ -101,7 +102,7 @@
 import { ElButton, ElDialog, ElMessage } from 'element-plus'
 
 export default {
-  name: 'DataImport',
+  name: 'FileExplore',
   components: {
     ElButton,
     ElDialog
@@ -128,52 +129,6 @@ export default {
     closeDialog() {
       this.dialogVisible = false
       this.currentPreviewFile = null
-    },
-    async processFile(file) {
-      this.loading = true
-      this.error = null
-      
-      try {
-        const formData = new FormData()
-        formData.append('file', file)
-        
-        // 根据文件类型选择不同的上传端点
-        const fileType = file.name.split('.').pop().toLowerCase()
-        let endpoint = ''
-        
-        if (fileType === 'csv') {
-          endpoint = 'http://localhost:8000/api/data-files/upload/csv'
-        } else if (['xlsx', 'xls'].includes(fileType)) {
-          endpoint = 'http://localhost:8000/api/data-files/upload/excel'
-        } else {
-          throw new Error('不支持的文件格式')
-        }
-        
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          body: formData
-        })
-        
-        if (!response.ok) {
-          throw new Error(`上传失败: ${response.status} ${response.statusText}`)
-        }
-        
-        const result = await response.json()
-        console.log('Upload response:', result)
-        
-        if (result.status === 'success') {
-          this.previewData = result.data
-          this.$emit('data-loaded', result.data)
-        } else {
-          throw new Error(result.message || '上传失败')
-        }
-      } catch (error) {
-        this.error = error.message
-        console.error('上传错误:', error)
-        throw error
-      } finally {
-        this.loading = false
-      }
     },
     // 生成数据加载代码
     generateDataLoadCode() {

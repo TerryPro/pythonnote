@@ -13,4 +13,12 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 }
 
 app.use(ElementPlus)
+
+// 添加 ResizeObserver 错误处理
+window.addEventListener('error', (event) => {
+  if (event.message.includes('ResizeObserver')) {
+    event.stopImmediatePropagation();
+  }
+});
+
 app.mount('#app')

@@ -3,13 +3,21 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import json
 import os
+import logging
 from pathlib import Path
 from code_executor import CodeExecutor
 from services.pdf.code_formatter import format_python_code
 from services.pdf.exporter import NotebookPDFExporter
-from routes import data_explorer, data_files
+from routes import data_explorer, data_files, ai_routes, dataframe_routes
 
-app = FastAPI()
+# 配置日志
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(title="AI Code Generator API")
 code_executor = CodeExecutor()
 
 # 配置CORS
@@ -32,8 +40,20 @@ EXPORT_DIR.mkdir(exist_ok=True)
 pdf_exporter = NotebookPDFExporter(EXPORT_DIR)
 
 # 注册路由
+logger.info("注册路由...")
 app.include_router(data_explorer.router)
 app.include_router(data_files.router)
+app.include_router(ai_routes.router)
+app.include_router(dataframe_routes.router, prefix="/api/dataframe", tags=["dataframe"])
+logger.info("路由注册完成")
+
+@app.on_event("startup")
+async def startup_event():
+    logger.info("服务启动...")
+    # 检查环境变量
+    if not os.getenv("DEEPSEEK_API_KEY"):
+        logger.warning("DEEPSEEK_API_KEY 环境变量未设置")
+    logger.info("服务启动完成")
 
 @app.post("/execute")
 async def execute_code(request: Request):
@@ -172,4 +192,5 @@ async def export_pdf(request: Request):
 
 @app.get("/")
 async def root():
-    return {"message": "服务已启动"} 
+    logger.info("访问根路径")
+    return {"message": "Welcome to AI Code Generator API"} 

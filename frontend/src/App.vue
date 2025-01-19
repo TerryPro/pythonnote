@@ -138,6 +138,31 @@
             </div>
           </div>
         </div>
+
+        <!-- DataFrame变量列表 -->
+        <div class="panel-section">
+          <div class="panel-header">
+            <h3>DataFrame变量列表</h3>
+          </div>
+          <div class="file-list">
+            <div v-for="name in dataframes" 
+                 :key="name" 
+                 class="file-item">
+              <div class="file-content">
+                <i class="fas fa-table text-blue-500"></i>
+                <span class="file-name">{{ name }}</span>
+              </div>
+              <div class="file-actions">
+                <button 
+                  @click="previewDataFrame(name)"
+                  class="icon-btn preview-btn"
+                  title="预览变量">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="notebook" v-if="cells.length">
@@ -160,6 +185,19 @@
                   title="运行"
                 >
                   <i class="fas fa-play"></i>
+                </button>
+                <button 
+                  v-if="cellTypes[cellId] === 'code'"
+                  @click="() => {
+                    const cell = $refs[`codeCell${cellId}`];
+                    if (cell && cell[0]) {
+                      cell[0].showAiDialog = true;
+                    }
+                  }" 
+                  class="icon-btn ai-btn" 
+                  title="AI代码助手"
+                >
+                  <i class="fas fa-magic"></i>
                 </button>
                 <button 
                   v-else
@@ -224,6 +262,7 @@
               @update:content="(v) => cellContents[cellId] = v"
               @update:output="(v) => cellOutputs[cellId] = v"
               @execution-complete="handleExecutionComplete"
+              @refresh-dataframes="fetchDataFrameInfo"
             />
             <MarkdownCell
               v-else
@@ -317,7 +356,7 @@
     </el-dialog>
 
     <!-- 修改数据导入组件，添加引用和文件属性 -->
-    <data-import 
+    <FileExplore 
       ref="dataImportRef"
       @data-loaded="handleDataLoaded"
       @insert-code="handleCodeInsert"
@@ -332,11 +371,18 @@
       style="display: none; visibility: hidden; position: absolute;"
       class="hidden-input"
     />
+
+    <!-- 添加DataFrame预览组件 -->
+    <DataFramePreview
+      v-model="showDataFramePreview"
+      :title="dataFramePreviewTitle"
+      ref="dataFramePreview"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, provide } from 'vue'
+import { ref, onMounted, provide, onUnmounted } from 'vue'
 import CodeCell from './components/CodeCell.vue'
 import MarkdownCell from './components/MarkdownCell.vue'
 import { v4 as uuidv4 } from 'uuid'
@@ -354,7 +400,8 @@ import {
   ElAlert,
   ElTooltip
 } from 'element-plus'
-import DataImport from './components/DataExplorer/DataImport.vue'
+import FileExplore from './components/DataExplorer/FileExplore.vue'
+import DataFramePreview from './components/DataFramePreview.vue'
 
 const cells = ref([])
 const currentFile = ref(null)
@@ -387,6 +434,15 @@ const deleteCellId = ref(null)
 // 添加文件上传和处理逻辑
 const fileInput = ref(null)
 const dataImportRef = ref(null)
+
+// 添加DataFrame相关的状态
+const dataframes = ref([])
+const dataframeTimer = ref(null)
+
+// DataFrame预览相关的状态
+const showDataFramePreview = ref(false)
+const dataFramePreviewTitle = ref('')
+const dataFramePreview = ref(null)
 
 // 提供主题变量给子组件
 provide('currentTheme', currentTheme)
@@ -737,6 +793,16 @@ onMounted(async () => {
   await loadFileList()
   addCell('code')
   applyTheme(currentTheme.value)
+  fetchDataFrameInfo()
+  // 每30秒自动刷新一次
+  dataframeTimer.value = setInterval(fetchDataFrameInfo, 30000)
+})
+
+// 在组件卸载时清理定时器
+onUnmounted(() => {
+  if (dataframeTimer.value) {
+    clearInterval(dataframeTimer.value)
+  }
 })
 
 // 处理数据加载
@@ -947,6 +1013,27 @@ const copyCell = (cellId) => {
     })
   }
 }
+
+// 添加获取DataFrame信息的方法
+const fetchDataFrameInfo = async () => {
+  try {
+    const response = await fetch('http://localhost:8000/api/dataframe/info')
+    if (!response.ok) {
+      throw new Error('获取DataFrame信息失败')
+    }
+    const data = await response.json()
+    dataframes.value = data.dataframes
+  } catch (err) {
+    console.error('获取DataFrame信息失败:', err)
+  }
+}
+
+// 预览DataFrame的方法
+const previewDataFrame = async (name) => {
+  dataFramePreviewTitle.value = `DataFrame预览: ${name}`
+  showDataFramePreview.value = true
+  await dataFramePreview.value.loadPreview(name)
+}
 </script>
 
 <style>
@@ -1066,6 +1153,7 @@ body {
   display: flex;
   height: calc(100vh - 72px); /* 减去navbar的高度 */
   overflow: hidden;
+  position: relative;
 }
 
 .file-panel {
@@ -1076,6 +1164,7 @@ body {
   flex-direction: column;
   transition: background-color 0.3s ease;
   flex-shrink: 0;
+  position: relative;
 }
 
 .file-panel-header {
@@ -1145,10 +1234,11 @@ body {
 
 .notebook {
   flex: 1;
-  background: var(--background);
-  overflow-y: auto;
-  transition: background-color 0.3s ease;
   position: relative;
+  overflow: auto;
+  padding: 2rem;
+  background: var(--background);
+  transition: background-color 0.3s ease;
 }
 
 .notebook-cells {
@@ -1285,8 +1375,8 @@ body {
   padding: 6px 12px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  background: var(--cellBackground);
-  color: var(--text);
+  background: var(--cell-background);
+  color: var(--text-color);
   font-size: 13px;
   cursor: pointer;
   outline: none;
@@ -1304,8 +1394,8 @@ body {
 }
 
 .type-select option {
-  background-color: var(--cellBackground);
-  color: var(--text);
+  background-color: var(--cell-background);
+  color: var(--text-color);
   padding: 8px;
 }
 
@@ -1637,5 +1727,53 @@ body {
 .header .el-button i {
   font-size: 20px;
   margin-right: 4px;
+}
+
+.icon-btn.ai-btn {
+  color: #409EFF;
+  transition: all 0.3s ease;
+}
+
+.icon-btn.ai-btn:hover {
+  color: #79bbff;
+  transform: scale(1.1);
+}
+
+.icon-btn.ai-btn:active {
+  transform: scale(0.95);
+}
+
+/* 添加DataFrame预览对话框的样式 */
+.file-info .info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.file-info .label {
+  min-width: 80px;
+}
+
+.data-preview table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.data-preview th:first-child,
+.data-preview td:first-child {
+  padding-left: 1.5rem;
+}
+
+.data-preview th:last-child,
+.data-preview td:last-child {
+  padding-right: 1.5rem;
+}
+
+.column-item {
+  transition: all 0.2s ease;
+}
+
+.column-item:hover {
+  background-color: #f3f4f6;
 }
 </style>

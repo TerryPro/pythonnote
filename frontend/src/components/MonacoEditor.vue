@@ -5,6 +5,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import * as monaco from 'monaco-editor'
+import { debounce } from 'lodash'
 
 const props = defineProps({
   value: {
@@ -53,12 +54,14 @@ onMounted(() => {
       emit('change', value)
     })
 
-    // 监听编辑器大小变化
-    editor.onDidContentSizeChange(() => {
-      const contentHeight = Math.min(1000, editor.getContentHeight()) // 设置最大高度为1000px
+    // 使用防抖处理 resize
+    const handleResize = debounce(() => {
+      const contentHeight = Math.min(1000, editor.getContentHeight())
       editorContainer.value.style.height = `${contentHeight}px`
       editor.layout()
-    })
+    }, 100)
+
+    editor.onDidContentSizeChange(handleResize)
 
     // 设置初始值
     if (props.value) {

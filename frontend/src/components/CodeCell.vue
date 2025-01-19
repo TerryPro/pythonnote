@@ -13,7 +13,7 @@
           lineNumbers: 'on',
           renderLineHighlight: 'all',
           autoHeight: true,
-          wordWrap: 'on',
+          wordWrap: 'off',
           fontSize: 14,
           tabSize: 4,
           lineHeight: 20,
@@ -28,17 +28,27 @@
         class="monaco-editor-auto-height"
       />
     </div>
+    
     <div class="output-container" v-show="outputContent">
       <pre class="output-text" v-if="outputContent.output">{{ outputContent.output }}</pre>
       <div class="plot-container" v-if="outputContent.plot" v-html="outputContent.plot"></div>
       <div class="plotly-container" :id="`plotly-container-${cellId}`" v-if="outputContent.plotly_html" v-html="outputContent.plotly_html"></div>
     </div>
+    
+    <!-- AI对话框 -->
+    <AiDialog
+      v-model="showAiDialog"
+      :notebook-context="notebookContext"
+      :dataframe-info="dataframeInfo"
+      @code-generated="handleCodeGenerated"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, inject, onMounted, watch, nextTick } from 'vue'
 import MonacoEditor from './MonacoEditor.vue'
+import AiDialog from './ai/AiDialog.vue'
 
 const props = defineProps({
   cellId: {
@@ -57,30 +67,46 @@ const props = defineProps({
       plotly_html: '',
       status: 'idle'
     })
+  },
+  notebookContext: {
+    type: Object,
+    default: () => ({})
+  },
+  dataframeInfo: {
+    type: Object,
+    default: () => ({})
   }
 })
 
 // 注入主题
 const currentTheme = inject('currentTheme', ref('light'))
 
-// 本地内容状态
+// 本地状态
 const localContent = ref(props.content)
+const showAiDialog = ref(false)
+const isExecuting = ref(false)
 
-// 监听 props.content 的变化
+// 监听props变化
 watch(() => props.content, (newValue) => {
   localContent.value = newValue
 })
 
-const emit = defineEmits(['execution-complete', 'update:content', 'update:output'])
-
-const isExecuting = ref(false)
+const emit = defineEmits(['execution-complete', 'update:content', 'update:output', 'refresh-dataframes'])
 
 // 处理编辑器内容变化
 const handleEditorChange = (value) => {
   emit('update:content', value || '')
 }
 
+// 处理AI生成的代码
+const handleCodeGenerated = (code) => {
+  localContent.value = code
+  emit('update:content', code)
+}
+
 const executeCode = async () => {
+  if (!props.content.trim()) return
+  
   isExecuting.value = true
   try {
     const response = await fetch('http://localhost:8000/execute', {
@@ -88,30 +114,35 @@ const executeCode = async () => {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        code: props.content
-      })
+      body: JSON.stringify({ code: props.content })
     })
     
-    const result = await response.json()
-    console.log('Execution result:', result)
+    if (!response.ok) {
+      throw new Error('执行失败')
+    }
     
+    const result = await response.json()
+    
+    // 更新输出
     emit('update:output', {
-      output: result.error ? 
-        `错误: ${result.error.type}\n${result.error.message}` : 
-        result.output || '',
+      output: result.output || '',
       plot: result.plot || '',
       plotly_html: result.plotly_html || '',
       status: result.status || 'idle'
     })
-      
-    if (result.status === 'success') {
-      emit('execution-complete', props.cellId)
+    
+    // 如果有DataFrame变量，触发刷新
+    if (result.has_dataframes) {
+      emit('refresh-dataframes')
     }
+    
+    // 触发执行完成事件
+    emit('execution-complete', props.cellId)
+    
   } catch (error) {
-    console.error('Execution error:', error)
+    console.error('执行代码失败:', error)
     emit('update:output', {
-      output: `请求错误: ${error.message}`,
+      output: `执行失败: ${error.message}`,
       plot: '',
       plotly_html: '',
       status: 'error'
@@ -166,8 +197,10 @@ watch(() => props.outputContent?.plotly_html, (newVal) => {
   }
 });
 
+// 暴露属性给父组件
 defineExpose({
-  executeCode
+  executeCode,
+  showAiDialog
 })
 </script>
 
@@ -190,6 +223,7 @@ defineExpose({
 .monaco-editor-auto-height {
   width: 100%;
   min-height: 20px;
+  position: relative;
 }
 
 :deep(.monaco-editor) {
@@ -197,11 +231,11 @@ defineExpose({
 }
 
 :deep(.monaco-editor .overflow-guard) {
-  position: static !important;
+  position: relative !important;
 }
 
 :deep(.monaco-editor .monaco-scrollable-element) {
-  position: static !important;
+  position: relative !important;
 }
 
 :deep(.monaco-editor-background) {
@@ -209,20 +243,20 @@ defineExpose({
 }
 
 :deep(.monaco-editor .editor-scrollable) {
-  position: static !important;
+  position: relative !important;
 }
 
 :deep(.monaco-editor .lines-content) {
-  position: static !important;
+  position: relative !important;
 }
 
 :deep(.monaco-editor .view-lines) {
-  position: static !important;
+  position: relative !important;
   white-space: pre;
 }
 
 :deep(.monaco-editor .view-line) {
-  position: static !important;
+  position: relative !important;
   width: 100% !important;
 }
 
