@@ -7,6 +7,7 @@ from pathlib import Path
 from code_executor import CodeExecutor
 from services.pdf.code_formatter import format_python_code
 from services.pdf.exporter import NotebookPDFExporter
+from routes import data_explorer, data_files
 
 app = FastAPI()
 code_executor = CodeExecutor()
@@ -14,7 +15,7 @@ code_executor = CodeExecutor()
 # 配置CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # 在生产环境中应该设置为特定的域名
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -29,6 +30,10 @@ EXPORT_DIR.mkdir(exist_ok=True)
 
 # 创建PDF导出器实例
 pdf_exporter = NotebookPDFExporter(EXPORT_DIR)
+
+# 注册路由
+app.include_router(data_explorer.router)
+app.include_router(data_files.router)
 
 @app.post("/execute")
 async def execute_code(request: Request):
@@ -164,3 +169,7 @@ async def export_pdf(request: Request):
     except Exception as e:
         print(f"PDF导出错误: {str(e)}")  # 添加错误日志
         raise HTTPException(status_code=500, detail=str(e)) 
+
+@app.get("/")
+async def root():
+    return {"message": "服务已启动"} 

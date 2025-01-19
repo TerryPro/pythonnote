@@ -36,11 +36,12 @@ class CodeExecutor:
                 
     def _capture_plot(self) -> str:
         """捕获matplotlib图形并转换为base64字符串"""
-        if plt.get_fignums():
+        if plt.get_fignums() and hasattr(self, '_show_called') and self._show_called:
             buf = BytesIO()
             plt.savefig(buf, format='png', bbox_inches='tight')
             plt.close()  # 清除当前图形
             buf.seek(0)
+            self._show_called = False  # 重置标志
             return f'<img src="data:image/png;base64,{base64.b64encode(buf.getvalue()).decode()}">'
         return ''
 
@@ -190,6 +191,7 @@ class CodeExecutor:
         # 清除所有图形
         plt.close('all')
         self._last_plotly_fig = None
+        self._show_called = False  # 添加标志
         
         # 初始化全局和局部命名空间
         self.globals_dict = {
@@ -215,9 +217,16 @@ class CodeExecutor:
         plt.rcParams['figure.max_open_warning'] = 50
         plt.rcParams['figure.dpi'] = 100
 
+        # 重写 plt.show 函数来跟踪调用
+        def custom_show(*args, **kwargs):
+            self._show_called = True
+            return None
+        
+        plt.show = custom_show
+
         # 重写plotly的show函数来捕获图形
-        def custom_show(fig, *args, **kwargs):
+        def custom_plotly_show(fig, *args, **kwargs):
             self._last_plotly_fig = fig
             return None
         
-        plotly.io.show = custom_show 
+        plotly.io.show = custom_plotly_show 

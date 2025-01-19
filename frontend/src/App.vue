@@ -18,36 +18,75 @@
         <button @click="exportPDF" class="toolbar-btn">导出PDF</button>
         <button @click="addCell('code')" class="toolbar-btn">添加代码单元格</button>
         <button @click="addCell('markdown')" class="toolbar-btn">添加Markdown单元格</button>
+        <button @click="triggerFileUpload" class="toolbar-btn upload-btn">
+          <i class="el-icon-upload"></i>
+          上传数据文件
+        </button>
       </div>
     </nav>
     
     <main class="main-container">
       <div class="file-panel">
-        <div class="file-panel-header">
-          <h3>文件列表</h3>
-        </div>
-        <div class="file-list">
-          <div v-for="file in files" 
-               :key="file.path" 
-               class="file-item"
-               :class="{ active: currentFile === file.path }">
-            <div class="file-content" @click="openNotebook(file)">
-              <i class="fas fa-file-code file-icon"></i>
-              <span class="file-name">{{ file.name }}</span>
+        <!-- 笔记本文件列表 -->
+        <div class="panel-section">
+          <div class="panel-header">
+            <h3>笔记本列表</h3>
+          </div>
+          <div class="file-list">
+            <div v-for="file in notebookFiles" 
+                 :key="file.path" 
+                 class="file-item"
+                 :class="{ active: currentFile === file.path }">
+              <div class="file-content" @click="openNotebook(file)">
+                <i class="fas fa-file-code file-icon"></i>
+                <span class="file-name">{{ file.name }}</span>
+              </div>
+              <div class="file-actions">
+                <button 
+                  @click="renameNotebook(file)"
+                  class="icon-btn"
+                  title="重命名">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button 
+                  @click="confirmDelete(file)"
+                  class="icon-btn delete-btn"
+                  title="删除">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
             </div>
-            <div class="file-actions">
-              <button 
-                @click="renameNotebook(file)"
-                class="icon-btn"
-                title="重命名">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button 
-                @click="confirmDelete(file)"
-                class="icon-btn delete-btn"
-                title="删除">
-                <i class="fas fa-trash"></i>
-              </button>
+          </div>
+        </div>
+
+        <!-- 数据文件列表 -->
+        <div class="panel-section">
+          <div class="panel-header">
+            <h3>数据文件列表</h3>
+          </div>
+          <div class="file-list">
+            <div v-for="file in dataFiles" 
+                 :key="file.path" 
+                 class="file-item"
+                 :class="{ active: currentDataFile === file.path }">
+              <div class="file-content">
+                <i :class="['fas', getDataFileIcon(file)]"></i>
+                <span class="file-name">{{ file.name }}</span>
+              </div>
+              <div class="file-actions">
+                <button 
+                  @click="previewDataFile(file)"
+                  class="icon-btn preview-btn"
+                  title="预览数据">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button 
+                  @click="deleteDataFile(file)"
+                  class="icon-btn delete-btn"
+                  title="删除">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -210,6 +249,23 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 修改数据导入组件，添加引用和文件属性 -->
+    <data-import 
+      ref="dataImportRef"
+      @data-loaded="handleDataLoaded"
+      @insert-code="handleCodeInsert"
+    />
+
+    <!-- 隐藏的文件输入框 -->
+    <input
+      type="file"
+      ref="fileInput"
+      @change="handleFileSelect"
+      accept=".csv,.xlsx,.xls"
+      style="display: none; visibility: hidden; position: absolute;"
+      class="hidden-input"
+    />
   </div>
 </template>
 
@@ -220,15 +276,20 @@ import MarkdownCell from './components/MarkdownCell.vue'
 import { v4 as uuidv4 } from 'uuid'
 import { themes, applyTheme } from './themes'
 import { ElMessage } from 'element-plus'
+import DataImport from './components/DataExplorer/DataImport.vue'
 
 const cells = ref([])
-const files = ref([])
 const currentFile = ref(null)
 const cellContents = ref({})
 const cellOutputs = ref({})
 const cellTypes = ref({})
 const markdownEditStates = ref({})
 const currentTheme = ref('light')
+
+// 添加笔记本文件列表和数据文件列表
+const notebookFiles = ref([])
+const dataFiles = ref([])
+const currentDataFile = ref(null)
 
 // 添加重命名相关的响应式变量
 const renameDialogVisible = ref(false)
@@ -244,6 +305,10 @@ const deleteFile = ref(null)
 // 添加删除单元格相关的响应式变量
 const deleteCellDialogVisible = ref(false)
 const deleteCellId = ref(null)
+
+// 添加文件上传和处理逻辑
+const fileInput = ref(null)
+const dataImportRef = ref(null)
 
 // 提供主题变量给子组件
 provide('currentTheme', currentTheme)
@@ -342,8 +407,20 @@ const openNotebook = async (file) => {
 
 // 加载文件列表
 const loadFileList = async () => {
-  const response = await fetch('http://localhost:8000/list_notebooks')
-  files.value = await response.json()
+  try {
+    // 加载笔记本文件
+    const notebookResponse = await fetch('http://localhost:8000/list_notebooks')
+    const notebookResult = await notebookResponse.json()
+    notebookFiles.value = notebookResult || []
+
+    // 加载数据文件
+    const dataResponse = await fetch('http://localhost:8000/api/data-files/list')
+    const dataResult = await dataResponse.json()
+    dataFiles.value = dataResult.files || []
+  } catch (error) {
+    console.error('加载文件列表失败:', error)
+    ElMessage.error('加载文件列表失败')
+  }
 }
 
 const addCell = (type = 'code') => {
@@ -588,6 +665,169 @@ onMounted(async () => {
   addCell('code')
   applyTheme(currentTheme.value)
 })
+
+// 处理数据加载
+const handleDataLoaded = (data) => {
+  console.log('数据加载成功:', data)
+  ElMessage.success('数据加载成功')
+}
+
+// 处理代码插入
+const handleCodeInsert = (code) => {
+  // 获取最后一个单元格
+  const lastCellId = cells.value[cells.value.length - 1]
+  
+  // 检查最后一个单元格是否为代码单元格且内容为空
+  if (lastCellId && 
+      cellTypes.value[lastCellId] === 'code' && 
+      (!cellContents.value[lastCellId] || cellContents.value[lastCellId].trim() === '')) {
+    // 如果是空的代码单元格，直接使用它
+    cellContents.value[lastCellId] = code
+    ElMessage.success('代码已插入到当前单元格')
+  } else {
+    // 否则创建新的代码单元格
+    const newCellId = uuidv4()
+    cells.value.push(newCellId)
+    cellContents.value[newCellId] = code
+    cellTypes.value[newCellId] = 'code'
+    cellOutputs.value[newCellId] = {
+      output: '',
+      plot: '',
+      plotly_html: '',
+      status: 'idle'
+    }
+    ElMessage.success('代码已插入到新的单元格')
+  }
+}
+
+// 获取数据文件图标
+const getDataFileIcon = (file) => {
+  const ext = file.name.split('.').pop().toLowerCase()
+  switch (ext) {
+    case 'csv':
+      return 'fa-file-csv'
+    case 'xlsx':
+    case 'xls':
+      return 'fa-file-excel'
+    default:
+      return 'fa-file'
+  }
+}
+
+// 预览数据文件
+const previewDataFile = async (file) => {
+  currentDataFile.value = file.path
+  if (dataImportRef.value) {
+    try {
+      // 加载文件数据
+      const fileType = file.name.split('.').pop().toLowerCase()
+      const endpoint = fileType === 'csv' 
+        ? 'http://localhost:8000/api/data-files/preview/csv'
+        : 'http://localhost:8000/api/data-files/preview/excel'
+      
+      const response = await fetch(`${endpoint}?filename=${file.path}`)
+      
+      if (!response.ok) {
+        throw new Error(`加载失败: ${response.status} ${response.statusText}`)
+      }
+      
+      const result = await response.json()
+      if (result.status === 'success') {
+        // 显示预览对话框
+        dataImportRef.value.previewData = result.data
+        dataImportRef.value.previewDataFile(file)  // 调用新的预览方法
+      } else {
+        throw new Error(result.message || '加载失败')
+      }
+    } catch (error) {
+      console.error('加载数据文件失败:', error)
+      ElMessage.error('加载数据文件失败: ' + error.message)
+    }
+  }
+}
+
+// 删除数据文件
+const deleteDataFile = async (file) => {
+  try {
+    const response = await fetch(`http://localhost:8000/api/data-files/delete?filename=${file.path}`, {
+      method: 'DELETE'
+    })
+    
+    const result = await response.json()
+    if (result.status === 'success') {
+      if (currentDataFile.value === file.path) {
+        currentDataFile.value = null
+      }
+      await loadFileList()
+      ElMessage.success('数据文件删除成功')
+    } else {
+      ElMessage.error(result.message || '删除失败')
+    }
+  } catch (error) {
+    console.error('删除数据文件失败:', error)
+    ElMessage.error('删除数据文件失败: ' + error.message)
+  }
+}
+
+// 处理文件选择
+const handleFileSelect = async (event) => {
+  const files = event.target.files
+  if (files.length > 0) {
+    const file = files[0]
+    
+    try {
+      // 创建 FormData 对象
+      const formData = new FormData()
+      formData.append('file', file)
+      
+      // 根据文件类型选择不同的上传端点
+      const fileType = file.name.split('.').pop().toLowerCase()
+      let endpoint = ''
+      
+      if (fileType === 'csv') {
+        endpoint = 'http://localhost:8000/api/data-files/upload/csv'
+      } else if (['xlsx', 'xls'].includes(fileType)) {
+        endpoint = 'http://localhost:8000/api/data-files/upload/excel'
+      } else {
+        throw new Error('不支持的文件格式')
+      }
+      
+      // 上传文件
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        body: formData
+      })
+      
+      if (!response.ok) {
+        throw new Error(`上传失败: ${response.status} ${response.statusText}`)
+      }
+      
+      const result = await response.json()
+      
+      if (result.status === 'success') {
+        // 更新文件列表
+        await loadFileList()
+        ElMessage.success('文件上传成功')
+        
+        // 更新当前文件
+        currentDataFile.value = result.data.file_path
+      } else {
+        throw new Error(result.message || '上传失败')
+      }
+    } catch (error) {
+      console.error('文件上传失败:', error)
+      ElMessage.error('文件上传失败: ' + error.message)
+    }
+    
+    // 清空文件输入框，允许重复上传同一个文件
+    event.target.value = ''
+  }
+}
+
+// 触发文件上传
+const triggerFileUpload = () => {
+  fileInput.value.click()
+}
 </script>
 
 <style>
@@ -977,11 +1217,12 @@ body {
   overflow: hidden;
   background-color: var(--code-background);
   transition: background-color 0.3s ease;
+  font-family: 'Fira Code', 'Consolas', 'Monaco', 'Menlo', monospace;
 }
 
 .output-text {
   padding: 12px;
-  font-family: 'Fira Code', monospace;
+  font-family: 'Fira Code', 'Consolas', 'Monaco', 'Menlo', monospace;
   font-size: 13px;
   line-height: 1.5;
   white-space: pre-wrap;
@@ -1104,5 +1345,149 @@ body {
 .version:hover {
   opacity: 1;
   background: rgba(255, 255, 255, 0.2);
+}
+
+.hidden-input {
+  width: 0;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.upload-btn i {
+  font-size: 16px;
+}
+
+.panel-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.panel-section:last-child {
+  border-bottom: none;
+}
+
+.panel-header {
+  padding: 12px 16px;
+  background: var(--background-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.file-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.file-item:hover {
+  background: var(--button-hover);
+}
+
+.file-item.active {
+  background: var(--selection);
+}
+
+.file-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.file-icon {
+  font-size: 16px;
+  color: var(--primary-color);
+}
+
+.file-name {
+  font-size: 14px;
+  color: var(--text-color);
+}
+
+.file-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.file-item:hover .file-actions {
+  opacity: 1;
+}
+
+.icon-btn {
+  padding: 4px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-color);
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.delete-btn:hover {
+  color: #f56c6c;
+}
+
+.preview-btn:hover {
+  color: #409EFF;
+}
+
+.file-actions .icon-btn {
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-color);
+  transition: all 0.2s;
+}
+
+.file-actions .icon-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.file-actions .preview-btn:hover {
+  color: #409EFF;
+}
+
+.file-actions .delete-btn:hover {
+  color: #f56c6c;
 }
 </style>
