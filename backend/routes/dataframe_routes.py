@@ -30,6 +30,12 @@ class DataFramePreviewResponse(BaseModel):
     status: str = "success"
     message: str = "Successfully retrieved DataFrame preview"
 
+class SaveDataFrameRequest(BaseModel):
+    """保存DataFrame的请求模型"""
+    file_path: str
+    file_type: str = "csv"
+    save_options: Dict[str, Any] = {}
+
 def process_value(value: Any) -> Any:
     """处理数值，确保JSON序列化安全
     
@@ -206,4 +212,37 @@ async def get_dataframe_preview(name: str) -> DataFramePreviewResponse:
         raise
     except Exception as e:
         logger.error(f"获取DataFrame {name} 预览信息失败: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/{name}/save", response_model=Dict[str, Any])
+async def save_dataframe(name: str, request: SaveDataFrameRequest) -> Dict[str, Any]:
+    """
+    保存指定的DataFrame到文件
+    
+    Args:
+        name: DataFrame变量名
+        request: SaveDataFrameRequest对象,包含保存选项
+        
+    Returns:
+        Dict包含保存结果信息
+    """
+    try:
+        logger.info(f"正在保存DataFrame {name} 到文件 {request.file_path}...")
+        manager = get_manager()
+        
+        result = manager.save_dataframe(
+            name=name,
+            file_path=request.file_path,
+            file_type=request.file_type,
+            **request.save_options
+        )
+        
+        logger.info(f"DataFrame {name} 保存成功")
+        return result
+        
+    except ValueError as e:
+        logger.error(f"保存DataFrame {name} 失败: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"保存DataFrame {name} 时发生错误: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e)) 

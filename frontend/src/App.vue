@@ -111,6 +111,12 @@
         <div class="panel-section">
           <div class="panel-header">
             <h3>数据文件列表</h3>
+            <button 
+              @click="refreshDataFiles"
+              class="icon-btn refresh-btn"
+              title="刷新文件列表">
+              <i class="fas fa-sync-alt"></i>
+            </button>
           </div>
           <div class="file-list">
             <div v-for="file in dataFiles" 
@@ -149,6 +155,12 @@
         <div class="panel-section">
           <div class="panel-header">
             <h3>DataFrame变量列表</h3>
+            <button 
+              @click="refreshDataFrames"
+              class="icon-btn refresh-btn"
+              title="刷新变量列表">
+              <i class="fas fa-sync-alt"></i>
+            </button>
           </div>
           <div class="file-list">
             <div v-for="name in dataframes" 
@@ -382,6 +394,7 @@
     <DataFramePreview
       v-model="showDataFramePreview"
       :title="dataFramePreviewTitle"
+      :dataframe-name="currentDataframeName"
       ref="dataFramePreview"
     />
 
@@ -504,6 +517,7 @@ const dataframeTimer = ref(null)
 const showDataFramePreview = ref(false)
 const dataFramePreviewTitle = ref('')
 const dataFramePreview = ref(null)
+const currentDataframeName = ref('')
 
 // 保存对话框相关的响应式变量
 const saveDialogVisible = ref(false)
@@ -1125,25 +1139,46 @@ const copyCell = (cellId) => {
   }
 }
 
-// 添加获取DataFrame信息的方法
+// 获取DataFrame列表
 const fetchDataFrameInfo = async () => {
   try {
     const response = await fetch('http://localhost:8000/api/dataframes/list')
     if (!response.ok) {
-      throw new Error('获取DataFrame信息失败')
+      throw new Error(`HTTP error! status: ${response.status}`)
     }
     const data = await response.json()
-    dataframes.value = data  // 直接使用返回的数组
-  } catch (err) {
-    console.error('获取DataFrame信息失败:', err)
+    dataframes.value = data
+  } catch (error) {
+    console.error('获取DataFrame列表失败:', error)
+    ElMessage.error('获取DataFrame列表失败: ' + error.message)
+  }
+}
+
+// 刷新DataFrame列表
+const refreshDataFrames = async () => {
+  const btn = document.querySelector('.refresh-btn')
+  if (btn) {
+    btn.classList.add('loading')
+  }
+  
+  try {
+    await fetchDataFrameInfo()
+    ElMessage.success('DataFrame列表已刷新')
+  } catch (error) {
+    console.error('刷新DataFrame列表失败:', error)
+    ElMessage.error('刷新DataFrame列表失败: ' + error.message)
+  } finally {
+    if (btn) {
+      btn.classList.remove('loading')
+    }
   }
 }
 
 // 预览DataFrame的方法
 const previewDataFrame = async (name) => {
+  currentDataframeName.value = name  // 更新当前DataFrame名称
   dataFramePreviewTitle.value = `DataFrame预览: ${name}`
   showDataFramePreview.value = true
-  await dataFramePreview.value.loadPreview(name)
 }
 
 // 添加重命名数据文件的方法
@@ -1211,6 +1246,26 @@ const fetchVersion = async () => {
   } catch (error) {
     console.error('获取版本信息失败:', error)
     version.value = '获取失败'
+  }
+}
+
+// 刷新数据文件列表
+const refreshDataFiles = async () => {
+  const btn = document.querySelector('.panel-section:nth-child(2) .refresh-btn')
+  if (btn) {
+    btn.classList.add('loading')
+  }
+  
+  try {
+    await loadFileList()
+    ElMessage.success('数据文件列表已刷新')
+  } catch (error) {
+    console.error('刷新数据文件列表失败:', error)
+    ElMessage.error('刷新数据文件列表失败: ' + error.message)
+  } finally {
+    if (btn) {
+      btn.classList.remove('loading')
+    }
   }
 }
 </script>
@@ -1766,193 +1821,48 @@ body {
 }
 
 .panel-header {
-  padding: 12px 16px;
-  background: var(--background-color);
-  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
 }
 
 .panel-header h3 {
   margin: 0;
-  font-size: 14px;
+  font-size: 1rem;
   font-weight: 500;
-  color: var(--text-color);
-}
-
-.file-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px;
-}
-
-.file-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.file-item:hover {
-  background: var(--button-hover);
-}
-
-.file-item.active {
-  background: var(--selection);
-}
-
-.file-content {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-}
-
-.file-icon {
-  font-size: 16px;
-  color: var(--primary-color);
-}
-
-.file-name {
-  font-size: 14px;
-  color: var(--text-color);
-}
-
-.file-actions {
-  display: flex;
-  gap: 4px;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.file-item:hover .file-actions {
-  opacity: 1;
 }
 
 .icon-btn {
-  padding: 4px;
   background: none;
   border: none;
-  border-radius: 4px;
+  padding: 0.25rem;
   cursor: pointer;
-  color: var(--text-color);
-  transition: all 0.2s;
+  color: #606266;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
 }
 
 .icon-btn:hover {
-  background: rgba(0, 0, 0, 0.1);
-}
-
-.delete-btn:hover {
-  color: #f56c6c;
-}
-
-.preview-btn:hover {
+  background-color: #f0f0f0;
   color: #409EFF;
 }
 
-.file-actions .icon-btn {
-  width: 28px;
-  height: 28px;
-  font-size: 14px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  border-radius: 4px;
-  color: var(--text-color);
-  transition: all 0.2s;
+.refresh-btn i {
+  font-size: 0.9rem;
 }
 
-.file-actions .icon-btn:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+.refresh-btn.loading i {
+  animation: spin 1s linear infinite;
 }
 
-.file-actions .preview-btn:hover {
-  color: #409EFF;
-}
-
-.file-actions .delete-btn:hover {
-  color: #f56c6c;
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  padding: 8px;
-  background: #1e88e5;
-  gap: 8px;
-}
-
-.header .el-button {
-  background: transparent;
-  border: none;
-  color: white;
-  padding: 8px;
-  height: 40px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.header .el-button:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.header .el-button i {
-  font-size: 20px;
-  margin-right: 4px;
-}
-
-.icon-btn.ai-btn {
-  color: #409EFF;
-  transition: all 0.3s ease;
-}
-
-.icon-btn.ai-btn:hover {
-  color: #79bbff;
-  transform: scale(1.1);
-}
-
-.icon-btn.ai-btn:active {
-  transform: scale(0.95);
-}
-
-/* 添加DataFrame预览对话框的样式 */
-.file-info .info-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.file-info .label {
-  min-width: 80px;
-}
-
-.data-preview table {
-  border-collapse: separate;
-  border-spacing: 0;
-}
-
-.data-preview th:first-child,
-.data-preview td:first-child {
-  padding-left: 1.5rem;
-}
-
-.data-preview th:last-child,
-.data-preview td:last-child {
-  padding-right: 1.5rem;
-}
-
-.column-item {
-  transition: all 0.2s ease;
-}
-
-.column-item:hover {
-  background-color: #f3f4f6;
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 </style>

@@ -1,6 +1,14 @@
 # 完整的FileExplore.vue内容
 <template>
   <div class="file-explore">
+    <!-- DataFrame预览对话框 -->
+    <data-frame-preview
+      v-model="dataframePreviewVisible"
+      :title="`DataFrame预览: ${currentDataframe}`"
+      :dataframe-name="currentDataframe"
+      @save-success="handleDataframeSaved"
+    />
+    
     <!-- 数据预览对话框 -->
     <el-dialog
       v-model="dialogVisible"
@@ -100,12 +108,14 @@
 
 <script>
 import { ElButton, ElDialog, ElMessage } from 'element-plus'
+import DataFramePreview from '../DataFramePreview.vue'
 
 export default {
   name: 'FileExplore',
   components: {
     ElButton,
-    ElDialog
+    ElDialog,
+    DataFramePreview
   },
   props: {
     currentFile: {
@@ -119,7 +129,9 @@ export default {
       loading: false,
       error: null,
       dialogVisible: false,
-      currentPreviewFile: null
+      currentPreviewFile: null,
+      dataframePreviewVisible: false,
+      currentDataframe: ''
     }
   },
   methods: {
@@ -249,6 +261,21 @@ export default {
     async previewDataFile(file) {
       this.currentPreviewFile = file
       this.dialogVisible = true
+    },
+    // 显示DataFrame预览
+    showDataframePreview(dataframeName) {
+      if (!dataframeName) {
+        ElMessage.warning('DataFrame名称不能为空')
+        return
+      }
+      this.currentDataframe = dataframeName
+      this.dataframePreviewVisible = true
+    },
+    // 处理DataFrame保存成功
+    handleDataframeSaved(result) {
+      ElMessage.success(`DataFrame保存成功: ${result.message}`)
+      // 可以在这里刷新文件列表等操作
+      this.$emit('refresh-files')
     }
   }
 }

@@ -6,6 +6,14 @@
     class="data-preview-dialog"
     :before-close="handleClose"
   >
+    <template #header>
+      <div class="dialog-header">
+        <span>{{ title }}</span>
+        <el-button type="primary" size="small" @click="showSaveDialog">
+          <i class="fas fa-save"></i> 保存数据
+        </el-button>
+      </div>
+    </template>
     <div v-if="loading" class="loading-container">
       <el-spinner></el-spinner>
       <p>加载数据中...</p>
@@ -65,10 +73,39 @@
         </el-table>
       </div>
     </div>
+
+    <el-dialog
+      v-model="saveDialogVisible"
+      title="保存数据"
+      width="30%"
+      append-to-body
+    >
+      <el-form :model="saveForm" label-width="100px">
+        <el-form-item label="文件名">
+          <el-input v-model="saveForm.fileName" placeholder="请输入文件名"></el-input>
+        </el-form-item>
+        <el-form-item label="文件类型">
+          <el-select v-model="saveForm.fileType" placeholder="请选择文件类型">
+            <el-option label="CSV文件" value="csv"></el-option>
+            <el-option label="Excel文件" value="excel"></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="saveDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleSave" :loading="saving">
+            保存
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </el-dialog>
 </template>
 
 <script>
+import { ElMessage } from 'element-plus'
+
 export default {
   name: 'DataFramePreview',
   props: {
@@ -79,14 +116,24 @@ export default {
     title: {
       type: String,
       default: 'DataFrame预览'
+    },
+    dataframeName: {
+      type: String,
+      required: true
     }
   },
-  emits: ['update:modelValue'],
+  emits: ['update:modelValue', 'save-success'],
   data() {
     return {
       loading: false,
       error: null,
-      previewData: {}
+      previewData: {},
+      saveDialogVisible: false,
+      saving: false,
+      saveForm: {
+        fileName: '',
+        fileType: 'csv'
+      }
     }
   },
   computed: {
@@ -97,6 +144,26 @@ export default {
       set(value) {
         this.$emit('update:modelValue', value)
       }
+    }
+  },
+  watch: {
+    modelValue(newVal) {
+      if (newVal && this.dataframeName) {
+        this.loadPreview(this.dataframeName)
+      }
+    },
+    dataframeName: {
+      immediate: true,
+      handler(newVal) {
+        if (newVal && this.modelValue) {
+          this.loadPreview(newVal)
+        }
+      }
+    }
+  },
+  mounted() {
+    if (this.modelValue && this.dataframeName) {
+      this.loadPreview(this.dataframeName)
     }
   },
   methods: {
@@ -144,6 +211,53 @@ export default {
         this.error = err.message
       } finally {
         this.loading = false
+      }
+    },
+    showSaveDialog() {
+      this.saveDialogVisible = true
+      this.saveForm.fileName = this.dataframeName
+    },
+    async handleSave() {
+      if (!this.saveForm.fileName) {
+        ElMessage.error('请输入文件名')
+        return
+      }
+      
+      if (!this.dataframeName) {
+        ElMessage.error('DataFrame名称不能为空')
+        return
+      }
+      
+      this.saving = true
+      try {
+        const fileExtension = this.saveForm.fileType === 'csv' ? '.csv' : '.xlsx'
+        const response = await fetch(`http://localhost:8000/api/dataframes/${encodeURIComponent(this.dataframeName)}/save`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            file_path: this.saveForm.fileName + fileExtension,
+            file_type: this.saveForm.fileType,
+            save_options: {}
+          })
+        })
+        
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.detail || `保存失败: ${response.statusText}`)
+        }
+        
+        const result = await response.json()
+        ElMessage.success('保存成功')
+        this.saveDialogVisible = false
+        
+        this.$emit('save-success', result)
+      } catch (error) {
+        console.error('保存失败:', error)
+        ElMessage.error(error.message || '保存失败')
+      } finally {
+        this.saving = false
       }
     }
   }
@@ -224,5 +338,17 @@ export default {
 
 :deep(.el-table td) {
   padding: 8px 0;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 </style> 
