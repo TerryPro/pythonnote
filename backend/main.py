@@ -10,6 +10,7 @@ from services.pdf.code_formatter import format_python_code
 from services.pdf.exporter import NotebookPDFExporter
 from routes import data_explorer, data_files, ai_routes, dataframe_routes
 from routes.dataframe_routes import router as dataframe_router
+from config import VERSION
 
 # 配置日志
 logging.basicConfig(
@@ -195,6 +196,17 @@ async def export_pdf(request: Request):
 async def root():
     logger.info("访问根路径")
     return {"message": "Welcome to AI Code Generator API"} 
+
+@app.get("/api/version")
+async def get_version():
+    """获取系统版本信息"""
+    try:
+        return {
+            "status": "success",
+            "data": VERSION
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.on_event("shutdown")
 async def shutdown_event():

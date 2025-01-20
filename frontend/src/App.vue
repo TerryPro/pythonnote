@@ -3,7 +3,7 @@
     <nav class="navbar">
       <div class="navbar-left">
         <h1>Python 交互式编程环境</h1>
-        <span class="version">v0.0.3</span>
+        <span class="version">{{ version }}</span>
       </div>
       <div class="toolbar">
         <el-dropdown @command="handleThemeChange" trigger="click">
@@ -42,7 +42,7 @@
         </el-tooltip>
 
         <el-tooltip content="保存笔记本" placement="bottom" :hide-after="0">
-          <button @click="saveNotebook" class="toolbar-btn">
+          <button @click="showSaveDialog" class="toolbar-btn">
             <i class="fas fa-save"></i>
           </button>
         </el-tooltip>
@@ -127,6 +127,12 @@
                   class="icon-btn preview-btn"
                   title="预览数据">
                   <i class="fas fa-eye"></i>
+                </button>
+                <button 
+                  @click="renameDataFile(file)"
+                  class="icon-btn"
+                  title="重命名">
+                  <i class="fas fa-edit"></i>
                 </button>
                 <button 
                   @click="deleteDataFile(file)"
@@ -378,6 +384,60 @@
       :title="dataFramePreviewTitle"
       ref="dataFramePreview"
     />
+
+    <!-- 添加保存对话框 -->
+    <el-dialog
+      v-model="saveDialogVisible"
+      title="保存笔记本"
+      width="30%"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+    >
+      <el-form :model="renameForm" label-width="0px">
+        <el-form-item>
+          <el-input
+            v-model="newFileName"
+            placeholder="请输入新的文件名"
+            @keyup.enter="confirmSave"
+          >
+            <template #append>.ipynb</template>
+          </el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="cancelSave">取消</el-button>
+          <el-button type="primary" @click="confirmSave" :loading="saveDialogLoading">确认</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 添加数据文件重命名对话框 -->
+    <el-dialog
+      v-model="renameDataFileDialogVisible"
+      title="重命名数据文件"
+      width="30%"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+    >
+      <el-form :model="renameDataFileForm" label-width="0px">
+        <el-form-item>
+          <el-input
+            v-model="renameDataFileForm.newName"
+            placeholder="请输入新的文件名"
+            @keyup.enter="handleDataFileRename"
+          >
+            <template #append>{{ renameDataFileForm.extension }}</template>
+          </el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="renameDataFileDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleDataFileRename">确认</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -410,6 +470,7 @@ const cellOutputs = ref({})
 const cellTypes = ref({})
 const markdownEditStates = ref({})
 const currentTheme = ref('light')
+const version = ref('加载中...')
 
 // 添加笔记本文件列表和数据文件列表
 const notebookFiles = ref([])
@@ -444,6 +505,19 @@ const showDataFramePreview = ref(false)
 const dataFramePreviewTitle = ref('')
 const dataFramePreview = ref(null)
 
+// 保存对话框相关的响应式变量
+const saveDialogVisible = ref(false)
+const newFileName = ref('')
+const saveDialogLoading = ref(false)
+
+// 添加数据文件重命名相关的响应式变量
+const renameDataFileDialogVisible = ref(false)
+const renameDataFileForm = ref({
+  newName: '',
+  file: null,
+  extension: ''
+})
+
 // 提供主题变量给子组件
 provide('currentTheme', currentTheme)
 
@@ -461,38 +535,73 @@ const createNewNotebook = async () => {
   addCell('code')
 }
 
-// 保存笔记本
-const saveNotebook = async () => {
+// 打开保存对话框
+const showSaveDialog = () => {
   if (!currentFile.value) {
-    const fileName = prompt('请输入笔记本名称：')
-    if (!fileName) return
-    currentFile.value = fileName + '.ipynb'
+    newFileName.value = ''
+    saveDialogVisible.value = true
+  } else {
+    handleSaveNotebook()
   }
+}
 
-  const notebook = {
-    cells: cells.value.map(cellId => ({
-      id: cellId,
-      type: cellTypes.value[cellId],
-      content: cellContents.value[cellId] || '',
-      output: cellTypes.value[cellId] === 'code' ? (cellOutputs.value[cellId] || {
-        output: '',
-        plot: '',
-        plotly_html: '',
-        status: 'idle'
-      }) : null
-    }))
-  }
+// 处理保存操作
+const handleSaveNotebook = async (fileName = '') => {
+  try {
+    saveDialogLoading.value = true
+    
+    // 如果提供了新文件名，更新currentFile
+    if (fileName) {
+      currentFile.value = fileName + '.ipynb'
+    }
+    
+    const notebook = {
+      cells: cells.value.map(cellId => ({
+        id: cellId,
+        type: cellTypes.value[cellId],
+        content: cellContents.value[cellId] || '',
+        output: cellTypes.value[cellId] === 'code' ? (cellOutputs.value[cellId] || {
+          output: '',
+          plot: '',
+          plotly_html: '',
+          status: 'idle'
+        }) : null
+      }))
+    }
 
-  await fetch('http://localhost:8000/save_notebook', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      filename: currentFile.value,
-      notebook: notebook
+    await fetch('http://localhost:8000/save_notebook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename: currentFile.value,
+        notebook: notebook
+      })
     })
-  })
 
-  loadFileList()
+    loadFileList()
+    ElMessage.success('笔记本保存成功')
+    saveDialogVisible.value = false
+  } catch (error) {
+    ElMessage.error('保存笔记本失败')
+    console.error('保存笔记本失败:', error)
+  } finally {
+    saveDialogLoading.value = false
+  }
+}
+
+// 取消保存
+const cancelSave = () => {
+  saveDialogVisible.value = false
+  newFileName.value = ''
+}
+
+// 确认保存
+const confirmSave = () => {
+  if (!newFileName.value.trim()) {
+    ElMessage.warning('请输入笔记本名称')
+    return
+  }
+  handleSaveNotebook(newFileName.value.trim())
 }
 
 // 打开笔记本
@@ -794,6 +903,8 @@ onMounted(async () => {
   addCell('code')
   applyTheme(currentTheme.value)
   fetchDataFrameInfo()
+  // 获取版本信息
+  await fetchVersion()
   // 每30秒自动刷新一次
   dataframeTimer.value = setInterval(fetchDataFrameInfo, 30000)
 })
@@ -1033,6 +1144,74 @@ const previewDataFrame = async (name) => {
   dataFramePreviewTitle.value = `DataFrame预览: ${name}`
   showDataFramePreview.value = true
   await dataFramePreview.value.loadPreview(name)
+}
+
+// 添加重命名数据文件的方法
+const renameDataFile = (file) => {
+  const extension = '.' + file.name.split('.').pop()
+  renameDataFileForm.value = {
+    newName: file.name.replace(extension, ''),
+    file: file,
+    extension: extension
+  }
+  renameDataFileDialogVisible.value = true
+}
+
+// 处理数据文件重命名
+const handleDataFileRename = async () => {
+  if (!renameDataFileForm.value.newName.trim()) {
+    ElMessage.warning('文件名不能为空')
+    return
+  }
+  
+  const newFilename = renameDataFileForm.value.newName + renameDataFileForm.value.extension
+  
+  try {
+    const response = await fetch('http://localhost:8000/api/data-files/rename', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        old_filename: renameDataFileForm.value.file.path,
+        new_filename: newFilename
+      })
+    })
+    
+    const result = await response.json()
+    if (result.status === 'success') {
+      // 如果当前打开的文件被重命名，更新currentDataFile
+      if (currentDataFile.value === renameDataFileForm.value.file.path) {
+        currentDataFile.value = newFilename
+      }
+      // 重新加载文件列表
+      await loadFileList()
+      renameDataFileDialogVisible.value = false
+      ElMessage.success('重命名成功')
+    } else {
+      ElMessage.error(result.message || '重命名失败')
+    }
+  } catch (error) {
+    console.error('重命名失败:', error)
+    ElMessage.error('重命名失败: ' + error.message)
+  }
+}
+
+// 添加获取版本信息的方法
+const fetchVersion = async () => {
+  try {
+    const response = await fetch('http://localhost:8000/api/version')
+    if (!response.ok) {
+      throw new Error('获取版本信息失败')
+    }
+    const result = await response.json()
+    if (result.status === 'success') {
+      version.value = result.data.version
+    } else {
+      throw new Error(result.message || '获取版本信息失败')
+    }
+  } catch (error) {
+    console.error('获取版本信息失败:', error)
+    version.value = '获取失败'
+  }
 }
 </script>
 

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, HTTPException
+from fastapi import APIRouter, UploadFile, HTTPException, Request
 from fastapi.responses import JSONResponse
 import os
 import shutil
@@ -76,6 +76,55 @@ async def preview_excel(filename: str, sheet_name: str = None):
     try:
         result = data_loader.load_excel(filename, sheet_name)
         return {"status": "success", "data": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/rename")
+async def rename_data_file(request: Request):
+    """重命名数据文件"""
+    try:
+        data = await request.json()
+        old_filename = data.get("old_filename")
+        new_filename = data.get("new_filename")
+        
+        if not old_filename or not new_filename:
+            raise HTTPException(status_code=400, detail="缺少旧文件名或新文件名")
+        
+        # 构建文件路径
+        old_path = DATA_DIR / old_filename
+        new_path = DATA_DIR / new_filename
+        
+        # 检查源文件是否存在
+        if not old_path.exists():
+            raise HTTPException(status_code=404, detail="源文件不存在")
+        
+        # 检查新文件名是否已存在
+        if new_path.exists():
+            raise HTTPException(status_code=400, detail="目标文件名已存在")
+        
+        # 检查文件扩展名
+        old_ext = old_path.suffix.lower()
+        new_ext = new_path.suffix.lower()
+        if old_ext != new_ext:
+            raise HTTPException(status_code=400, detail="不允许更改文件扩展名")
+        
+        # 检查文件扩展名是否支持
+        if new_ext not in ['.csv', '.xlsx', '.xls']:
+            raise HTTPException(status_code=400, detail="不支持的文件格式")
+        
+        # 重命名文件
+        old_path.rename(new_path)
+        
+        return {
+            "status": "success",
+            "message": "文件重命名成功",
+            "data": {
+                "old_path": str(old_path.relative_to(DATA_DIR)),
+                "new_path": str(new_path.relative_to(DATA_DIR))
+            }
+        }
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

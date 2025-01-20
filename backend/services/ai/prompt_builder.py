@@ -24,7 +24,9 @@ class PromptBuilder:
             "1. 代码简洁易懂，有必要的注释",
             "2. 使用pandas的最佳实践",
             "3. 考虑数据处理的性能",
-            "4. 包含适当的错误处理"
+            "4. 包含适当的错误处理",
+            "5. 在检查变量是否存在时，使用 'df' in locals() 而不是 globals()",
+            "6. DataFrame存在性检查使用 'df' in locals() and not df.empty"
         ]
         
         if dataframe_info:
