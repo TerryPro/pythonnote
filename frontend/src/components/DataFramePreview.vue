@@ -9,9 +9,6 @@
     <template #header>
       <div class="dialog-header">
         <span>{{ title }}</span>
-        <el-button type="primary" size="small" @click="showSaveDialog">
-          <i class="fas fa-save"></i> 保存数据
-        </el-button>
       </div>
     </template>
     <div v-if="loading" class="loading-container">
@@ -73,6 +70,13 @@
         </el-table>
       </div>
     </div>
+
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button type="primary" @click="showSaveDialog">保存数据到文件</el-button>
+        <el-button @click="handleClose">关闭</el-button>
+      </span>
+    </template>
 
     <el-dialog
       v-model="saveDialogVisible"

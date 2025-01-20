@@ -74,113 +74,128 @@
     </nav>
     
     <main class="main-container">
-      <div class="file-panel">
-        <!-- 笔记本文件列表 -->
-        <div class="panel-section">
-          <div class="panel-header">
-            <h3>笔记本列表</h3>
-          </div>
-          <div class="file-list">
-            <div v-for="file in notebookFiles" 
-                 :key="file.path" 
-                 class="file-item"
-                 :class="{ active: currentFile === file.path }">
-              <div class="file-content" @click="openNotebook(file)">
-                <i class="fas fa-file-code file-icon"></i>
-                <span class="file-name">{{ file.name }}</span>
+      <div class="file-panel" :style="{ width: panelWidth + 'px' }">
+        <el-collapse v-model="activePanels" accordion>
+          <!-- 笔记本文件列表 -->
+          <el-collapse-item name="notebooks">
+            <template #title>
+              <div class="panel-header">
+                <h3>笔记文件</h3>
               </div>
-              <div class="file-actions">
-                <button 
-                  @click="renameNotebook(file)"
-                  class="icon-btn"
-                  title="重命名">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button 
-                  @click="confirmDelete(file)"
-                  class="icon-btn delete-btn"
-                  title="删除">
-                  <i class="fas fa-trash"></i>
-                </button>
+            </template>
+            <div class="file-list">
+              <div v-for="file in notebookFiles" 
+                   :key="file.path" 
+                   class="file-item"
+                   :class="{ active: currentFile === file.path }">
+                <div class="file-content" @click="openNotebook(file)">
+                  <i class="fas fa-file-code file-icon"></i>
+                  <span class="file-name">{{ file.name }}</span>
+                </div>
+                <div class="file-actions">
+                  <button 
+                    @click="renameNotebook(file)"
+                    class="icon-btn"
+                    title="重命名">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button 
+                    @click="confirmDelete(file)"
+                    class="icon-btn delete-btn"
+                    title="删除">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </el-collapse-item>
 
-        <!-- 数据文件列表 -->
-        <div class="panel-section">
-          <div class="panel-header">
-            <h3>数据文件列表</h3>
-            <button 
-              @click="refreshDataFiles"
-              class="icon-btn refresh-btn"
-              title="刷新文件列表">
-              <i class="fas fa-sync-alt"></i>
-            </button>
-          </div>
-          <div class="file-list">
-            <div v-for="file in dataFiles" 
-                 :key="file.path" 
-                 class="file-item"
-                 :class="{ active: currentDataFile === file.path }">
-              <div class="file-content">
-                <i :class="['fas', getDataFileIcon(file)]"></i>
-                <span class="file-name">{{ file.name }}</span>
+          <!-- 数据文件列表 -->
+          <el-collapse-item name="datafiles">
+            <template #title>
+              <div class="panel-header">
+                <h3>数据文件</h3>
+                <button 
+                  @click="refreshDataFiles"
+                  class="icon-btn refresh-btn"
+                  title="刷新文件列表">
+                  <i class="fas fa-sync-alt"></i>
+                </button>
               </div>
-              <div class="file-actions">
-                <button 
-                  @click="previewDataFile(file)"
-                  class="icon-btn preview-btn"
-                  title="预览数据">
-                  <i class="fas fa-eye"></i>
-                </button>
-                <button 
-                  @click="renameDataFile(file)"
-                  class="icon-btn"
-                  title="重命名">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button 
-                  @click="deleteDataFile(file)"
-                  class="icon-btn delete-btn"
-                  title="删除">
-                  <i class="fas fa-trash"></i>
-                </button>
+            </template>
+            <div class="file-list">
+              <div v-for="file in dataFiles" 
+                   :key="file.path" 
+                   class="file-item"
+                   :class="{ active: currentDataFile === file.path }">
+                <div class="file-content">
+                  <i :class="['fas', getDataFileIcon(file)]"></i>
+                  <span class="file-name">{{ file.name }}</span>
+                </div>
+                <div class="file-actions">
+                  <button 
+                    @click="previewDataFile(file)"
+                    class="icon-btn preview-btn"
+                    title="预览数据">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button 
+                    @click="renameDataFile(file)"
+                    class="icon-btn"
+                    title="重命名">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button 
+                    @click="deleteDataFile(file)"
+                    class="icon-btn delete-btn"
+                    title="删除">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </el-collapse-item>
 
-        <!-- DataFrame变量列表 -->
-        <div class="panel-section">
-          <div class="panel-header">
-            <h3>DataFrame变量列表</h3>
-            <button 
-              @click="refreshDataFrames"
-              class="icon-btn refresh-btn"
-              title="刷新变量列表">
-              <i class="fas fa-sync-alt"></i>
-            </button>
-          </div>
-          <div class="file-list">
-            <div v-for="name in dataframes" 
-                 :key="name" 
-                 class="file-item">
-              <div class="file-content">
-                <i class="fas fa-table text-blue-500"></i>
-                <span class="file-name">{{ name }}</span>
-              </div>
-              <div class="file-actions">
+          <!-- DataFrame变量列表 -->
+          <el-collapse-item name="dataframes">
+            <template #title>
+              <div class="panel-header">
+                <h3>数据集合</h3>
                 <button 
-                  @click="previewDataFrame(name)"
-                  class="icon-btn preview-btn"
-                  title="预览变量">
-                  <i class="fas fa-eye"></i>
+                  @click="refreshDataFrames"
+                  class="icon-btn refresh-btn"
+                  title="刷新变量列表">
+                  <i class="fas fa-sync-alt"></i>
                 </button>
               </div>
+            </template>
+            <div class="file-list">
+              <div v-for="name in dataframes" 
+                   :key="name" 
+                   class="file-item">
+                <div class="file-content">
+                  <i class="fas fa-table text-blue-500"></i>
+                  <span class="file-name">{{ name }}</span>
+                </div>
+                <div class="file-actions">
+                  <button 
+                    @click="previewDataFrame(name)"
+                    class="icon-btn preview-btn"
+                    title="预览变量">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </el-collapse-item>
+        </el-collapse>
+      </div>
+
+      <!-- 添加拖动条 -->
+      <div class="resize-handle" 
+           @mousedown="startResize"
+           title="拖动调整宽度">
+        <div class="resize-handle-line"></div>
       </div>
 
       <div class="notebook" v-if="cells.length">
@@ -531,6 +546,13 @@ const renameDataFileForm = ref({
   file: null,
   extension: ''
 })
+
+// 在 script setup 部分添加
+const activePanels = ref(['notebooks']) // 默认展开笔记本列表
+const panelWidth = ref(250) // 初始宽度
+const isDragging = ref(false)
+const startX = ref(0)
+const startWidth = ref(0)
 
 // 提供主题变量给子组件
 provide('currentTheme', currentTheme)
@@ -928,6 +950,8 @@ onUnmounted(() => {
   if (dataframeTimer.value) {
     clearInterval(dataframeTimer.value)
   }
+  document.removeEventListener('mousemove', handleResize)
+  document.removeEventListener('mouseup', stopResize)
 })
 
 // 处理数据加载
@@ -1267,6 +1291,37 @@ const refreshDataFiles = async () => {
       btn.classList.remove('loading')
     }
   }
+}
+
+// 开始拖动
+const startResize = (e) => {
+  isDragging.value = true
+  startX.value = e.clientX
+  startWidth.value = panelWidth.value
+  
+  // 添加事件监听
+  document.addEventListener('mousemove', handleResize)
+  document.addEventListener('mouseup', stopResize)
+  
+  // 添加禁止选择类
+  document.body.classList.add('resizing')
+}
+
+// 处理拖动
+const handleResize = (e) => {
+  if (!isDragging.value) return
+  
+  const diff = e.clientX - startX.value
+  const newWidth = Math.max(200, Math.min(500, startWidth.value + diff)) // 限制最小/最大宽度
+  panelWidth.value = newWidth
+}
+
+// 停止拖动
+const stopResize = () => {
+  isDragging.value = false
+  document.removeEventListener('mousemove', handleResize)
+  document.removeEventListener('mouseup', stopResize)
+  document.body.classList.remove('resizing')
 }
 </script>
 
@@ -1824,33 +1879,45 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 1rem;
+  padding: 8px 16px;
+  width: 100%;
 }
 
 .panel-header h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 14px;
   font-weight: 500;
+  flex: 1;
 }
 
-.icon-btn {
-  background: none;
+.file-list {
+  max-height: calc(33vh - 48px);
+  overflow-y: auto;
+  background: var(--el-fill-color-blank);
+}
+
+/* 修改折叠面板样式 */
+.file-panel :deep(.el-collapse) {
   border: none;
-  padding: 0.25rem;
-  cursor: pointer;
-  color: #606266;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s;
+  --el-collapse-header-height: auto;
 }
 
-.icon-btn:hover {
-  background-color: #f0f0f0;
-  color: #409EFF;
+.file-panel :deep(.el-collapse-item__header) {
+  padding: 0;
+  border: none;
+}
+
+.file-panel :deep(.el-collapse-item__content) {
+  padding: 0;
+  background-color: var(--el-fill-color-blank);
+}
+
+.file-panel :deep(.el-collapse-item__wrap) {
+  border: none;
+}
+
+.file-panel :deep(.el-collapse-item__arrow) {
+  margin: 0 8px;
 }
 
 .refresh-btn i {
@@ -1864,5 +1931,57 @@ body {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+/* 添加拖动相关样式 */
+.resize-handle {
+  width: 8px;
+  height: 100%;
+  cursor: ew-resize;
+  background-color: transparent;
+  position: relative;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.resize-handle::after {
+  content: "⋮";
+  color: var(--el-border-color);
+  font-size: 20px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.resize-handle:hover::after,
+.resizing .resize-handle::after {
+  opacity: 1;
+  color: var(--el-color-primary);
+}
+
+.resize-handle:hover,
+.resizing .resize-handle {
+  background-color: var(--el-border-color-lighter);
+}
+
+/* 拖动时禁止选择文本 */
+body.resizing {
+  user-select: none;
+  cursor: ew-resize !important;
+}
+
+/* 移除原来的分隔线样式 */
+.resize-handle-line {
+  display: none;
+}
+
+/* 修改文件面板样式 */
+.file-panel {
+  min-width: 200px;
+  max-width: 500px;
+  transition: none; /* 移除宽度动画以实现流畅拖动 */
 }
 </style>
