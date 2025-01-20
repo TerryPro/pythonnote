@@ -80,7 +80,13 @@
           <el-collapse-item name="notebooks">
             <template #title>
               <div class="panel-header">
-                <h3>笔记文件</h3>
+                <h3><i class="fas fa-book"></i> 笔记文件</h3>
+                <button 
+                  @click.stop="refreshNotebooks"
+                  class="icon-btn refresh-btn"
+                  title="刷新笔记本列表">
+                  <i class="fas fa-sync-alt"></i>
+                </button>
               </div>
             </template>
             <div class="file-list">
@@ -114,9 +120,9 @@
           <el-collapse-item name="datafiles">
             <template #title>
               <div class="panel-header">
-                <h3>数据文件</h3>
+                <h3><i class="fas fa-file-alt"></i> 数据文件</h3>
                 <button 
-                  @click="refreshDataFiles"
+                  @click.stop="refreshDataFiles"
                   class="icon-btn refresh-btn"
                   title="刷新文件列表">
                   <i class="fas fa-sync-alt"></i>
@@ -160,9 +166,9 @@
           <el-collapse-item name="dataframes">
             <template #title>
               <div class="panel-header">
-                <h3>数据集合</h3>
+                <h3><i class="fas fa-database"></i> 数据集合</h3>
                 <button 
-                  @click="refreshDataFrames"
+                  @click.stop="refreshDataFrames"
                   class="icon-btn refresh-btn"
                   title="刷新变量列表">
                   <i class="fas fa-sync-alt"></i>
@@ -1323,6 +1329,26 @@ const stopResize = () => {
   document.removeEventListener('mouseup', stopResize)
   document.body.classList.remove('resizing')
 }
+
+// 刷新笔记本文件列表
+const refreshNotebooks = async () => {
+  const btn = document.querySelector('.panel-header:first-child .refresh-btn')
+  if (btn) {
+    btn.classList.add('loading')
+  }
+  
+  try {
+    await loadFileList()
+    ElMessage.success('笔记本列表已刷新')
+  } catch (error) {
+    console.error('刷新笔记本列表失败:', error)
+    ElMessage.error('刷新笔记本列表失败: ' + error.message)
+  } finally {
+    if (btn) {
+      btn.classList.remove('loading')
+    }
+  }
+}
 </script>
 
 <style>
@@ -1884,10 +1910,17 @@ body {
 }
 
 .panel-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 0;
   font-size: 14px;
-  font-weight: 500;
-  flex: 1;
+  color: #606266;
+}
+
+.panel-header h3 i {
+  font-size: 16px;
+  color: #909399;
 }
 
 .file-list {

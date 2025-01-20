@@ -26,7 +26,8 @@ class PromptBuilder:
             "3. 考虑数据处理的性能",
             "4. 包含适当的错误处理",
             "5. 在检查变量是否存在时，使用 'df' in locals() 而不是 globals()",
-            "6. DataFrame存在性检查使用 'df' in locals() and not df.empty"
+            "6. DataFrame存在性检查使用 'df' in locals() and not df.empty",
+            "7. 当生成多幅图时使用子图的方式"
         ]
         
         if dataframe_info:
