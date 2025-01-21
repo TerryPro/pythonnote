@@ -1,10 +1,23 @@
 """
 提示词构建服务，用于生成更好的AI提示词
 """
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
+from .sys_prompt_config import SysPromptConfig
+from .user_prompt_config import UserPromptConfig
 
 class PromptBuilder:
     """提示词构建器类"""
+    
+    def __init__(self):
+        self.prompt_config = SysPromptConfig()
+        self.user_prompt_config = UserPromptConfig()
+    
+    @staticmethod
+    def _instance():
+        """获取单例实例"""
+        if not hasattr(PromptBuilder, '_prompt_builder'):
+            PromptBuilder._prompt_builder = PromptBuilder()
+        return PromptBuilder._prompt_builder
     
     @staticmethod
     def build_system_prompt(dataframe_info: Optional[Dict[str, Any]] = None) -> str:
@@ -17,18 +30,9 @@ class PromptBuilder:
         Returns:
             str: 构建好的系统提示词
         """
-        system_prompt = [
-            "你是一个Python数据分析专家，精通pandas库的使用。",
-            "你需要根据用户的需求，生成准确的Python代码。",
-            "生成的代码应该：",
-            "1. 代码简洁易懂，有必要的注释",
-            "2. 使用pandas的最佳实践",
-            "3. 考虑数据处理的性能",
-            "4. 包含适当的错误处理",
-            "5. 在检查变量是否存在时，使用 'df' in locals() 而不是 globals()",
-            "6. DataFrame存在性检查使用 'df' in locals() and not df.empty",
-            "7. 当生成多幅图时使用子图的方式"
-        ]
+        # 获取当前配置的提示词
+        instance = PromptBuilder._instance()
+        system_prompt = instance.prompt_config.load_prompts()
         
         if dataframe_info:
             # 添加DataFrame的基本信息
@@ -63,18 +67,27 @@ class PromptBuilder:
         Returns:
             str: 构建好的用户提示词
         """
-        return f"""请针对名为 '{dataframe_name}' 的DataFrame生成Python代码，执行以下操作：
+        # 验证输入参数
+        if not prompt or not dataframe_name:
+            raise ValueError("prompt和dataframe_name不能为空")
+            
+        # 获取当前配置的代码生成要求
+        instance = PromptBuilder._instance()
+        requirements = instance.user_prompt_config.load_requirements()
+        
+        # 添加变量名要求
+        requirements.append(f"使用变量名 '{dataframe_name}'")
+        
+        # 使用textwrap.dedent处理多行字符串
+        from textwrap import dedent
+        return dedent(f"""
+            请针对名为 '{dataframe_name}' 的DataFrame生成Python代码，执行以下操作：
 
-{prompt}
+            {prompt}
 
-严格遵循以下要求：
-1. 只返回可以直接执行的Python代码
-2. 不要使用任何Markdown格式
-3. 不要使用```python或```等代码块标记
-4. 不要包含任何自然语言解释
-5. 代码中包含必要的注释（使用#号注释）
-6. 使用变量名 '{dataframe_name}'
-7. 如果需要导入包，请在代码开头导入"""
+            严格遵循以下要求：
+            {chr(10).join(f"{i+1}. {req}" for i, req in enumerate(requirements))}
+        """).strip()
 
     @staticmethod
     def build_code_generation_prompt(

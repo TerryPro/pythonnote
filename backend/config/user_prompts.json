@@ -1,0 +1,8 @@
+{
+  "version": "1.0",
+  "last_modified": "2025-01-21T10:00:27.645287",
+  "code_requirements": [
+    "如果需要导入包，请在代码开头导入",
+    "图像使用plotly绘图"
+  ]
+}
