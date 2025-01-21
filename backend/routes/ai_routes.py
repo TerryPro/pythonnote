@@ -88,7 +88,7 @@ async def generate_code(request: GenerateCodeRequest):
             request.dataframe_info = handle_special_floats(request.dataframe_info)
         
         client = get_client()
-        generated_code = await client.generate_code(
+        generated_code = client.generate_code(
             prompt=request.prompt,
             dataframe_info=request.dataframe_info,
             dataframe_name=request.dataframe_name,

@@ -53,6 +53,12 @@
           </button>
         </el-tooltip>
 
+        <el-tooltip content="系统配置" placement="bottom" :hide-after="0">
+          <button @click="showSystemConfig" class="toolbar-btn">
+            <i class="fas fa-cog"></i>
+          </button>
+        </el-tooltip>
+
         <el-tooltip content="添加代码单元格" placement="bottom" :hide-after="0">
           <button @click="addCell('code')" class="toolbar-btn">
             <i class="fas fa-code"></i>
@@ -472,6 +478,9 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 添加系统配置对话框组件 -->
+    <SystemPromptConfig ref="systemConfigRef" />
   </div>
 </template>
 
@@ -496,6 +505,7 @@ import {
 } from 'element-plus'
 import FileExplore from './components/DataExplorer/FileExplore.vue'
 import DataFramePreview from './components/DataFramePreview.vue'
+import SystemPromptConfig from './components/SystemPromptConfig.vue'
 
 const cells = ref([])
 const currentFile = ref(null)
@@ -559,6 +569,9 @@ const panelWidth = ref(250) // 初始宽度
 const isDragging = ref(false)
 const startX = ref(0)
 const startWidth = ref(0)
+
+// 添加系统配置相关的引用
+const systemConfigRef = ref(null)
 
 // 提供主题变量给子组件
 provide('currentTheme', currentTheme)
@@ -1349,6 +1362,11 @@ const refreshNotebooks = async () => {
     }
   }
 }
+
+// 添加显示系统配置的方法
+const showSystemConfig = () => {
+  systemConfigRef.value?.show()
+}
 </script>
 
 <style>
@@ -1551,7 +1569,7 @@ body {
   flex: 1;
   position: relative;
   overflow: auto;
-  padding: 2rem;
+  padding: 5px;
   background: var(--background);
   transition: background-color 0.3s ease;
 }
@@ -1619,7 +1637,7 @@ body {
   }
 
   .notebook {
-    padding: 1rem;
+    padding: 5px;
   }
 }
 

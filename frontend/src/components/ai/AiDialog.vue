@@ -1,78 +1,99 @@
 <template>
   <el-dialog
     v-model="dialogVisible"
-    title="AI 代码助手"
     width="50%"
     :close-on-click-modal="false"
     :close-on-press-escape="false"
     destroy-on-close
   >
-    <!-- DataFrame选择器 -->
-    <div class="dataframe-selector">
-      <el-select
-        v-model="selectedDataFrame"
-        placeholder="选择要操作的DataFrame"
-        clearable
-        @change="handleDataFrameChange"
-        style="width: 100%"
-      >
-        <el-option
-          v-for="df in dataFrames"
-          :key="df"
-          :label="df"
-          :value="df"
-        />
-      </el-select>
-    </div>
-
-    <!-- DataFrame信息展示 -->
-    <div v-if="dataFrameInfo" class="dataframe-info">
-      <!-- 基本信息卡片 -->
-      <div class="info-card">
-        <div class="info-item">
-          <span class="info-label">行数：</span>
-          <span class="info-value">{{ dataFrameInfo.basic_info?.行数 }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">列数：</span>
-          <span class="info-value">{{ dataFrameInfo.basic_info?.列数 }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">内存占用：</span>
-          <span class="info-value">{{ dataFrameInfo.basic_info?.内存占用 }}</span>
-        </div>
-      </div>
-
-      <!-- 列信息表格 -->
-      <div class="columns-info">
-        <div class="section-title">列信息</div>
-        <el-table
-          :data="dataFrameInfo.columns"
-          size="small"
-          style="width: 100%"
-          :height="200"
+    <template #title>
+      <div class="dialog-title">
+        <span>AI 代码助手</span>
+        <el-button
+          type="text"
+          class="config-btn"
+          @click="showConfig"
+          title="配置代码生成要求"
         >
-          <el-table-column prop="name" label="列名" min-width="120" />
-          <el-table-column prop="type" label="数据类型" min-width="120" />
-          <el-table-column prop="null_count" label="空值数量" min-width="100" />
-        </el-table>
+          <i class="fas fa-cog"></i>
+        </el-button>
       </div>
-    </div>
+    </template>
 
-    <!-- 提示词输入 -->
-    <el-input
-      v-model="prompt"
-      type="textarea"
-      :rows="4"
-      :placeholder="promptPlaceholder"
-      :disabled="loading || !selectedDataFrame"
-      @keydown.ctrl.enter="handleGenerate"
-    />
-    
-    <!-- 加载提示 -->
-    <div v-if="loading" class="loading-container">
-      <el-icon class="loading-icon"><Loading /></el-icon>
-      <span>正在生成代码，已等待 {{ waitTime }} 秒...</span>
+    <div class="ai-dialog">
+      <div class="dialog-header">
+        <div class="dataframe-info" v-if="dataframe">
+          <span class="info-label">当前数据集:</span>
+          <span class="info-value">{{ dataframe }}</span>
+        </div>
+      </div>
+      <!-- DataFrame选择器 -->
+      <div class="dataframe-selector">
+        <el-select
+          v-model="selectedDataFrame"
+          placeholder="选择要操作的DataFrame"
+          clearable
+          @change="handleDataFrameChange"
+          style="width: 100%"
+        >
+          <el-option
+            v-for="df in dataFrames"
+            :key="df"
+            :label="df"
+            :value="df"
+          />
+        </el-select>
+      </div>
+
+      <!-- DataFrame信息展示 -->
+      <div v-if="dataFrameInfo" class="dataframe-info">
+        <!-- 基本信息卡片 -->
+        <div class="info-card">
+          <div class="info-item">
+            <span class="info-label">行数：</span>
+            <span class="info-value">{{ dataFrameInfo.basic_info?.行数 }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">列数：</span>
+            <span class="info-value">{{ dataFrameInfo.basic_info?.列数 }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">内存占用：</span>
+            <span class="info-value">{{ dataFrameInfo.basic_info?.内存占用 }}</span>
+          </div>
+        </div>
+
+        <!-- 列信息表格 -->
+        <div class="columns-info">
+          <div class="section-title">列信息</div>
+          <el-table
+            :data="dataFrameInfo.columns"
+            size="small"
+            style="width: 100%"
+            :height="200"
+          >
+            <el-table-column prop="name" label="列名" min-width="120" />
+            <el-table-column prop="type" label="数据类型" min-width="120" />
+            <el-table-column prop="null_count" label="空值数量" min-width="100" />
+          </el-table>
+        </div>
+      </div>
+
+      <!-- 提示词输入 -->
+      <el-input
+        v-model="prompt"
+        type="textarea"
+        :rows="4"
+        :placeholder="promptPlaceholder"
+        :disabled="loading || !selectedDataFrame"
+        @keydown.ctrl.enter="handleGenerate"
+      />
+      
+      <!-- 加载提示 -->
+      <div v-if="loading" class="loading-container">
+        <el-icon class="loading-icon"><Loading /></el-icon>
+        <span>正在生成代码，已等待 {{ waitTime }} 秒...</span>
+      </div>
     </div>
 
     <template #footer>
@@ -89,6 +110,9 @@
       </span>
     </template>
   </el-dialog>
+
+  <!-- 添加用户提示词配置对话框 -->
+  <UserPromptConfig ref="userPromptConfigRef" />
 </template>
 
 <script setup>
@@ -96,6 +120,7 @@ import { ref, watch, computed } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
+import UserPromptConfig from '../UserPromptConfig.vue'
 
 const props = defineProps({
   modelValue: {
@@ -240,6 +265,12 @@ const handleCancel = () => {
   if (loading.value) return
   dialogVisible.value = false
 }
+
+// 显示配置对话框
+const userPromptConfigRef = ref(null)
+const showConfig = () => {
+  userPromptConfigRef.value?.show()
+}
 </script>
 
 <style scoped>
@@ -331,5 +362,29 @@ const handleCancel = () => {
 
 :deep(.el-table td) {
   padding: 4px 0;
+}
+
+.config-btn {
+  margin-left: 8px;
+  font-size: 14px;
+}
+
+.config-btn:hover {
+  color: var(--el-color-primary);
+}
+
+.dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dialog-title .config-btn {
+  padding: 2px 4px;
+  margin-left: 8px;
+}
+
+.dialog-title .config-btn:hover {
+  color: var(--el-color-primary);
 }
 </style> 

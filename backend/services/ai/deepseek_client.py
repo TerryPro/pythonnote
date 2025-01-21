@@ -27,10 +27,10 @@ class DeepSeekClient:
             
         self.client = OpenAI(
             api_key=self.api_key,
-            base_url="https://api.deepseek.com/v1"
+            base_url="https://api.deepseek.com"
         )
     
-    async def generate_code(
+    def generate_code(
         self,
         prompt: str,
         dataframe_info: Optional[Dict[str, Any]] = None,
@@ -59,14 +59,15 @@ class DeepSeekClient:
             user_prompt = PromptBuilder.build_user_prompt(prompt, dataframe_name) if dataframe_name else prompt
             
             # 调用API生成代码
-            response = await self.client.chat.completions.create(
-                model="deepseek-coder-6.7b-instruct",
+            response = self.client.chat.completions.create(
+                model="deepseek-chat",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
                 temperature=0.2,
-                max_tokens=2000
+                max_tokens=2000,
+                stream=False
             )
             
             # 提取生成的代码
