@@ -138,4 +138,17 @@ class PromptManager:
                 if prompt["id"] == prompt_id:
                     category["prompts"].pop(i)
                     return self._save_templates()
-        return False 
+        return False
+
+    def reload_templates(self) -> bool:
+        """重新加载提示词模板配置
+        
+        Returns:
+            bool: 重新加载是否成功
+        """
+        try:
+            self.templates = self._load_templates()
+            return True
+        except Exception as e:
+            print(f"重新加载提示词模板失败: {str(e)}")
+            return False 

@@ -5,72 +5,76 @@
     :close-on-click-modal="false"
     :close-on-press-escape="false"
     destroy-on-close
+    class="ai-dialog-wrapper"
   >
     <template #title>
-      <div class="dialog-title">
+      <div class="dialog-header">
         <span>AI 代码助手</span>
-        <div class="dialog-actions">
-          <button class="icon-btn" @click="showPromptPanel = true" title="预定义提示词">
-            <i class="fas fa-list-alt"></i>
-          </button>
-          <button class="icon-btn" @click="userPromptConfigRef?.show()" title="设置">
-            <i class="fas fa-cog"></i>
-          </button>
+        <div class="header-actions">
+          <el-button-group>
+            <el-button text @click="showPromptPanel = true" title="预定义提示词">
+              <i class="fas fa-list-alt"></i>
+            </el-button>
+            <el-button text @click="userPromptConfigRef?.show()" title="设置">
+              <i class="fas fa-cog"></i>
+            </el-button>
+          </el-button-group>
         </div>
       </div>
     </template>
 
-    <div class="ai-dialog">
+    <div class="dialog-body">
       <!-- DataFrame选择器 -->
-      <div class="dataframe-selector">
-        <el-select
-          v-model="selectedDataFrame"
-          placeholder="选择要操作的DataFrame"
-          clearable
-          @change="handleDataFrameChange"
-          style="width: 100%"
-        >
-          <el-option
-            v-for="df in dataFrames"
-            :key="df"
-            :label="df"
-            :value="df"
-          />
-        </el-select>
-      </div>
+      <el-select
+        v-model="selectedDataFrame"
+        placeholder="选择要操作的DataFrame"
+        clearable
+        @change="handleDataFrameChange"
+        class="df-select"
+      >
+        <el-option
+          v-for="df in dataFrames"
+          :key="df"
+          :label="df"
+          :value="df"
+        />
+      </el-select>
 
       <!-- DataFrame信息展示 -->
-      <div v-if="dataFrameInfo" class="dataframe-info">
+      <div v-if="dataFrameInfo" class="df-info">
         <!-- 基本信息卡片 -->
-        <div class="info-card">
-          <div class="info-item">
-            <span class="info-label">行数：</span>
-            <span class="info-value">{{ dataFrameInfo.basic_info?.行数 }}</span>
+        <el-card class="info-card" shadow="never">
+          <div class="info-grid">
+            <div class="info-item">
+              <span>行数：</span>
+              <strong>{{ dataFrameInfo.basic_info?.行数 }}</strong>
+            </div>
+            <div class="info-item">
+              <span>列数：</span>
+              <strong>{{ dataFrameInfo.basic_info?.列数 }}</strong>
+            </div>
+            <div class="info-item">
+              <span>内存占用：</span>
+              <strong>{{ dataFrameInfo.basic_info?.内存占用 }}</strong>
+            </div>
           </div>
-          <div class="info-item">
-            <span class="info-label">列数：</span>
-            <span class="info-value">{{ dataFrameInfo.basic_info?.列数 }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">内存占用：</span>
-            <span class="info-value">{{ dataFrameInfo.basic_info?.内存占用 }}</span>
-          </div>
-        </div>
+        </el-card>
 
         <!-- 列信息表格 -->
-        <div class="columns-info">
-          <div class="section-title">列信息</div>
+        <el-card class="columns-card" shadow="never">
+          <template #header>
+            <div class="card-header">列信息</div>
+          </template>
           <el-table
             :data="dataFrameInfo.columns"
             size="small"
-            style="width: 100%"
             :height="200"
           >
             <el-table-column prop="name" label="列名" min-width="120" />
             <el-table-column prop="type" label="数据类型" min-width="120" />
             <el-table-column prop="null_count" label="空值数量" min-width="100" />
           </el-table>
-        </div>
+        </el-card>
       </div>
 
       <!-- 提示词输入 -->
@@ -81,17 +85,18 @@
         :placeholder="promptPlaceholder"
         :disabled="loading || !selectedDataFrame"
         @keydown.ctrl.enter="handleGenerate"
+        class="prompt-input"
       />
       
       <!-- 加载提示 -->
-      <div v-if="loading" class="loading-container">
-        <el-icon class="loading-icon"><Loading /></el-icon>
+      <div v-if="loading" class="loading-tip">
+        <el-icon class="is-loading"><Loading /></el-icon>
         <span>正在生成代码，已等待 {{ waitTime }} 秒...</span>
       </div>
     </div>
 
     <template #footer>
-      <span class="dialog-footer">
+      <div class="dialog-footer">
         <el-button @click="handleCancel" :disabled="loading">取消</el-button>
         <el-button
           type="primary"
@@ -101,28 +106,23 @@
         >
           生成代码
         </el-button>
-      </span>
+      </div>
     </template>
   </el-dialog>
 
-  <!-- 添加用户提示词配置对话框 -->
+  <!-- 用户提示词配置对话框 -->
   <UserPromptConfig ref="userPromptConfigRef" />
 
-  <!-- 提示词面板弹窗 -->
-  <div v-if="showPromptPanel" class="prompt-panel-modal">
-    <div class="modal-overlay" @click="showPromptPanel = false"></div>
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3>预定义提示词</h3>
-        <button class="icon-btn" @click="showPromptPanel = false">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <div class="modal-body">
-        <PromptPanel @use-prompt="usePrompt" />
-      </div>
-    </div>
-  </div>
+  <!-- 提示词面板 -->
+  <el-dialog
+    v-model="showPromptPanel"
+    title="预定义提示词"
+    width="60%"
+    destroy-on-close
+    class="prompt-panel-dialog"
+  >
+    <PromptPanel @use-prompt="usePrompt" />
+  </el-dialog>
 </template>
 
 <script setup>
@@ -305,182 +305,88 @@ defineExpose({
 </script>
 
 <style scoped>
-.dataframe-selector {
-  margin-bottom: 16px;
+.ai-dialog-wrapper :deep(.el-dialog__body) {
+  padding: 0 20px;
 }
 
-.dataframe-info {
-  margin: 16px 0;
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 0;
+}
+
+.df-select {
+  width: 100%;
+}
+
+.df-info {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.info-card {
+.info-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
-  padding: 16px;
-  background-color: var(--el-fill-color-light);
-  border-radius: 4px;
 }
 
 .info-item {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.info-label {
-  font-size: 12px;
-  color: var(--el-text-color-secondary);
-}
-
-.info-value {
-  font-size: 14px;
-  color: var(--el-text-color-primary);
-  font-weight: 500;
-}
-
-.columns-info {
-  display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 8px;
 }
 
-.section-title {
-  font-size: 14px;
+.info-item span {
   color: var(--el-text-color-secondary);
-  font-weight: 500;
 }
 
-.loading-container {
-  margin-top: 16px;
+.info-item strong {
+  color: var(--el-text-color-primary);
+}
+
+.columns-card :deep(.el-card__header) {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+.card-header {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--el-text-color-primary);
+}
+
+.prompt-input {
+  margin-top: 8px;
+}
+
+.loading-tip {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
   color: var(--el-text-color-secondary);
-}
-
-.loading-icon {
-  font-size: 18px;
-  animation: rotate 1s linear infinite;
-}
-
-@keyframes rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  font-size: 14px;
 }
 
 .dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
+  text-align: right;
+}
+
+/* 使用Element Plus的变量来保持一致性 */
+:deep(.el-button--text) {
+  padding: 8px;
+  height: 32px;
 }
 
 :deep(.el-table) {
   --el-table-border-color: var(--el-border-color-lighter);
-  --el-table-header-background-color: var(--el-fill-color-light);
-  --el-table-row-hover-background-color: var(--el-fill-color);
-}
-
-:deep(.el-table th) {
-  background-color: var(--el-table-header-background-color);
-  font-weight: 500;
-  color: var(--el-text-color-regular);
-}
-
-:deep(.el-table td) {
-  padding: 4px 0;
-}
-
-.dialog-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.dialog-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: none;
-  background: none;
-  border-radius: 4px;
-  color: var(--el-text-color-regular);
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.icon-btn:hover {
-  color: var(--el-color-primary);
-  background-color: var(--el-color-primary-light-9);
-}
-
-.icon-btn i {
-  font-size: 16px;
-}
-
-.prompt-panel-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 3000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
-.modal-content {
-  position: relative;
-  width: 80%;
-  height: 80%;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  z-index: 3001;
-}
-
-.modal-header {
-  padding: 16px;
-  border-bottom: 1px solid var(--el-border-color-lighter);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-}
-
-.modal-body {
-  flex: 1;
-  overflow: hidden;
+  --el-table-header-bg-color: var(--el-fill-color-light);
 }
 </style> 

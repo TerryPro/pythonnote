@@ -5,14 +5,23 @@
       <template #header>
         <div class="card-header">
           <span>提示词分类</span>
-          <button
-            v-if="isManageMode"
-            class="icon-btn"
-            @click="handleAddCategory"
-            title="添加分类"
-          >
-            <el-icon><Plus /></el-icon>
-          </button>
+          <div class="header-actions">
+            <button
+              class="icon-btn"
+              @click="handleReload"
+              title="重新加载"
+            >
+              <el-icon><Refresh /></el-icon>
+            </button>
+            <button
+              v-if="isManageMode"
+              class="icon-btn"
+              @click="handleAddCategory"
+              title="添加分类"
+            >
+              <el-icon><Plus /></el-icon>
+            </button>
+          </div>
         </div>
       </template>
       <el-menu
@@ -26,6 +35,7 @@
           :index="category.id"
         >
           <template #title>
+            <i :class="getCategoryIcon(category.id)"></i>
             <span>{{ category.name }}</span>
           </template>
         </el-menu-item>
@@ -67,6 +77,7 @@
           >
             <div class="prompt-item">
               <div class="prompt-info">
+                <i :class="getPromptIcon(prompt)"></i>
                 <div class="prompt-title">{{ prompt.title }}</div>
               </div>
             </div>
@@ -227,7 +238,8 @@ import {
   Plus,
   Edit,
   Delete,
-  Search
+  Search,
+  Refresh
 } from '@element-plus/icons-vue'
 
 const props = defineProps({
@@ -494,6 +506,65 @@ const savePromptForm = async () => {
   }
 }
 
+// 重新加载提示词
+const handleReload = async () => {
+  try {
+    const response = await fetch(`${BASE_URL}/api/prompt/reload`, {
+      method: 'POST'
+    })
+    if (!response.ok) {
+      throw new Error('重新加载失败')
+    }
+    await loadCategories() // 重新加载分类列表
+    ElMessage.success('重新加载成功')
+  } catch (error) {
+    console.error('重新加载失败:', error)
+    ElMessage.error('重新加载失败')
+  }
+}
+
+// 获取分类图标
+const getCategoryIcon = (categoryId) => {
+  const iconMap = {
+    'data_exploration': 'fas fa-search',
+    'data_preprocessing': 'fas fa-tools',
+    'data_visualization': 'fas fa-chart-bar',
+    'statistical_analysis': 'fas fa-calculator',
+    'data_export': 'fas fa-file-export'
+  }
+  return iconMap[categoryId] || 'fas fa-folder'
+}
+
+// 获取提示词图标
+const getPromptIcon = (prompt) => {
+  // 根据提示词的id或tags来决定使用什么图标
+  if (prompt.id.includes('plot') || prompt.tags.includes('可视化')) {
+    return 'fas fa-chart-line'
+  }
+  if (prompt.id.includes('analysis') || prompt.tags.includes('统计分析')) {
+    return 'fas fa-chart-pie'
+  }
+  if (prompt.id.includes('check') || prompt.tags.includes('数据质量')) {
+    return 'fas fa-check-circle'
+  }
+  if (prompt.id.includes('test') || prompt.tags.includes('统计检验')) {
+    return 'fas fa-vial'
+  }
+  if (prompt.id.includes('distribution') || prompt.tags.includes('数据分布')) {
+    return 'fas fa-wave-square'
+  }
+  if (prompt.id.includes('correlation') || prompt.tags.includes('相关性')) {
+    return 'fas fa-project-diagram'
+  }
+  if (prompt.id.includes('engineering') || prompt.tags.includes('特征工程')) {
+    return 'fas fa-cogs'
+  }
+  if (prompt.id.includes('clean') || prompt.tags.includes('数据清洗')) {
+    return 'fas fa-broom'
+  }
+  return 'fas fa-file-alt' // 默认图标
+}
+
 // 在组件挂载时加载分类列表
 onMounted(async () => {
   await loadCategories()
@@ -578,7 +649,15 @@ onMounted(async () => {
 }
 
 .prompt-info {
-  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prompt-info i {
+  font-size: 14px;
+  width: 16px;
+  color: var(--el-text-color-regular);
 }
 
 .prompt-title {
@@ -754,5 +833,23 @@ onMounted(async () => {
   padding: 0;
   display: flex;
   flex-direction: column;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-btn {
+  padding: 2px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--el-text-color-regular);
+  transition: color 0.2s;
+}
+
+.icon-btn:hover {
+  color: var(--el-color-primary);
 }
 </style> 

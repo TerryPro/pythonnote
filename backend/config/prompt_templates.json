@@ -12,7 +12,7 @@
           "数据探索",
           "基础统计"
         ],
-        "use_count": 3
+        "use_count": 5
       },
       {
         "id": "data_quality",
@@ -22,6 +22,690 @@
         "tags": [
           "数据质量",
           "数据清洗"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "outlier_detection",
+        "title": "异常值检测",
+        "description": "识别数据中的异常值和离群点",
+        "template": "请帮我检测数据中的异常值：\n1. 使用箱线图法识别数值型变量的离群点\n2. 计算Z-score，标记超过3个标准差的值\n3. 使用IQR方法检测异常值\n4. 分析异常值的分布特征\n5. 给出异常值的处理建议（删除、替换或保留）",
+        "tags": [
+          "数据质量",
+          "异常检测",
+          "数据清洗"
+        ],
+        "use_count": 1
+      },
+      {
+        "id": "duplicate_check",
+        "title": "重复数据检查",
+        "description": "检查和处理数据中的重复记录",
+        "template": "请帮我检查数据中的重复问题：\n1. 检查完全重复的记录\n2. 识别部分字段重复的情况\n3. 分析重复数据的特征和原因\n4. 统计各类重复的数量\n5. 提供重复数据的处理建议",
+        "tags": [
+          "数据质量",
+          "重复检查",
+          "数据清洗"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "consistency_check",
+        "title": "数据一致性检查",
+        "description": "检查数据的逻辑一致性和业务规则",
+        "template": "请帮我检查数据的一致性：\n1. 检查字段值的格式一致性\n2. 验证数值范围的合理性\n3. 检查字段间的逻辑关系\n4. 验证日期时间的连续性\n5. 给出不一致数据的修正建议",
+        "tags": [
+          "数据质量",
+          "一致性",
+          "数据验证"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "completeness_check",
+        "title": "数据完整性检查",
+        "description": "检查数据的缺失情况和完整性",
+        "template": "请帮我检查数据的完整性：\n1. 统计每个字段的缺失值比例\n2. 分析缺失值的分布模式\n3. 检查必填字段的完整性\n4. 识别系统性缺失的情况\n5. 提供缺失值处理的建议（填充或删除）",
+        "tags": [
+          "数据质量",
+          "完整性",
+          "缺失值"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "data_format_check",
+        "title": "数据格式检查",
+        "description": "检查数据的格式规范性",
+        "template": "请帮我检查数据的格式规范：\n1. 检查字段类型的正确性\n2. 验证字符串格式（如邮箱、电话、身份证等）\n3. 检查日期时间格式的统一性\n4. 验证数值精度和单位一致性\n5. 提供格式标准化的建议",
+        "tags": [
+          "数据质量",
+          "格式规范",
+          "数据标准化"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "normality_test",
+        "title": "正态分布检验",
+        "description": "检验数值变量是否符合正态分布",
+        "template": "请对数值变量进行正态分布检验：\n1. 使用scipy.stats进行Shapiro-Wilk检验\n2. 计算偏度(skewness)，判断分布的对称性\n3. 计算峰度(kurtosis)，判断分布的尖峭程度\n4. 绘制Q-Q图进行直观判断\n5. 给出检验结果的解释说明",
+        "tags": [
+          "数据分布",
+          "正态检验",
+          "统计分析"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "distribution_range",
+        "title": "分布范围分析",
+        "description": "分析数据的取值范围和集中趋势",
+        "template": "请分析数据的取值范围和集中趋势：\n1. 计算最小值、最大值和极差\n2. 计算分位数（0%、25%、50%、75%、100%）\n3. 计算均值和中位数\n4. 识别可能的异常值\n5. 绘制箱线图直观展示分布",
+        "tags": [
+          "数据分布",
+          "描述统计",
+          "集中趋势"
+        ],
+        "use_count": 1
+      },
+      {
+        "id": "multimodal_analysis",
+        "title": "多峰分布分析",
+        "description": "识别和分析多峰分布特征",
+        "template": "请分析数据是否存在多峰分布：\n1. 使用核密度估计(KDE)绘制密度曲线\n2. 计算局部最大值点的数量\n3. 分析各个峰值的位置和高度\n4. 判断是否为混合分布\n5. 给出可能的数据分组建议",
+        "tags": [
+          "数据分布",
+          "多峰分析",
+          "密度估计"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "distribution_comparison",
+        "title": "分布对比分析",
+        "description": "比较不同组别或时期的数据分布差异",
+        "template": "请对不同组别的数据分布进行对比分析：\n1. 计算各组的基本统计量\n2. 绘制并列的箱线图或小提琴图\n3. 进行分布差异的统计检验\n4. 分析分布形状的变化\n5. 总结主要的分布差异",
+        "tags": [
+          "数据分布",
+          "对比分析",
+          "统计检验"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "distribution_visualization",
+        "title": "分布可视化",
+        "description": "创建数据分布的可视化图表",
+        "template": "请创建数据分布的可视化图表：\n1. 绘制直方图和密度曲线\n2. 添加均值和中位数的标记线\n3. 绘制箱线图展示异常值\n4. 创建分位数-分位数图(Q-Q plot)\n5. 添加图例和适当的标注",
+        "tags": [
+          "数据分布",
+          "可视化",
+          "统计图表"
+        ],
+        "use_count": 1
+      },
+      {
+        "id": "correlation_analysis",
+        "title": "相关性分析",
+        "description": "分析变量之间的相关关系",
+        "template": "请分析数据中变量之间的相关关系：\n1. 计算数值变量间的相关系数矩阵\n2. 识别强相关的变量对\n3. 分析变量间的线性和非线性关系\n4. 生成相关性热力图\n5. 对发现的相关性给出解释和建议",
+        "tags": [
+          "相关性",
+          "统计分析"
+        ],
+        "use_count": 1
+      }
+    ]
+  },
+  "data_preprocessing": {
+    "category_name": "数据预处理",
+    "category_description": "用于数据清洗、转换和特征工程的提示词",
+    "prompts": [
+      {
+        "id": "data_cleaning",
+        "title": "数据清洗",
+        "description": "处理缺失值和异常值",
+        "template": "请帮我对数据进行清洗：\n1. 处理缺失值（根据数据特征选择合适的填充方法）\n2. 处理异常值和离群点\n3. 修正数据格式问题\n4. 处理重复数据\n5. 生成数据清洗报告",
+        "tags": [
+          "数据清洗",
+          "数据质量"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "data_transformation",
+        "title": "数据转换",
+        "description": "进行数据标准化和归一化",
+        "template": "请对数据进行必要的转换：\n1. 标准化数值型变量（z-score标准化）\n2. 对偏态分布数据进行转换（对数转换等）\n3. 对分类变量进行编码\n4. 处理数据的量纲统一问题\n5. 生成转换后的数据概览",
+        "tags": [
+          "数据转换",
+          "特征工程"
+        ],
+        "use_count": 1
+      },
+      {
+        "id": "feature_engineering",
+        "title": "特征工程",
+        "description": "创建和选择特征",
+        "template": "请帮我进行特征工程：\n1. 创建交互特征\n2. 进行多项式特征扩展\n3. 时间特征提取（如果有时间列）\n4. 文本特征提取（如果有文本列）\n5. 特征重要性评估和选择",
+        "tags": [
+          "特征工程",
+          "数据转换"
+        ],
+        "use_count": 1
+      }
+    ]
+  },
+  "data_visualization": {
+    "category_name": "数据可视化",
+    "category_description": "用于创建各类数据可视化图表的提示词",
+    "prompts": [
+      {
+        "id": "histogram_plot",
+        "title": "直方图绘制",
+        "description": "创建数值变量的直方图，用于展示数据分布",
+        "template": "请帮我创建数值变量的直方图：\n1. 使用plt.figure()创建画布\n2. 使用plt.hist()绘制直方图\n3. 添加标题、x轴标签和y轴标签\n4. 设置合适的bins数量\n5. 添加网格线增强可读性\n6. 使用plt.show()显示图形",
+        "tags": [
+          "可视化",
+          "直方图",
+          "数据分布"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "bar_plot",
+        "title": "条形图绘制",
+        "description": "创建类别变量的条形图，用于比较不同类别的数量或比例",
+        "template": "请帮我创建类别变量的条形图：\n1. 使用plt.figure()创建画布\n2. 使用plt.bar()绘制条形图\n3. 添加标题、x轴标签和y轴标签\n4. 为每个条形添加数值标签\n5. 设置合适的条形宽度和间距\n6. 使用plt.show()显示图形",
+        "tags": [
+          "可视化",
+          "条形图",
+          "类别对比"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "line_plot",
+        "title": "折线图绘制",
+        "description": "创建时间序列的折线图，用于展示数据随时间的变化趋势",
+        "template": "请帮我创建时间序列的折线图：\n1. 使用plt.figure()创建画布\n2. 使用plt.plot()绘制折线图\n3. 添加标题、x轴标签和y轴标签\n4. 设置合适的线条样式和颜色\n5. 添加图例说明不同线条的含义\n6. 使用plt.show()显示图形",
+        "tags": [
+          "可视化",
+          "折线图",
+          "时间序列"
+        ],
+        "use_count": 10
+      },
+      {
+        "id": "scatter_plot",
+        "title": "散点图绘制",
+        "description": "创建散点图，用于展示两个变量之间的关系",
+        "template": "请帮我创建散点图：\n1. 使用plt.figure()创建画布\n2. 使用plt.scatter()绘制散点图\n3. 添加标题、x轴标签和y轴标签\n4. 设置点的大小、颜色和透明度\n5. 可选：添加趋势线显示相关性\n6. 使用plt.show()显示图形",
+        "tags": [
+          "可视化",
+          "散点图",
+          "相关性分析"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "boxplot",
+        "title": "箱线图绘制",
+        "description": "创建箱线图，用于展示数据的分布特征和异常值",
+        "template": "请帮我创建箱线图：\n1. 使用plt.figure()创建画布\n2. 使用plt.boxplot()绘制箱线图\n3. 添加标题和轴标签\n4. 设置箱体的颜色和样式\n5. 添加数据点的标注\n6. 使用plt.show()显示图形",
+        "tags": [
+          "可视化",
+          "箱线图",
+          "分布分析"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "pie_plot",
+        "title": "饼图绘制",
+        "description": "创建饼图，用于展示各部分占整体的比例",
+        "template": "请帮我创建饼图：\n1. 使用plt.figure()创建画布\n2. 使用plt.pie()绘制饼图\n3. 添加标题和图例\n4. 设置各部分的颜色和标签\n5. 添加百分比显示\n6. 使用plt.show()显示图形",
+        "tags": [
+          "可视化",
+          "饼图",
+          "占比分析"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "heatmap_plot",
+        "title": "热力图绘制",
+        "description": "创建热力图，用于展示变量之间的相关性或数据密度",
+        "template": "请帮我创建热力图：\n1. 使用plt.figure()创建画布\n2. 使用sns.heatmap()绘制热力图\n3. 添加标题和颜色条\n4. 设置颜色映射方案\n5. 添加数值标注\n6. 使用plt.show()显示图形",
+        "tags": [
+          "可视化",
+          "热力图",
+          "相关性分析"
+        ],
+        "use_count": 0
+      }
+    ]
+  },
+  "statistical_analysis": {
+    "category_name": "统计分析",
+    "category_description": "用于进行统计分析和建模的提示词",
+    "prompts": [
+      {
+        "id": "central_tendency",
+        "title": "集中趋势分析",
+        "description": "计算数据的集中趋势指标",
+        "template": "请计算数据的集中趋势指标：\n1. 计算算术平均值(mean)\n2. 计算中位数(median)\n3. 计算众数(mode)\n4. 计算加权平均值（如果有权重）\n5. 解释各个指标的含义和差异",
+        "tags": [
+          "统计分析",
+          "描述统计",
+          "集中趋势"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "dispersion_analysis",
+        "title": "离散程度分析",
+        "description": "计算数据的离散程度指标",
+        "template": "请计算数据的离散程度指标：\n1. 计算方差(variance)\n2. 计算标准差(standard deviation)\n3. 计算变异系数(CV)\n4. 计算四分位数(Q1, Q2, Q3)\n5. 计算四分位距(IQR)",
+        "tags": [
+          "统计分析",
+          "描述统计",
+          "离散程度"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "distribution_features",
+        "title": "分布特征分析",
+        "description": "计算数据的分布特征指标",
+        "template": "请计算数据的分布特征指标：\n1. 计算偏度(skewness)\n2. 计算峰度(kurtosis)\n3. 判断分布的对称性\n4. 判断分布的尖峭程度\n5. 解释分布特征的实际含义",
+        "tags": [
+          "统计分析",
+          "描述统计",
+          "分布特征"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "group_statistics",
+        "title": "分组统计分析",
+        "description": "生成数据的分组统计摘要",
+        "template": "请生成数据的分组统计分析：\n1. 按指定变量进行分组\n2. 计算各组的基本统计量\n3. 比较组间的差异\n4. 生成统计摘要表\n5. 可视化展示组间差异",
+        "tags": [
+          "统计分析",
+          "描述统计",
+          "分组分析"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "statistical_summary",
+        "title": "统计结果解释",
+        "description": "解释统计分析结果的实际含义",
+        "template": "请解释统计分析结果：\n1. 总结数据的主要特征\n2. 解释各统计指标的含义\n3. 分析数据的异常情况\n4. 对比不同指标的差异\n5. 给出数据分析的建议",
+        "tags": [
+          "统计分析",
+          "描述统计",
+          "结果解释"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "parametric_tests",
+        "title": "参数检验",
+        "description": "进行参数统计检验",
+        "template": "请进行参数统计检验：\n1. 进行单样本t检验\n2. 进行独立样本t检验\n3. 进行配对样本t检验\n4. 进行方差分析(ANOVA)\n5. 解释检验结果和效应量",
+        "tags": [
+          "统计分析",
+          "假设检验",
+          "参数检验"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "nonparametric_tests",
+        "title": "非参数检验",
+        "description": "进行非参数统计检验",
+        "template": "请进行非参数统计检验：\n1. 进行Mann-Whitney U检验\n2. 进行Wilcoxon符号秩检验\n3. 进行Kruskal-Wallis H检验\n4. 进行Friedman检验\n5. 解释检验结果和效应量",
+        "tags": [
+          "统计分析",
+          "假设检验",
+          "非参数检验"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "correlation_tests",
+        "title": "相关性检验",
+        "description": "进行相关性统计检验",
+        "template": "请进行相关性统计检验：\n1. 计算Pearson相关系数\n2. 计算Spearman等级相关\n3. 计算Kendall's tau相关\n4. 生成相关性矩阵\n5. 解释相关性强度和显著性",
+        "tags": [
+          "统计分析",
+          "假设检验",
+          "相关分析"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "chi_square_tests",
+        "title": "卡方检验",
+        "description": "进行卡方统计检验",
+        "template": "请进行卡方统计检验：\n1. 进行拟合优度检验\n2. 进行独立性检验\n3. 进行同质性检验\n4. 计算列联表\n5. 解释检验结果和关联强度",
+        "tags": [
+          "统计分析",
+          "假设检验",
+          "卡方检验"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "effect_size",
+        "title": "效应量分析",
+        "description": "计算统计检验的效应量",
+        "template": "请计算统计检验的效应量：\n1. 计算Cohen's d效应量\n2. 计算相关系数r效应量\n3. 计算η²效应量\n4. 计算odds ratio效应量\n5. 解释效应量的实际意义",
+        "tags": [
+          "统计分析",
+          "假设检验",
+          "效应量"
+        ],
+        "use_count": 0
+      }
+    ]
+  },
+  "data_export": {
+    "category_name": "数据导出",
+    "category_description": "用于数据和分析结果导出的提示词",
+    "prompts": [
+      {
+        "id": "data_save",
+        "title": "数据保存",
+        "description": "将数据保存为不同格式",
+        "template": "请帮我将处理后的数据保存：\n1. 保存为CSV格式（指定分隔符和编码）\n2. 保存为Excel格式（包含数据字典）\n3. 保存为Parquet格式（如果数据量大）\n4. 添加适当的列注释\n5. 生成数据字典文档",
+        "tags": [
+          "数据导出",
+          "文件保存"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "analysis_report",
+        "title": "分析报告生成",
+        "description": "生成数据分析报告",
+        "template": "请生成一份完整的数据分析报告：\n1. 数据概览和基本统计信息\n2. 主要发现和洞察\n3. 可视化图表及解释\n4. 统计分析结果\n5. 建议和下一步分析方向",
+        "tags": [
+          "报告生成",
+          "结果导出"
+        ],
+        "use_count": 1
+      }
+    ]
+  },
+  "time_series_analysis": {
+    "category_name": "时序分析",
+    "category_description": "用于时间序列数据分析和预测的提示词",
+    "prompts": [
+      {
+        "id": "trend_component",
+        "title": "趋势成分分析",
+        "description": "分析时间序列的长期趋势成分",
+        "template": "请分析时间序列的趋势成分：\n1. 使用seasonal_decompose提取趋势成分\n2. 分析趋势的方向（上升/下降）\n3. 识别趋势的转折点\n4. 计算趋势的增长率\n5. 绘制趋势成分图",
+        "tags": [
+          "时序分析",
+          "趋势",
+          "分解"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "seasonal_component",
+        "title": "季节成分分析",
+        "description": "分析时间序列的季节性成分",
+        "template": "请分析时间序列的季节性成分：\n1. 使用seasonal_decompose提取季节成分\n2. 识别主要的季节周期\n3. 计算季节性强度\n4. 分析季节模式的稳定性\n5. 绘制季节成分图",
+        "tags": [
+          "时序分析",
+          "季节性",
+          "分解"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "residual_component",
+        "title": "残差成分分析",
+        "description": "分析时间序列的随机残差成分",
+        "template": "请分析时间序列的残差成分：\n1. 使用seasonal_decompose提取残差成分\n2. 检验残差的白噪声特性\n3. 分析残差的分布特征\n4. 检测残差中的异常值\n5. 绘制残差成分图",
+        "tags": [
+          "时序分析",
+          "残差",
+          "分解"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "acf_analysis",
+        "title": "自相关分析",
+        "description": "分析时间序列的自相关特征",
+        "template": "请分析时间序列的自相关特征：\n1. 计算并绘制自相关函数(ACF)\n2. 识别显著的自相关系数\n3. 判断序列的记忆性\n4. 检测周期性特征\n5. 解释自相关结果",
+        "tags": [
+          "时序分析",
+          "自相关",
+          "周期性"
+        ],
+        "use_count": 1
+      },
+      {
+        "id": "pacf_analysis",
+        "title": "偏自相关分析",
+        "description": "分析时间序列的偏自相关特征",
+        "template": "请分析时间序列的偏自相关特征：\n1. 计算并绘制偏自相关函数(PACF)\n2. 识别显著的偏自相关系数\n3. 确定AR模型的阶数\n4. 分析直接影响关系\n5. 解释偏自相关结果",
+        "tags": [
+          "时序分析",
+          "偏自相关",
+          "模型识别"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "adf_test",
+        "title": "ADF平稳性检验",
+        "description": "使用ADF检验分析时间序列的平稳性",
+        "template": "请进行ADF平稳性检验：\n1. 执行ADF检验\n2. 解释检验结果和p值\n3. 判断是否需要差分\n4. 确定所需的差分阶数\n5. 给出平稳化建议",
+        "tags": [
+          "时序分析",
+          "平稳性",
+          "单位根检验"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "kpss_test",
+        "title": "KPSS平稳性检验",
+        "description": "使用KPSS检验分析时间序列的平稳性",
+        "template": "请进行KPSS平稳性检验：\n1. 执行KPSS检验\n2. 解释检验结果和p值\n3. 判断趋势平稳性\n4. 与ADF检验结果对比\n5. 给出平稳化建议",
+        "tags": [
+          "时序分析",
+          "平稳性",
+          "趋势检验"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "missing_value_handler",
+        "title": "缺失值处理",
+        "description": "处理时间序列中的缺失数据",
+        "template": "请处理时间序列的缺失值：\n1. 识别缺失的时间点\n2. 使用前向填充方法\n3. 使用后向填充方法\n4. 使用插值方法填充\n5. 评估填充效果",
+        "tags": [
+          "时序分析",
+          "数据预处理",
+          "缺失值"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "resample_analysis",
+        "title": "重采样分析",
+        "description": "对时间序列进行频率转换和重采样",
+        "template": "请对时间序列进行重采样分析：\n1. 向上采样（提高频率）\n2. 向下采样（降低频率）\n3. 选择合适的聚合方法\n4. 处理重采样边界问题\n5. 评估重采样效果",
+        "tags": [
+          "时序分析",
+          "数据预处理",
+          "频率转换"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "moving_average",
+        "title": "移动平均分析",
+        "description": "计算不同类型的移动平均",
+        "template": "请进行移动平均分析：\n1. 计算简单移动平均\n2. 计算加权移动平均\n3. 计算指数移动平均\n4. 选择合适的窗口大小\n5. 绘制移动平均图",
+        "tags": [
+          "时序分析",
+          "趋势",
+          "平滑"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "arima_model",
+        "title": "ARIMA模型分析",
+        "description": "使用ARIMA模型进行时间序列分析",
+        "template": "请使用ARIMA模型进行分析：\n1. 确定模型阶数(p,d,q)\n2. 拟合ARIMA模型\n3. 检验模型残差\n4. 进行预测分析\n5. 评估预测精度",
+        "tags": [
+          "时序分析",
+          "预测",
+          "ARIMA"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "sarima_model",
+        "title": "SARIMA模型分析",
+        "description": "使用SARIMA模型处理季节性时间序列",
+        "template": "请使用SARIMA模型进行分析：\n1. 确定季节性参数\n2. 拟合SARIMA模型\n3. 检验模型残差\n4. 进行季节性预测\n5. 评估预测精度",
+        "tags": [
+          "时序分析",
+          "预测",
+          "SARIMA"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "prophet_model",
+        "title": "Prophet模型分析",
+        "description": "使用Prophet模型进行时间序列分析",
+        "template": "请使用Prophet模型进行分析：\n1. 准备Prophet所需的数据格式\n2. 拟合Prophet模型\n3. 添加节假日效应\n4. 进行预测分析\n5. 评估预测精度",
+        "tags": [
+          "时序分析",
+          "预测",
+          "Prophet"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "ma_anomaly",
+        "title": "移动平均异常检测",
+        "description": "使用移动平均方法检测异常值",
+        "template": "请使用移动平均进行异常检测：\n1. 计算移动平均和标准差\n2. 设置检测阈值\n3. 标识异常点\n4. 分析异常原因\n5. 可视化异常检测结果",
+        "tags": [
+          "时序分析",
+          "异常检测",
+          "移动平均"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "stl_anomaly",
+        "title": "STL分解异常检测",
+        "description": "使用STL分解方法检测异常值",
+        "template": "请使用STL分解进行异常检测：\n1. 进行STL分解\n2. 分析残差分布\n3. 设置异常检测阈值\n4. 标识异常点\n5. 可视化检测结果",
+        "tags": [
+          "时序分析",
+          "异常检测",
+          "STL分解"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "cusum_change",
+        "title": "CUSUM变点检测",
+        "description": "使用CUSUM算法检测时间序列变点",
+        "template": "请使用CUSUM算法检测变点：\n1. 设置CUSUM参数\n2. 执行CUSUM检测\n3. 定位变点位置\n4. 评估变点显著性\n5. 可视化变点结果",
+        "tags": [
+          "时序分析",
+          "变点检测",
+          "CUSUM"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "pelt_change",
+        "title": "PELT变点检测",
+        "description": "使用PELT算法检测时间序列变点",
+        "template": "请使用PELT算法检测变点：\n1. 设置PELT参数\n2. 执行PELT检测\n3. 定位变点位置\n4. 评估变点显著性\n5. 可视化变点结果",
+        "tags": [
+          "时序分析",
+          "变点检测",
+          "PELT"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "dtw_clustering",
+        "title": "DTW距离聚类",
+        "description": "使用DTW距离进行时间序列聚类",
+        "template": "请使用DTW距离进行时序聚类：\n1. 计算DTW距离矩阵\n2. 执行层次聚类\n3. 确定最佳簇数\n4. 分析聚类特征\n5. 可视化聚类结果",
+        "tags": [
+          "时序分析",
+          "聚类",
+          "DTW"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "kmeans_clustering",
+        "title": "K-means时序聚类",
+        "description": "使用K-means算法进行时间序列聚类",
+        "template": "请使用K-means进行时序聚类：\n1. 准备时序特征\n2. 执行K-means聚类\n3. 确定最佳簇数\n4. 分析聚类特征\n5. 可视化聚类结果",
+        "tags": [
+          "时序分析",
+          "聚类",
+          "K-means"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "cross_correlation",
+        "title": "交叉相关分析",
+        "description": "分析两个时间序列的交叉相关关系",
+        "template": "请分析时间序列的交叉相关：\n1. 计算交叉相关函数\n2. 识别最大相关滞后\n3. 分析领先/滞后关系\n4. 评估相关显著性\n5. 可视化相关结果",
+        "tags": [
+          "时序分析",
+          "相关性",
+          "交叉相关"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "granger_causality",
+        "title": "格兰杰因果检验",
+        "description": "进行时间序列的格兰杰因果检验",
+        "template": "请进行格兰杰因果检验：\n1. 检验序列的平稳性\n2. 选择适当的滞后阶数\n3. 执行因果检验\n4. 解释检验结果\n5. 确定因果方向",
+        "tags": [
+          "时序分析",
+          "因果检验",
+          "格兰杰"
+        ],
+        "use_count": 0
+      },
+      {
+        "id": "cointegration_test",
+        "title": "协整关系检验",
+        "description": "检验时间序列之间的协整关系",
+        "template": "请检验协整关系：\n1. 检验单个序列的阶数\n2. 执行Johansen检验\n3. 确定协整关系数量\n4. 估计协整方程\n5. 解释检验结果",
+        "tags": [
+          "时序分析",
+          "协整",
+          "长期关系"
         ],
         "use_count": 0
       }

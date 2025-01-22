@@ -136,8 +136,6 @@ class CodeExecutor:
                 "status": str  # 执行状态：'success' 或 'error'
             }
         """
-        # 清空已注册的DataFrame变量
-        get_manager().clear()
         
         # 捕获标准输出和错误
         stdout = io.StringIO()
@@ -157,6 +155,8 @@ class CodeExecutor:
             with redirect_stdout(stdout), redirect_stderr(stderr):
                 exec(code, self.globals_dict, self.locals_dict)
                 
+            # 清空已注册的DataFrame变量
+            get_manager().clear()
             # 注册所有DataFrame变量
             self._register_dataframes()
             # 检查是否有DataFrame变量

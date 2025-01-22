@@ -49,6 +49,7 @@
 import { ref, inject, onMounted, watch, nextTick } from 'vue'
 import MonacoEditor from './MonacoEditor.vue'
 import AiDialog from './ai/AiDialog.vue'
+import { ElLoading } from 'element-plus'
 
 const props = defineProps({
   cellId: {
@@ -107,6 +108,12 @@ const handleCodeGenerated = (code) => {
 const executeCode = async () => {
   if (!props.content.trim()) return
   
+  const loading = ElLoading.service({
+    target: `#codeCell${props.cellId}`,
+    text: '正在执行代码...',
+    background: 'rgba(255, 255, 255, 0.7)'
+  })
+  
   isExecuting.value = true
   try {
     const response = await fetch('http://localhost:8000/execute', {
@@ -149,6 +156,7 @@ const executeCode = async () => {
     })
   } finally {
     isExecuting.value = false
+    loading.close()
   }
 }
 
@@ -316,5 +324,29 @@ defineExpose({
 
 .plotly-container :deep(.main-svg) {
   background: transparent !important;
+}
+
+:deep(.el-loading-spinner) {
+  .el-loading-text {
+    color: var(--el-color-primary);
+    font-size: 14px;
+    margin: 8px 0;
+  }
+  
+  .circular {
+    width: 32px;
+    height: 32px;
+    .path {
+      stroke: var(--el-color-primary);
+      stroke-width: 3;
+    }
+  }
+}
+
+:deep(.el-loading-mask) {
+  background-color: var(--el-mask-color);
+  backdrop-filter: blur(2px);
+  transition: all 0.3s;
+  z-index: 10;
 }
 </style> 

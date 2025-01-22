@@ -111,4 +111,12 @@ async def delete_prompt(prompt_id: str):
     success = prompt_manager.delete_prompt(prompt_id)
     if not success:
         raise HTTPException(status_code=404, detail="提示词不存在")
+    return ResponseModel(data={"message": "success"})
+
+@router.post("/reload", response_model=ResponseModel[Dict])
+async def reload_prompts():
+    """重新加载预定义的提示词模板"""
+    success = prompt_manager.reload_templates()
+    if not success:
+        raise HTTPException(status_code=500, detail="重新加载提示词模板失败")
     return ResponseModel(data={"message": "success"}) 
