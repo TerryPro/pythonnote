@@ -9,24 +9,18 @@
     <template #title>
       <div class="dialog-title">
         <span>AI 代码助手</span>
-        <el-button
-          type="text"
-          class="config-btn"
-          @click="showConfig"
-          title="配置代码生成要求"
-        >
-          <i class="fas fa-cog"></i>
-        </el-button>
+        <div class="dialog-actions">
+          <button class="icon-btn" @click="showPromptPanel = true" title="预定义提示词">
+            <i class="fas fa-list-alt"></i>
+          </button>
+          <button class="icon-btn" @click="userPromptConfigRef?.show()" title="设置">
+            <i class="fas fa-cog"></i>
+          </button>
+        </div>
       </div>
     </template>
 
     <div class="ai-dialog">
-      <div class="dialog-header">
-        <div class="dataframe-info" v-if="dataframe">
-          <span class="info-label">当前数据集:</span>
-          <span class="info-value">{{ dataframe }}</span>
-        </div>
-      </div>
       <!-- DataFrame选择器 -->
       <div class="dataframe-selector">
         <el-select
@@ -113,6 +107,22 @@
 
   <!-- 添加用户提示词配置对话框 -->
   <UserPromptConfig ref="userPromptConfigRef" />
+
+  <!-- 提示词面板弹窗 -->
+  <div v-if="showPromptPanel" class="prompt-panel-modal">
+    <div class="modal-overlay" @click="showPromptPanel = false"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>预定义提示词</h3>
+        <button class="icon-btn" @click="showPromptPanel = false">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <PromptPanel @use-prompt="usePrompt" />
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -121,6 +131,7 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import { Loading } from '@element-plus/icons-vue'
 import UserPromptConfig from '../UserPromptConfig.vue'
+import PromptPanel from '../prompts/PromptPanel.vue'
 
 const props = defineProps({
   modelValue: {
@@ -235,8 +246,16 @@ const handleDataFrameChange = async (value) => {
 
 // 处理代码生成
 const handleGenerate = async () => {
-  if (!prompt.value.trim() || loading.value || !selectedDataFrame.value) return
+  if (!selectedDataFrame.value) {
+    ElMessage.warning('请先选择要操作的DataFrame')
+    return
+  }
   
+  if (!prompt.value.trim()) {
+    ElMessage.warning('请输入提示词')
+    return
+  }
+
   loading.value = true
   startWaitTimer()
   
@@ -266,11 +285,23 @@ const handleCancel = () => {
   dialogVisible.value = false
 }
 
+// 提示词面板相关状态
+const showPromptPanel = ref(false)
+
+const usePrompt = (template) => {
+  prompt.value = template
+  showPromptPanel.value = false
+}
+
 // 显示配置对话框
 const userPromptConfigRef = ref(null)
-const showConfig = () => {
-  userPromptConfigRef.value?.show()
-}
+
+// 导出组件属性
+defineExpose({
+  show() {
+    dialogVisible.value = true
+  }
+})
 </script>
 
 <style scoped>
@@ -364,27 +395,92 @@ const showConfig = () => {
   padding: 4px 0;
 }
 
-.config-btn {
-  margin-left: 8px;
-  font-size: 14px;
-}
-
-.config-btn:hover {
-  color: var(--el-color-primary);
-}
-
 .dialog-title {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.dialog-actions {
+  display: flex;
   gap: 8px;
+  align-items: center;
 }
 
-.dialog-title .config-btn {
-  padding: 2px 4px;
-  margin-left: 8px;
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 4px;
+  color: var(--el-text-color-regular);
+  cursor: pointer;
+  transition: all 0.3s;
 }
 
-.dialog-title .config-btn:hover {
+.icon-btn:hover {
   color: var(--el-color-primary);
+  background-color: var(--el-color-primary-light-9);
+}
+
+.icon-btn i {
+  font-size: 16px;
+}
+
+.prompt-panel-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  position: relative;
+  width: 80%;
+  height: 80%;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 3001;
+}
+
+.modal-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.modal-body {
+  flex: 1;
+  overflow: hidden;
 }
 </style> 

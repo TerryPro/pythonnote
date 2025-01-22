@@ -76,6 +76,12 @@
             <i class="fas fa-upload"></i>
           </button>
         </el-tooltip>
+
+        <el-tooltip content="管理预定义提示词" placement="bottom">
+          <div class="tool-item" @click="showPromptManager = true">
+            <i class="fas fa-list-alt"></i>
+          </div>
+        </el-tooltip>
       </div>
     </nav>
     
@@ -481,6 +487,17 @@
 
     <!-- 添加系统配置对话框组件 -->
     <SystemPromptConfig ref="systemConfigRef" />
+
+    <!-- 添加预定义提示词管理弹窗 -->
+    <el-dialog
+      v-model="showPromptManager"
+      title="管理预定义提示词"
+      width="80%"
+      :close-on-click-modal="false"
+      destroy-on-close
+    >
+      <PromptPanel mode="manage" />
+    </el-dialog>
   </div>
 </template>
 
@@ -506,6 +523,7 @@ import {
 import FileExplore from './components/DataExplorer/FileExplore.vue'
 import DataFramePreview from './components/DataFramePreview.vue'
 import SystemPromptConfig from './components/SystemPromptConfig.vue'
+import PromptPanel from './components/prompts/PromptPanel.vue'
 
 const cells = ref([])
 const currentFile = ref(null)
@@ -572,6 +590,9 @@ const startWidth = ref(0)
 
 // 添加系统配置相关的引用
 const systemConfigRef = ref(null)
+
+// 预定义提示词管理状态
+const showPromptManager = ref(false)
 
 // 提供主题变量给子组件
 provide('currentTheme', currentTheme)

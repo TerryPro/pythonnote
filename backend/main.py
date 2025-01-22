@@ -8,8 +8,9 @@ from pathlib import Path
 from code_executor import CodeExecutor
 from services.pdf.code_formatter import format_python_code
 from services.pdf.exporter import NotebookPDFExporter
-from routes import data_explorer, data_files, ai_routes, dataframe_routes
+from routes import data_explorer, data_files, ai_routes, dataframe_routes, prompt_routes
 from routes.dataframe_routes import router as dataframe_router
+from routes.prompt_routes import router as prompt_router
 from config import VERSION
 
 # 配置日志
@@ -47,6 +48,7 @@ app.include_router(data_explorer.router)
 app.include_router(data_files.router)
 app.include_router(ai_routes.router)
 app.include_router(dataframe_router)
+app.include_router(prompt_router)
 logger.info("路由注册完成")
 
 @app.on_event("startup")
