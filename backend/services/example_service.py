@@ -5,15 +5,27 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Optional
 from fastapi import HTTPException
+import logging
 from models.example import (
     Category, Example,
     CategoryCreate, CategoryUpdate,
     ExampleCreate, ExampleUpdate
 )
 
+# 配置日志
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class DateTimeEncoder(json.JSONEncoder):
+    """处理datetime的JSON编码器"""
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
+
 class ExampleService:
     def __init__(self):
-        self.data_dir = Path("data/examples")
+        self.data_dir = Path("examples")
         self.categories_file = self.data_dir / "categories.json"
         self.examples_dir = self.data_dir / "examples"
         
@@ -205,15 +217,21 @@ class ExampleService:
     async def create_example(self, example: ExampleCreate) -> Example:
         """创建示例"""
         try:
+            logger.info(f"开始创建新示例，分类ID: {example.category_id}")
+            
             # 检查分类是否存在
             category_dir = self.examples_dir / example.category_id
             if not category_dir.exists():
+                logger.error(f"分类不存在: {example.category_id}")
                 raise HTTPException(status_code=404, detail="分类不存在")
             
             # 生成新示例
             now = datetime.now()
+            new_id = str(uuid.uuid4())
+            logger.info(f"生成新示例ID: {new_id}")
+            
             new_example = Example(
-                id=str(uuid.uuid4()),
+                id=new_id,
                 title=example.title,
                 description=example.description,
                 code=example.code,
@@ -226,13 +244,22 @@ class ExampleService:
             
             # 保存到文件
             example_file = category_dir / f"{new_example.id}.json"
-            with open(example_file, "w", encoding="utf-8") as f:
-                json.dump(new_example.dict(), f, ensure_ascii=False, indent=2)
+            logger.info(f"保存示例到文件: {example_file}")
+            
+            try:
+                with open(example_file, "w", encoding="utf-8") as f:
+                    json.dump(new_example.dict(), f, ensure_ascii=False, indent=2, cls=DateTimeEncoder)
+                logger.info("示例文件保存成功")
+            except Exception as e:
+                logger.error(f"保存示例文件失败: {str(e)}")
+                raise Exception(f"保存示例文件失败: {str(e)}")
             
             return new_example
+            
         except HTTPException:
             raise
         except Exception as e:
+            logger.error(f"创建示例失败: {str(e)}", exc_info=True)
             raise HTTPException(status_code=500, detail=f"创建示例失败: {str(e)}")
 
     async def update_example(self, example_id: str, example: ExampleUpdate) -> Example:
@@ -278,7 +305,7 @@ class ExampleService:
             # 保存更新
             updated_example = Example(**update_data)
             with open(example_file, "w", encoding="utf-8") as f:
-                json.dump(updated_example.dict(), f, ensure_ascii=False, indent=2)
+                json.dump(updated_example.dict(), f, ensure_ascii=False, indent=2, cls=DateTimeEncoder)
             
             return updated_example
         except HTTPException:
@@ -317,7 +344,7 @@ class ExampleService:
                         example.updated_at = datetime.now()
                         
                         with open(example_file, "w", encoding="utf-8") as f:
-                            json.dump(example.dict(), f, ensure_ascii=False, indent=2)
+                            json.dump(example.dict(), f, ensure_ascii=False, indent=2, cls=DateTimeEncoder)
                         
                         return {"message": "使用成功", "code": example.code}
             

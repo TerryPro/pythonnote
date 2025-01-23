@@ -1,0 +1,11 @@
+{
+  "id": "data_process_2",
+  "title": "数据合并操作",
+  "description": "Pandas中的数据合并操作，包括concat、merge等",
+  "code": "import pandas as pd\n\n# 创建示例数据\n# 员工基本信息\nemployees = pd.DataFrame({\n    'emp_id': [1, 2, 3, 4, 5],\n    'name': ['张三', '李四', '王五', '赵六', '钱七'],\n    'department': ['技术', '销售', '技术', '市场', '销售']\n})\n\n# 员工工资信息\nsalaries = pd.DataFrame({\n    'emp_id': [1, 2, 3, 4, 5],\n    'salary': [8000, 12000, 15000, 9000, 13000],\n    'bonus': [1000, 2000, 2500, 1200, 2200]\n})\n\n# 部门信息\ndepartments = pd.DataFrame({\n    'department': ['技术', '销售', '市场', '人事'],\n    'location': ['北京', '上海', '广州', '深圳'],\n    'manager': ['张经理', '李经理', '王经理', '赵经理']\n})\n\n# 新员工信息\nnew_employees = pd.DataFrame({\n    'emp_id': [6, 7],\n    'name': ['孙八', '周九'],\n    'department': ['技术', '市场']\n})\n\nprint('原始数据：')\nprint('员工信息：')\nprint(employees)\nprint('\\n工资信息：')\nprint(salaries)\nprint('\\n部门信息：')\nprint(departments)\nprint('\\n新员工信息：')\nprint(new_employees)\n\n# 1. 使用concat合并数据框（纵向合并）\nall_employees = pd.concat([employees, new_employees], ignore_index=True)\nprint('\\n合并后的员工信息：')\nprint(all_employees)\n\n# 2. 使用merge合并数据框（横向合并）\n# 内连接\nprint('\\n员工信息与工资信息内连接：')\nemployee_details = employees.merge(salaries, on='emp_id', how='inner')\nprint(employee_details)\n\n# 左连接\nprint('\\n员工信息与部门信息左连接：')\nemployee_dept = employee_details.merge(departments, on='department', how='left')\nprint(employee_dept)\n\n# 3. 多表连接\nprint('\\n三表连接：')\nfull_details = employees.merge(salaries, on='emp_id').merge(departments, on='department')\nprint(full_details)\n\n# 4. 使用join方法\n# 设置索引\nemployees_indexed = employees.set_index('emp_id')\nsalaries_indexed = salaries.set_index('emp_id')\nprint('\\n使用join方法合并：')\njoined_data = employees_indexed.join(salaries_indexed)\nprint(joined_data)\n\n# 5. 处理重复列名\nemployees_dup = employees.copy()\nemployees_dup['location'] = ['北京', '上海', '广州', '深圳', '北京']\nprint('\\n处理重复列名的合并：')\nmerged_dup = employees_dup.merge(\n    departments,\n    on='department',\n    suffixes=('_emp', '_dept')\n)\nprint(merged_dup)",
+  "category_id": "data_process",
+  "tags": ["pandas", "数据处理", "数据合并", "merge"],
+  "use_count": 0,
+  "created_at": "2024-01-23T00:00:00",
+  "updated_at": "2024-01-23T00:00:00"
+} 

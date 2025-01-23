@@ -1,0 +1,11 @@
+{
+  "id": "data_explore_3",
+  "title": "高级数据探索",
+  "description": "使用pandas进行高级数据探索，包括分组统计、透视表等",
+  "code": "import pandas as pd\nimport numpy as np\n\n# 读取数据\ndf = pd.read_csv('example.csv')\n\n# 1. 分组统计\nprint('按类别分组统计：')\ngroup_stats = df.groupby('category').agg({\n    'value': ['count', 'mean', 'std', 'min', 'max'],\n    'age': ['mean', 'min', 'max']\n}).round(2)\nprint(group_stats)\n\n# 2. 透视表分析\nprint('\\n透视表分析：')\npivot_table = pd.pivot_table(\n    df,\n    values='value',\n    index='category',\n    columns='status',\n    aggfunc=['count', 'mean', 'std'],\n    fill_value=0\n).round(2)\nprint(pivot_table)\n\n# 3. 时间序列重采样（假设有日期列）\ndf['date'] = pd.to_datetime(df['date'])\nprint('\\n按月重采样：')\nmonthly_stats = df.set_index('date').resample('M')['value'].agg(['mean', 'count'])\nprint(monthly_stats)\n\n# 4. 数据分桶\nprint('\\n数值分桶统计：')\ndf['value_bin'] = pd.qcut(df['value'], q=4, labels=['Q1', 'Q2', 'Q3', 'Q4'])\nbin_stats = df.groupby('value_bin')['age'].agg(['count', 'mean']).round(2)\nprint(bin_stats)\n\n# 5. 高级统计指标\nprint('\\n高级统计指标：')\nadvanced_stats = df.agg({\n    'value': ['skew', 'kurt', 'sem'],  # 偏度、峰度、标准误\n    'age': ['var', 'std']  # 方差、标准差\n}).round(4)\nprint(advanced_stats)",
+  "category_id": "data_explore",
+  "tags": ["pandas", "数据探索", "高级分析", "统计"],
+  "use_count": 0,
+  "created_at": "2024-01-23T00:00:00",
+  "updated_at": "2024-01-23T00:00:00"
+} 

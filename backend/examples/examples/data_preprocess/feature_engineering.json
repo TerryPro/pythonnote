@@ -1,0 +1,11 @@
+{
+  "id": "data_preprocess_3",
+  "title": "特征工程",
+  "description": "常用的特征工程方法，包括特征缩放、编码、创建等",
+  "code": "import pandas as pd\nimport numpy as np\nfrom sklearn.preprocessing import StandardScaler, MinMaxScaler, LabelEncoder, OneHotEncoder\n\n# 创建示例数据\ndf = pd.DataFrame({\n    'age': [25, 35, 45, 20, 30],\n    'income': [30000, 45000, 80000, 25000, 50000],\n    'education': ['高中', '本科', '研究生', '高中', '本科'],\n    'city': ['北京', '上海', '广州', '深圳', '北京']\n})\n\nprint('原始数据：')\nprint(df)\n\n# 1. 数值特征缩放\n# 标准化 (Z-score标准化)\nscaler = StandardScaler()\ndf_scaled = df.copy()\ndf_scaled[['age', 'income']] = scaler.fit_transform(df[['age', 'income']])\nprint('\\n标准化后的数据：')\nprint(df_scaled)\n\n# 归一化 (Min-Max缩放)\nmin_max_scaler = MinMaxScaler()\ndf_normalized = df.copy()\ndf_normalized[['age', 'income']] = min_max_scaler.fit_transform(df[['age', 'income']])\nprint('\\n归一化后的数据：')\nprint(df_normalized)\n\n# 2. 类别特征编码\n# Label编码\nlabel_encoder = LabelEncoder()\ndf['education_encoded'] = label_encoder.fit_transform(df['education'])\nprint('\\nLabel编码后的数据：')\nprint(df)\n\n# One-Hot编码\ndf_onehot = pd.get_dummies(df, columns=['city', 'education'], prefix=['city', 'edu'])\nprint('\\nOne-Hot编码后的数据：')\nprint(df_onehot)\n\n# 3. 特征分箱\n# 等宽分箱\ndf['age_bin'] = pd.cut(df['age'], bins=3, labels=['young', 'middle', 'old'])\n# 等频分箱\ndf['income_bin'] = pd.qcut(df['income'], q=3, labels=['low', 'medium', 'high'])\nprint('\\n分箱后的数据：')\nprint(df)\n\n# 4. 特征组合\n# 数值特征组合\ndf['income_per_age'] = df['income'] / df['age']\n\n# 5. 特征交互\n# 创建交互特征\ndf_interact = df.copy()\ndf_interact['age_income_interact'] = df_interact['age'] * df_interact['income']\nprint('\\n特征交互后的数据：')\nprint(df_interact)\n\n# 6. 时间特征（假设有日期列）\ndf['date'] = pd.date_range(start='2024-01-01', periods=5)\ndf['year'] = df['date'].dt.year\ndf['month'] = df['date'].dt.month\ndf['day'] = df['date'].dt.day\ndf['dayofweek'] = df['date'].dt.dayofweek\nprint('\\n提取时间特征后的数据：')\nprint(df)",
+  "category_id": "data_preprocess",
+  "tags": ["特征工程", "数据预处理", "机器学习", "sklearn"],
+  "use_count": 0,
+  "created_at": "2024-01-23T00:00:00",
+  "updated_at": "2024-01-23T00:00:00"
+} 

@@ -1,0 +1,11 @@
+{
+  "id": "data_process_1",
+  "title": "Pandas基础操作",
+  "description": "Pandas常用的数据处理操作示例",
+  "code": "import pandas as pd\nimport numpy as np\n\n# 创建示例数据\ndf = pd.DataFrame({\n    'name': ['张三', '李四', '王五', '赵六', '钱七'],\n    'age': [25, 30, 35, 28, 32],\n    'salary': [8000, 12000, 15000, 9000, 13000],\n    'department': ['技术', '销售', '技术', '市场', '销售'],\n    'join_date': ['2020-01-01', '2019-06-15', '2021-03-01', '2020-08-01', '2018-12-01']\n})\n\n# 1. 基本查看\nprint('数据基本信息：')\nprint(df.info())\nprint('\\n数据预览：')\nprint(df.head())\n\n# 2. 列操作\n# 选择列\nprint('\\n选择特定列：')\nprint(df[['name', 'salary']])\n\n# 添加新列\ndf['bonus'] = df['salary'] * 0.1\nprint('\\n添加奖金列：')\nprint(df)\n\n# 重命名列\ndf = df.rename(columns={'salary': 'monthly_salary'})\nprint('\\n重命名列：')\nprint(df)\n\n# 3. 数据筛选\n# 条件筛选\nprint('\\n工资大于10000的员工：')\nprint(df[df['monthly_salary'] > 10000])\n\n# 多条件筛选\nprint('\\n技术部门且年龄小于30的员工：')\nprint(df[(df['department'] == '技术') & (df['age'] < 30)])\n\n# 4. 排序\n# 单列排序\nprint('\\n按年龄排序：')\nprint(df.sort_values('age'))\n\n# 多列排序\nprint('\\n按部门和工资排序：')\nprint(df.sort_values(['department', 'monthly_salary'], ascending=[True, False]))\n\n# 5. 分组统计\nprint('\\n按部门统计：')\nprint(df.groupby('department').agg({\n    'monthly_salary': ['mean', 'min', 'max'],\n    'age': 'mean',\n    'name': 'count'\n}).round(2))\n\n# 6. 日期处理\ndf['join_date'] = pd.to_datetime(df['join_date'])\ndf['work_years'] = (pd.Timestamp.now() - df['join_date']).dt.days / 365\nprint('\\n添加工作年限：')\nprint(df)\n\n# 7. 数据透视表\nprint('\\n部门-年龄段透视表：')\ndf['age_group'] = pd.cut(df['age'], bins=[20, 25, 30, 35, 40], labels=['20-25', '26-30', '31-35', '36-40'])\npivot_table = pd.pivot_table(\n    df,\n    values='monthly_salary',\n    index='department',\n    columns='age_group',\n    aggfunc='mean',\n    fill_value=0\n).round(2)\nprint(pivot_table)",
+  "category_id": "data_process",
+  "tags": ["pandas", "数据处理", "基础操作"],
+  "use_count": 0,
+  "created_at": "2024-01-23T00:00:00",
+  "updated_at": "2024-01-23T00:00:00"
+} 

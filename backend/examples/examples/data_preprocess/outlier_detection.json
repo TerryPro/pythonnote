@@ -1,0 +1,11 @@
+{
+  "id": "data_preprocess_2",
+  "title": "异常值检测",
+  "description": "使用多种方法进行异常值检测和处理",
+  "code": "import pandas as pd\nimport numpy as np\nfrom scipy import stats\nimport matplotlib.pyplot as plt\nimport seaborn as sns\n\n# 创建示例数据\nnp.random.seed(42)\ndata = np.random.normal(100, 15, 1000)\n# 添加一些异常值\ndata = np.append(data, [200, 210, 220, 0, -10, -20])\ndf = pd.DataFrame(data, columns=['value'])\n\n# 1. 箱线图法检测异常值\nQ1 = df['value'].quantile(0.25)\nQ3 = df['value'].quantile(0.75)\nIQR = Q3 - Q1\nlower_bound = Q1 - 1.5 * IQR\nupper_bound = Q3 + 1.5 * IQR\n\noutliers_iqr = df[(df['value'] < lower_bound) | (df['value'] > upper_bound)]\nprint('箱线图法检测到的异常值：')\nprint(outliers_iqr)\n\n# 可视化箱线图\nplt.figure(figsize=(10, 6))\nsns.boxplot(x=df['value'])\nplt.title('数据分布箱线图')\nplt.show()\n\n# 2. Z-score方法检测异常值\nz_scores = stats.zscore(df['value'])\noutliers_zscore = df[abs(z_scores) > 3]\nprint('\\nZ-score方法检测到的异常值（|z| > 3）：')\nprint(outliers_zscore)\n\n# 3. 修改版Z-score方法（使用中位数和MAD）\nmedian = df['value'].median()\nmad = stats.median_abs_deviation(df['value'])\nmodified_z_scores = 0.6745 * (df['value'] - median) / mad\noutliers_modified_z = df[abs(modified_z_scores) > 3.5]\nprint('\\n修改版Z-score方法检测到的异常值：')\nprint(outliers_modified_z)\n\n# 4. 处理异常值\n# 方法1：删除异常值\ndf_clean = df[(df['value'] >= lower_bound) & (df['value'] <= upper_bound)]\n\n# 方法2：将异常值替换为边界值\ndf['value_clipped'] = df['value'].clip(lower=lower_bound, upper=upper_bound)\n\n# 方法3：将异常值替换为NaN后插值\ndf['value_treated'] = df['value'].copy()\ndf.loc[abs(modified_z_scores) > 3.5, 'value_treated'] = np.nan\ndf['value_treated'] = df['value_treated'].interpolate()\n\n# 可视化处理结果\nplt.figure(figsize=(15, 5))\n\n# 原始数据\nplt.subplot(131)\nsns.histplot(df['value'], bins=50)\nplt.title('原始数据分布')\n\n# 删除异常值后\nplt.subplot(132)\nsns.histplot(df_clean['value'], bins=50)\nplt.title('删除异常值后的分布')\n\n# 处理异常值后\nplt.subplot(133)\nsns.histplot(df['value_treated'], bins=50)\nplt.title('处理异常值后的分布')\n\nplt.tight_layout()\nplt.show()",
+  "category_id": "data_preprocess",
+  "tags": ["pandas", "数据预处理", "异常值检测", "统计分析"],
+  "use_count": 0,
+  "created_at": "2024-01-23T00:00:00",
+  "updated_at": "2024-01-23T00:00:00"
+} 

@@ -1,0 +1,11 @@
+{
+  "id": "data_process_3",
+  "title": "数据重塑操作",
+  "description": "Pandas中的数据重塑操作，包括pivot、melt、stack、unstack等",
+  "code": "import pandas as pd\nimport numpy as np\n\n# 创建示例数据\n# 销售数据\nsales_data = pd.DataFrame({\n    'date': ['2024-01-01', '2024-01-01', '2024-01-01', '2024-01-02', '2024-01-02', '2024-01-02'],\n    'product': ['A', 'B', 'C', 'A', 'B', 'C'],\n    'region': ['北部', '北部', '北部', '南部', '南部', '南部'],\n    'sales': [100, 150, 200, 120, 180, 220],\n    'quantity': [10, 15, 20, 12, 18, 22]\n})\n\nprint('原始数据：')\nprint(sales_data)\n\n# 1. pivot - 数据透视\nprint('\\n使用pivot转换数据（按产品和日期透视销售额）：')\npivoted_sales = sales_data.pivot(index='date', columns='product', values='sales')\nprint(pivoted_sales)\n\n# 2. pivot_table - 数据透视表（可以处理重复值）\nprint('\\n使用pivot_table创建透视表：')\npivot_table = pd.pivot_table(\n    sales_data,\n    values=['sales', 'quantity'],\n    index=['region'],\n    columns=['product'],\n    aggfunc={'sales': 'sum', 'quantity': 'mean'}\n)\nprint(pivot_table)\n\n# 3. melt - 宽格式转长格式\n# 首先创建宽格式数据\nwide_data = pd.DataFrame({\n    'region': ['北部', '南部', '东部'],\n    'A_sales': [100, 120, 140],\n    'B_sales': [150, 180, 160],\n    'C_sales': [200, 220, 180]\n})\n\nprint('\\n原始宽格式数据：')\nprint(wide_data)\n\nprint('\\n使用melt转换为长格式：')\nmelted_data = pd.melt(\n    wide_data,\n    id_vars=['region'],\n    var_name='product',\n    value_name='sales'\n)\nprint(melted_data)\n\n# 4. stack/unstack - 层次化索引操作\n# 创建多层次索引数据\nmulti_index_data = sales_data.set_index(['date', 'region', 'product'])\nprint('\\n多层次索引数据：')\nprint(multi_index_data)\n\n# stack操作\nprint('\\nstack操作后：')\nstacked = multi_index_data.unstack('product')\nprint(stacked)\n\n# unstack操作\nprint('\\nunstack操作后：')\nunstacked = stacked.stack()\nprint(unstacked)\n\n# 5. 重塑索引\nprint('\\n重新设置索引：')\nreshaped = sales_data.set_index(['date', 'product']).reset_index()\nprint(reshaped)\n\n# 6. 数据透视表的高级用法\nprint('\\n高级数据透视表：')\nadvanced_pivot = pd.pivot_table(\n    sales_data,\n    values=['sales', 'quantity'],\n    index=['region'],\n    columns=['product'],\n    aggfunc={'sales': ['sum', 'mean'], 'quantity': ['sum', 'mean']},\n    margins=True,\n    margins_name='Total'\n)\nprint(advanced_pivot)",
+  "category_id": "data_process",
+  "tags": ["pandas", "数据处理", "数据重塑", "pivot"],
+  "use_count": 0,
+  "created_at": "2024-01-23T00:00:00",
+  "updated_at": "2024-01-23T00:00:00"
+} 

@@ -1,0 +1,11 @@
+{
+  "id": "data_preprocess_1",
+  "title": "缺失值处理",
+  "description": "常见的缺失值处理方法，包括删除、填充等",
+  "code": "import pandas as pd\nimport numpy as np\n\n# 创建包含缺失值的示例数据\ndf = pd.DataFrame({\n    'A': [1, 2, np.nan, 4, 5],\n    'B': [np.nan, 2, 3, np.nan, 5],\n    'C': [1, 2, 3, 4, 5],\n    'D': ['a', np.nan, 'c', 'd', np.nan]\n})\n\nprint('原始数据：')\nprint(df)\nprint('\\n缺失值统计：')\nprint(df.isnull().sum())\n\n# 1. 删除缺失值\n# 删除所有包含缺失值的行\ndf_dropna = df.dropna()\nprint('\\n删除所有缺失值后的数据：')\nprint(df_dropna)\n\n# 只删除全为缺失值的行\ndf_dropna_all = df.dropna(how='all')\nprint('\\n删除全为缺失值的行：')\nprint(df_dropna_all)\n\n# 2. 填充缺失值\n# 用固定值填充\ndf_fillna = df.fillna(0)\nprint('\\n用0填充缺失值：')\nprint(df_fillna)\n\n# 用前向值填充\ndf_ffill = df.fillna(method='ffill')\nprint('\\n用前向值填充：')\nprint(df_ffill)\n\n# 用后向值填充\ndf_bfill = df.fillna(method='bfill')\nprint('\\n用后向值填充：')\nprint(df_bfill)\n\n# 3. 不同列使用不同的填充方法\nfill_values = {\n    'A': df['A'].mean(),  # 用均值填充\n    'B': df['B'].median(),  # 用中位数填充\n    'D': 'missing'  # 用字符串填充\n}\ndf_mixed_fill = df.fillna(value=fill_values)\nprint('\\n使用不同方法填充：')\nprint(df_mixed_fill)\n\n# 4. 插值填充\n# 线性插值\ndf_interp = df.interpolate(method='linear')\nprint('\\n线性插值填充：')\nprint(df_interp)",
+  "category_id": "data_preprocess",
+  "tags": ["pandas", "数据预处理", "缺失值", "数据清洗"],
+  "use_count": 0,
+  "created_at": "2024-01-23T00:00:00",
+  "updated_at": "2024-01-23T00:00:00"
+} 

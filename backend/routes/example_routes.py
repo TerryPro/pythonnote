@@ -3,12 +3,18 @@ import uuid
 from datetime import datetime
 from typing import List
 from fastapi import APIRouter, HTTPException
+import logging
 from models.example import (
     Category, Example,
     CategoryCreate, CategoryUpdate,
-    ExampleCreate, ExampleUpdate
+    ExampleCreate, ExampleUpdate,
+    SaveFromCellRequest
 )
 from services.example_service import ExampleService
+
+# 配置日志
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/code-examples", tags=["code-examples"])
 example_service = ExampleService()
@@ -66,4 +72,32 @@ async def delete_example(example_id: str):
 @router.post("/{example_id}/use")
 async def use_example(example_id: str):
     """使用示例"""
-    return await example_service.use_example(example_id) 
+    return await example_service.use_example(example_id)
+
+@router.post("/save-from-cell", response_model=Example)
+async def save_from_cell(request: SaveFromCellRequest):
+    """从单元格保存代码到示例库"""
+    try:
+        logger.info("接收到保存示例请求:")
+        logger.info(f"标题: {request.title}")
+        logger.info(f"描述: {request.description}")
+        logger.info(f"分类ID: {request.category_id}")
+        logger.info(f"标签: {request.tags}")
+        logger.info(f"代码长度: {len(request.code)} 字符")
+        
+        example = ExampleCreate(
+            title=request.title,
+            description=request.description,
+            code=request.code,
+            category_id=request.category_id,
+            tags=request.tags
+        )
+        
+        logger.info("开始创建示例...")
+        result = await example_service.create_example(example)
+        logger.info(f"示例创建成功，ID: {result.id}")
+        return result
+        
+    except Exception as e:
+        logger.error(f"创建示例失败: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"创建示例失败: {str(e)}") 

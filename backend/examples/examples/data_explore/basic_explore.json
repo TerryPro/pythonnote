@@ -1,0 +1,11 @@
+{
+  "id": "basic_explore_1",
+  "title": "基础数据探索",
+  "description": "使用pandas进行基础数据探索，包括查看数据基本信息、统计描述等",
+  "code": "import pandas as pd\n\n# 读取数据集\ndf = pd.read_csv('example.csv')\n\n# 查看数据基本信息\nprint('数据基本信息：')\nprint(df.info())\n\n# 查看数据统计描述\nprint('\\n数据统计描述：')\nprint(df.describe())\n\n# 查看前几行数据\nprint('\\n数据预览：')\nprint(df.head())\n\n# 查看数据维度\nprint('\\n数据维度：', df.shape)\n\n# 查看列名\nprint('\\n数据列名：', df.columns.tolist())\n\n# 检查缺失值\nprint('\\n缺失值统计：')\nprint(df.isnull().sum())",
+  "category_id": "data_explore",
+  "tags": ["pandas", "数据探索", "基础操作"],
+  "use_count": 0,
+  "created_at": "2024-01-23T00:00:00",
+  "updated_at": "2024-01-23T00:00:00"
+}

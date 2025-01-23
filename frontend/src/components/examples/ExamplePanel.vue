@@ -1,10 +1,10 @@
 <template>
   <div class="example-panel">
     <!-- 左侧分类列表 -->
-    <el-card class="category-panel" shadow="never">
+    <el-card class="category-panel">
       <template #header>
         <div class="card-header">
-          <span>代码分类</span>
+          <span class="header-title">代码分类</span>
           <div class="header-actions">
             <button class="icon-btn" @click="handleReload" title="重新加载">
               <el-icon><Refresh /></el-icon>
@@ -39,23 +39,28 @@
     </el-card>
 
     <!-- 中间示例列表 -->
-    <el-card class="example-list" shadow="never">
+    <el-card class="example-list">
       <template #header>
         <div class="card-header">
-          <el-input
-            v-model="searchText"
-            placeholder="搜索代码示例..."
-            :prefix-icon="Search"
-            clearable
-          />
-          <button
-            v-if="isManageMode"
-            class="icon-btn"
-            @click="handleAddExample"
-            title="添加示例"
-          >
-            <el-icon><Plus /></el-icon>
-          </button>
+          <div class="search-wrapper">
+            <el-input
+              v-model="searchText"
+              placeholder="搜索代码示例..."
+              :prefix-icon="Search"
+              clearable
+              size="small"
+            />
+          </div>
+          <div class="header-actions">
+            <button
+              v-if="isManageMode"
+              class="icon-btn"
+              @click="handleAddExample"
+              title="添加示例"
+            >
+              <el-icon><Plus /></el-icon>
+            </button>
+          </div>
         </div>
       </template>
       <el-scrollbar>
@@ -83,10 +88,10 @@
     </el-card>
 
     <!-- 右侧预览区域 -->
-    <el-card class="example-preview" shadow="never">
+    <el-card class="example-preview">
       <template #header>
         <div class="card-header">
-          <span>示例预览</span>
+          <span class="header-title">示例预览</span>
         </div>
       </template>
       <el-empty
@@ -97,6 +102,9 @@
         <div class="preview-content">
           <div class="preview-header">
             <h3>{{ selectedExample.title }}</h3>
+            <el-tag size="small" type="info">
+              已使用 {{ selectedExample.use_count }} 次
+            </el-tag>
           </div>
           <p class="preview-desc">{{ selectedExample.description }}</p>
           <div class="preview-tags">
@@ -112,41 +120,39 @@
           <div class="preview-code">
             <div class="code-header">
               <span>代码示例</span>
-              <el-tag size="small" type="info">
-                已使用 {{ selectedExample.use_count }} 次
-              </el-tag>
+              <div class="code-actions">
+                <template v-if="isManageMode">
+                  <el-button type="primary" @click="handleEdit" size="small">
+                    <el-icon><Edit /></el-icon>编辑
+                  </el-button>
+                  <el-popconfirm
+                    title="确定要删除这个示例吗？"
+                    @confirm="handleDelete"
+                  >
+                    <template #reference>
+                      <el-button type="danger" size="small">
+                        <el-icon><Delete /></el-icon>删除
+                      </el-button>
+                    </template>
+                  </el-popconfirm>
+                </template>
+                <template v-else>
+                  <el-button type="primary" @click="useExample" size="small">
+                    使用此示例
+                  </el-button>
+                  <el-button @click="copyCode" size="small">
+                    复制代码
+                  </el-button>
+                </template>
+              </div>
             </div>
             <el-input
               type="textarea"
               v-model="selectedExample.code"
-              :rows="6"
+              :rows="15"
               readonly
+              class="code-input"
             />
-          </div>
-          <div class="preview-actions">
-            <template v-if="isManageMode">
-              <el-button type="primary" @click="handleEdit">
-                <el-icon><Edit /></el-icon>编辑
-              </el-button>
-              <el-popconfirm
-                title="确定要删除这个示例吗？"
-                @confirm="handleDelete"
-              >
-                <template #reference>
-                  <el-button type="danger">
-                    <el-icon><Delete /></el-icon>删除
-                  </el-button>
-                </template>
-              </el-popconfirm>
-            </template>
-            <template v-else>
-              <el-button type="primary" @click="useExample">
-                使用此示例
-              </el-button>
-              <el-button @click="copyCode">
-                复制代码
-              </el-button>
-            </template>
           </div>
         </div>
       </template>
@@ -454,16 +460,12 @@ const handleDelete = async () => {
 
 const useExample = async () => {
   if (!selectedExample.value) return
-  try {
-    const response = await fetch(`${BASE_URL}/api/code-examples/${selectedExample.value.id}/use`, {
-      method: 'POST'
-    })
-    if (response.ok) {
-      emit('use-example', selectedExample.value.code)
-    }
-  } catch (error) {
-    ElMessage.error('使用示例失败')
-  }
+  
+  // 直接发出事件，不需要调用API
+  emit('use-example', selectedExample.value.code)
+  
+  // 可以添加一个成功提示
+  ElMessage.success('代码已添加到单元格')
 }
 
 const copyCode = async () => {
@@ -574,29 +576,60 @@ onMounted(async () => {
   flex: 1;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  height: 40px; /* 统一header高度 */
+  padding: 0 4px;
+}
+
+.header-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--el-text-color-primary);
+}
+
+.search-wrapper {
+  flex: 1;
+  margin-right: 8px;
+  max-width: 220px;
+}
+
+.search-wrapper :deep(.el-input__wrapper) {
+  padding-right: 8px;
+}
+
+.search-wrapper :deep(.el-input__inner) {
+  height: 32px;
+  line-height: 32px;
 }
 
 .header-actions {
   display: flex;
   gap: 8px;
+  align-items: center;
 }
 
 .icon-btn {
-  padding: 2px;
+  padding: 6px;
   border: none;
   background: none;
   cursor: pointer;
   color: var(--el-text-color-regular);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
 }
 
 .icon-btn:hover {
   color: var(--el-color-primary);
+  background-color: var(--el-fill-color-light);
 }
 
 .category-menu {
@@ -626,19 +659,32 @@ onMounted(async () => {
 .preview-content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  height: calc(100% - 48px); /* 减去header高度 */
+}
+
+.preview-header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .preview-header h3 {
   margin: 0;
+  font-size: 18px;
+  color: var(--el-text-color-primary);
 }
 
 .preview-desc {
+  flex-shrink: 0;
   color: var(--el-text-color-regular);
   margin: 0;
+  line-height: 1.5;
 }
 
 .preview-tags {
+  flex-shrink: 0;
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
@@ -648,18 +694,36 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  height: 400px; /* 固定代码区域高度 */
 }
 
 .code-header {
+  flex-shrink: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 8px 0;
 }
 
-.preview-actions {
+.code-actions {
+  flex-shrink: 0;
   display: flex;
   gap: 8px;
-  justify-content: flex-end;
+}
+
+.code-input {
+  height: 100%;
+  font-family: 'Fira Code', monospace;
+}
+
+.code-input :deep(.el-textarea__inner) {
+  height: 100% !important; /* 强制textarea高度100% */
+  font-family: 'Fira Code', monospace;
+  line-height: 1.6;
+  padding: 12px;
+  background-color: var(--el-fill-color-light);
+  border-radius: 4px;
+  resize: none; /* 禁用手动调整大小 */
 }
 
 /* 自定义滚动条样式 */

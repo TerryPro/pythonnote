@@ -42,6 +42,13 @@
       :dataframe-info="dataframeInfo"
       @code-generated="handleCodeGenerated"
     />
+    
+    <!-- 保存到示例库对话框 -->
+    <SaveToExampleDialog
+      v-model="showSaveDialog"
+      :code="localContent"
+      @saved="handleExampleSaved"
+    />
   </div>
 </template>
 
@@ -49,7 +56,8 @@
 import { ref, inject, onMounted, watch, nextTick } from 'vue'
 import MonacoEditor from './MonacoEditor.vue'
 import AiDialog from './ai/AiDialog.vue'
-import { ElLoading } from 'element-plus'
+import SaveToExampleDialog from './examples/SaveToExampleDialog.vue'
+import { ElLoading, ElMessage } from 'element-plus'
 
 const props = defineProps({
   cellId: {
@@ -205,10 +213,27 @@ watch(() => props.outputContent?.plotly_html, (newVal) => {
   }
 });
 
+// 保存到示例库相关
+const showSaveDialog = ref(false)
+
+const handleSaveToExample = () => {
+  if (!localContent.value?.trim()) {
+    ElMessage.warning('请先输入代码')
+    return
+  }
+  showSaveDialog.value = true
+}
+
+const handleExampleSaved = () => {
+  ElMessage.success('示例代码保存成功')
+  showSaveDialog.value = false
+}
+
 // 暴露属性给父组件
 defineExpose({
   executeCode,
-  showAiDialog
+  showAiDialog,
+  handleSaveToExample
 })
 </script>
 
@@ -348,5 +373,12 @@ defineExpose({
   backdrop-filter: blur(2px);
   transition: all 0.3s;
   z-index: 10;
+}
+
+.editor-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px;
+  border-bottom: 1px solid var(--border-color);
 }
 </style> 

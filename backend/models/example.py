@@ -47,4 +47,12 @@ class ExampleUpdate(BaseModel):
     description: Optional[str] = None
     code: Optional[str] = None
     category_id: Optional[str] = None
-    tags: Optional[List[str]] = None 
+    tags: Optional[List[str]] = None
+
+class SaveFromCellRequest(BaseModel):
+    """从单元格保存代码的请求模型"""
+    code: str
+    title: str
+    description: str = ""
+    category_id: str
+    tags: List[str] = [] 

@@ -245,13 +245,6 @@
                   <i class="fas fa-play"></i>
                 </button>
                 <button 
-                  @click="deleteCell(cellId)"
-                  class="icon-btn"
-                  title="删除单元格"
-                >
-                  <i class="fas fa-trash"></i>
-                </button>
-                <button 
                   v-if="cellTypes[cellId] === 'code'"
                   @click="openExampleSelector(cellId)"
                   class="icon-btn"
@@ -323,6 +316,14 @@
                   title="删除单元格"
                 >
                   <i class="fas fa-trash"></i>
+                </button>
+                <button 
+                  v-if="cellTypes[cellId] === 'code'"
+                  @click="() => $refs[`codeCell${cellId}`]?.[0]?.handleSaveToExample()"
+                  class="icon-btn"
+                  title="保存到示例库"
+                >
+                  <i class="fas fa-save"></i>
                 </button>
               </div>
             </div>
