@@ -1,0 +1,11 @@
+{
+  "id": "basic_plots",
+  "title": "基础图表绘制",
+  "description": "使用matplotlib和seaborn绘制常见的数据可视化图表",
+  "code": "import pandas as pd\nimport matplotlib.pyplot as plt\nimport seaborn as sns\n\n# 设置中文显示\nplt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签\nplt.rcParams['axes.unicode_minus'] = False    # 用来正常显示负号\n\n# 准备示例数据\ndf = pd.DataFrame({\n    '月份': ['1月', '2月', '3月', '4月', '5月', '6月'],\n    '销售额': [100, 120, 140, 180, 200, 210],\n    '利润': [30, 40, 50, 60, 70, 80],\n    '客户数': [150, 160, 170, 180, 190, 200]\n})\n\n# 1. 折线图\nplt.figure(figsize=(10, 6))\nplt.plot(df['月份'], df['销售额'], marker='o', label='销售额')\nplt.plot(df['月份'], df['利润'], marker='s', label='利润')\nplt.title('月度销售额和利润趋势')\nplt.xlabel('月份')\nplt.ylabel('金额')\nplt.legend()\nplt.grid(True)\nplt.show()\n\n# 2. 柱状图\nplt.figure(figsize=(10, 6))\nx = range(len(df['月份']))\nwidth = 0.35\nplt.bar(x, df['销售额'], width, label='销售额')\nplt.bar([i + width for i in x], df['利润'], width, label='利润')\nplt.xticks([i + width/2 for i in x], df['月份'])\nplt.title('月度销售额和利润对比')\nplt.xlabel('月份')\nplt.ylabel('金额')\nplt.legend()\nplt.show()\n\n# 3. 散点图\nplt.figure(figsize=(8, 6))\nplt.scatter(df['客户数'], df['销售额'])\nplt.title('客户数与销售额的关系')\nplt.xlabel('客户数')\nplt.ylabel('销售额')\nplt.show()\n\n# 4. 饼图\nplt.figure(figsize=(8, 8))\nplt.pie(df['利润'], labels=df['月份'], autopct='%1.1f%%')\nplt.title('各月份利润占比')\nplt.axis('equal')\nplt.show()\n\n# 5. 使用Seaborn绘制高级图表\n# 热力图\nplt.figure(figsize=(8, 6))\nsns.heatmap(df.corr(), annot=True, cmap='coolwarm')\nplt.title('相关性热力图')\nplt.show()\n\n# 箱线图\nplt.figure(figsize=(10, 6))\nsns.boxplot(data=df[['销售额', '利润', '客户数']])\nplt.title('销售指标箱线图')\nplt.show()",
+  "category_id": "data_visualization",
+  "tags": ["数据可视化", "matplotlib", "seaborn", "图表"],
+  "use_count": 0,
+  "created_at": "2024-01-22T10:00:00Z",
+  "updated_at": "2024-01-22T10:00:00Z"
+} 

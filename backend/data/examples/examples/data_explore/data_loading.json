@@ -1,0 +1,11 @@
+{
+  "id": "data_loading",
+  "title": "数据加载与查看",
+  "description": "展示如何使用Pandas加载和查看数据的基本操作",
+  "code": "import pandas as pd\n\n# 从CSV文件加载数据\ndf = pd.read_csv('example.csv')\n\n# 查看数据基本信息\nprint('数据基本信息：')\nprint(df.info())\n\n# 查看前5行数据\nprint('\\n前5行数据：')\nprint(df.head())\n\n# 查看数据统计摘要\nprint('\\n数据统计摘要：')\nprint(df.describe())\n\n# 查看列名\nprint('\\n数据列名：')\nprint(df.columns.tolist())\n\n# 检查缺失值\nprint('\\n缺失值统计：')\nprint(df.isnull().sum())",
+  "category_id": "data_explore",
+  "tags": ["数据加载", "Pandas", "数据探索"],
+  "use_count": 0,
+  "created_at": "2024-01-22T10:00:00Z",
+  "updated_at": "2024-01-22T10:00:00Z"
+} 

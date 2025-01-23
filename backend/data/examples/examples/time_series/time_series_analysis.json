@@ -1,0 +1,11 @@
+{
+  "id": "time_series_analysis",
+  "title": "时间序列分析",
+  "description": "使用statsmodels进行时间序列分析和预测",
+  "code": "import pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\nfrom statsmodels.tsa.seasonal import seasonal_decompose\nfrom statsmodels.tsa.stattools import adfuller\nfrom statsmodels.tsa.arima.model import ARIMA\n\n# 设置中文显示\nplt.rcParams['font.sans-serif'] = ['SimHei']\nplt.rcParams['axes.unicode_minus'] = False\n\n# 创建示例时间序列数据\ndates = pd.date_range(start='2023-01-01', end='2023-12-31', freq='D')\ntrend = np.linspace(0, 10, len(dates))  # 趋势项\nseasonal = 5 * np.sin(2 * np.pi * np.arange(len(dates)) / 30)  # 季节性\nnoise = np.random.normal(0, 1, len(dates))  # 随机噪声\n\n# 组合数据\ndata = trend + seasonal + noise\nts = pd.Series(data, index=dates, name='value')\n\n# 1. 时间序列可视化\nplt.figure(figsize=(12, 6))\nplt.plot(ts)\nplt.title('时间序列数据')\nplt.xlabel('日期')\nplt.ylabel('值')\nplt.grid(True)\nplt.show()\n\n# 2. 时间序列分解\ndecomposition = seasonal_decompose(ts, period=30)\n\nplt.figure(figsize=(12, 10))\nplt.subplot(411)\nplt.plot(ts)\nplt.title('原始数据')\nplt.subplot(412)\nplt.plot(decomposition.trend)\nplt.title('趋势')\nplt.subplot(413)\nplt.plot(decomposition.seasonal)\nplt.title('季节性')\nplt.subplot(414)\nplt.plot(decomposition.resid)\nplt.title('残差')\nplt.tight_layout()\nplt.show()\n\n# 3. ADF检验（平稳性检验）\ndef adf_test(series):\n    result = adfuller(series.dropna())\n    print('ADF检验结果：')\n    print(f'ADF统计量: {result[0]:.4f}')\n    print(f'p值: {result[1]:.4f}')\n    print('临界值：')\n    for key, value in result[4].items():\n        print(f'\\t{key}: {value:.4f}')\n\nadf_test(ts)\n\n# 4. ARIMA模型预测\n# 拟合ARIMA模型\nmodel = ARIMA(ts, order=(1, 1, 1))\nresults = model.fit()\n\n# 预测未来30天\nforecast = results.forecast(steps=30)\n\n# 绘制预测结果\nplt.figure(figsize=(12, 6))\nplt.plot(ts.index, ts, label='实际值')\nplt.plot(forecast.index, forecast, label='预测值', color='red')\nplt.title('ARIMA模型预测结果')\nplt.xlabel('日期')\nplt.ylabel('值')\nplt.legend()\nplt.grid(True)\nplt.show()\n\n# 5. 打印模型摘要\nprint('\\nARIMA模型摘要：')\nprint(results.summary())",
+  "category_id": "time_series",
+  "tags": ["时间序列", "ARIMA", "statsmodels", "预测"],
+  "use_count": 0,
+  "created_at": "2024-01-22T10:00:00Z",
+  "updated_at": "2024-01-22T10:00:00Z"
+} 

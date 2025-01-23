@@ -1,0 +1,14 @@
+{
+  "id": "basic_explore",
+  "title": "基础数据探索",
+  "description": "使用Pandas进行基础数据探索的示例",
+  "code": "import pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\nimport seaborn as sns\n\n# 设置中文显示\nplt.rcParams['font.sans-serif'] = ['SimHei']\nplt.rcParams['axes.unicode_minus'] = False\n\n# 创建示例数据\ndata = {\n    '姓名': ['张三', '李四', '王五', '赵六', '钱七'],\n    '年龄': [25, 30, 35, 28, 32],\n    '工资': [8000, 12000, 15000, 9000, 13000],\n    '部门': ['技术', '销售', '技术', '市场', '销售'],\n    '入职年份': [2020, 2019, 2021, 2020, 2018]\n}\n\n# 创建DataFrame\ndf = pd.DataFrame(data)\n\n# 1. 基本信息查看\nprint('数据基本信息：')\nprint(df.info())\n\n# 2. 数据预览\nprint('\\n前几行数据：')\nprint(df.head())\n\n# 3. 基本统计描述\nprint('\\n数据统计描述：')\nprint(df.describe())\n\n# 4. 数据类型查看\nprint('\\n数据类型：')\nprint(df.dtypes)\n\n# 5. 缺失值检查\nprint('\\n缺失值统计：')\nprint(df.isnull().sum())\n\n# 6. 唯一值统计\nprint('\\n唯一值统计：')\nfor column in df.columns:\n    print(f'\\n{column}的唯一值：')\n    print(df[column].value_counts())\n\n# 7. 数据分布可视化\n# 数值型数据分布\nplt.figure(figsize=(12, 6))\n\n# 年龄分布\nplt.subplot(121)\nsns.histplot(data=df, x='年龄', bins=10)\nplt.title('年龄分布')\n\n# 工资分布\nplt.subplot(122)\nsns.histplot(data=df, x='工资', bins=10)\nplt.title('工资分布')\n\nplt.tight_layout()\nplt.show()\n\n# 8. 分类数据统计可视化\nplt.figure(figsize=(12, 6))\n\n# 部门分布\nplt.subplot(121)\nsns.countplot(data=df, x='部门')\nplt.title('部门分布')\n\n# 入职年份分布\nplt.subplot(122)\nsns.countplot(data=df, x='入职年份')\nplt.title('入职年份分布')\n\nplt.tight_layout()\nplt.show()\n\n# 9. 相关性分析\n# 计算数值列的相关系数\ncorr = df[['年龄', '工资']].corr()\n\n# 绘制相关性热力图\nplt.figure(figsize=(8, 6))\nsns.heatmap(corr, annot=True, cmap='coolwarm', center=0)\nplt.title('相关性热力图')\nplt.show()\n\n# 10. 分组统计\nprint('\\n按部门分组统计：')\nprint(df.groupby('部门').agg({\n    '年龄': ['mean', 'min', 'max'],\n    '工资': ['mean', 'min', 'max'],\n    '姓名': 'count'\n}).round(2))",
+  "category_id": "data_explore",
+  "tags": [
+    "数据探索",
+    "Pandas",
+    "数据分析",
+    "可视化"
+  ],
+  "use_count": 1,
+  "created_at": 

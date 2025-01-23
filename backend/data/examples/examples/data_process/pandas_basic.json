@@ -1,0 +1,11 @@
+{
+  "id": "pandas_basic",
+  "title": "Pandas基础操作",
+  "description": "使用Pandas进行基本的数据处理操作",
+  "code": "import pandas as pd\n\n# 创建示例数据\ndata = {\n    '姓名': ['张三', '李四', '王五'],\n    '年龄': [25, 30, 35],\n    '工资': [8000, 12000, 15000]\n}\n\n# 创建DataFrame\ndf = pd.DataFrame(data)\nprint('原始数据:\\n', df)\n\n# 基本统计\nprint('\\n基本统计:\\n', df.describe())\n\n# 数据筛选\nprint('\\n工资大于10000的记录:\\n', df[df['工资'] > 10000])\n\n# 数据排序\nprint('\\n按工资排序:\\n', df.sort_values('工资', ascending=False))\n\n# 添加新列\ndf['奖金'] = df['工资'] * 0.1\nprint('\\n添加奖金列:\\n', df)",
+  "category_id": "data_process",
+  "tags": ["数据处理", "Pandas", "DataFrame"],
+  "use_count": 0,
+  "created_at": "2024-01-22T10:00:00Z",
+  "updated_at": "2024-01-22T10:00:00Z"
+} 

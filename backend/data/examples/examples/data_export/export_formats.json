@@ -1,0 +1,15 @@
+{
+  "id": "export_formats",
+  "title": "数据导出格式",
+  "description": "将数据导出为不同格式的示例",
+  "code": "import pandas as pd\nimport json\nimport sqlite3\n\n# 假设我们已经有了一个DataFrame\ndf = pd.read_csv('example.csv')\n\n# 1. 导出为CSV文件\nprint('导出为CSV文件...')\ndf.to_csv('output.csv', index=False, encoding='utf-8')\n\n# 2. 导出为Excel文件\nprint('导出为Excel文件...')\ndf.to_excel('output.xlsx', index=False, sheet_name='数据')\n\n# 3. 导出为JSON文件\nprint('导出为JSON文件...')\n# 方法1：直接导出\ndf.to_json('output.json', orient='records', force_ascii=False)\n\n# 方法2：自定义JSON格式\ndata_dict = {\n    'data': df.to_dict(orient='records'),\n    'metadata': {\n        'columns': df.columns.tolist(),\n        'shape': df.shape\n    }\n}\nwith open('output_with_metadata.json', 'w', encoding='utf-8') as f:\n    json.dump(data_dict, f, ensure_ascii=False, indent=2)\n\n# 4. 导出为SQLite数据库\nprint('导出为SQLite数据库...')\nconn = sqlite3.connect('output.db')\ndf.to_sql('data_table', conn, if_exists='replace', index=False)\nconn.close()\n\n# 5. 导出为Parquet文件（适合大数据）\nprint('导出为Parquet文件...')\ndf.to_parquet('output.parquet', compression='snappy')\n\n# 6. 导出为HTML表格\nprint('导出为HTML表格...')\nhtml_content = df.to_html(index=False)\nwith open('output.html', 'w', encoding='utf-8') as f:\n    f.write(f'''\n    <html>\n    <head>\n        <title>数据表格</title>\n        <style>\n            table {{ border-collapse: collapse; width: 100%; }}\n            th, td {{ padding: 8px; text-align: left; border: 1px solid #ddd; }}\n            th {{ background-color: #f2f2f2; }}\n        </style>\n    </head>\n    <body>\n        <h1>数据表格</h1>\n        {html_content}\n    </body>\n    </html>\n    ''')\n\nprint('所有导出完成！')\nprint('导出的文件列表：')\nprint('- output.csv')\nprint('- output.xlsx')\nprint('- output.json')\nprint('- output_with_metadata.json')\nprint('- output.db')\nprint('- output.parquet')\nprint('- output.html')",
+  "category_id": "data_export",
+  "tags": [
+    "数据导出",
+    "文件格式",
+    "Pandas"
+  ],
+  "use_count": 1,
+  "created_at": "2024-01-22T10:00:00Z",
+  "updated_at": "2024-01-22T10:00:00Z"
+} 

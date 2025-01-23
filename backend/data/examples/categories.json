@@ -1,0 +1,40 @@
+{
+  "categories": [
+    {
+      "id": "data_explore",
+      "name": "数据探索",
+      "description": "数据加载、查看和基本探索示例",
+      "icon": "Search"
+    },
+    {
+      "id": "data_preprocess",
+      "name": "数据预处理",
+      "description": "数据清洗、转换和预处理示例",
+      "icon": "Tools"
+    },
+    {
+      "id": "data_visualization",
+      "name": "数据可视化",
+      "description": "使用各种图表可视化数据",
+      "icon": "PieChart"
+    },
+    {
+      "id": "statistical_analysis",
+      "name": "统计分析",
+      "description": "数据统计分析和建模示例",
+      "icon": "TrendCharts"
+    },
+    {
+      "id": "data_export",
+      "name": "数据导出",
+      "description": "数据保存和导出示例",
+      "icon": "Upload"
+    },
+    {
+      "id": "time_series",
+      "name": "时序分析",
+      "description": "时间序列数据分析示例",
+      "icon": "Timer"
+    }
+  ]
+}

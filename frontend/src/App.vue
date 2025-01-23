@@ -82,6 +82,13 @@
             <i class="fas fa-list-alt"></i>
           </div>
         </el-tooltip>
+
+        <!-- 添加代码示例库按钮 -->
+        <el-tooltip content="管理代码示例" placement="bottom">
+          <button class="toolbar-btn" @click="openExampleManager">
+            <i class="fas fa-file-code"></i>
+          </button>
+        </el-tooltip>
       </div>
     </nav>
     
@@ -231,11 +238,26 @@
               <div class="cell-actions">
                 <button 
                   v-if="cellTypes[cellId] === 'code'"
-                  @click="() => $refs[`codeCell${cellId}`]?.[0]?.executeCode()" 
+                  @click="() => $refs[`codeCell${cellId}`]?.[0]?.executeCode()"
                   class="icon-btn" 
-                  title="运行"
+                  title="运行代码"
                 >
                   <i class="fas fa-play"></i>
+                </button>
+                <button 
+                  @click="deleteCell(cellId)"
+                  class="icon-btn"
+                  title="删除单元格"
+                >
+                  <i class="fas fa-trash"></i>
+                </button>
+                <button 
+                  v-if="cellTypes[cellId] === 'code'"
+                  @click="openExampleSelector(cellId)"
+                  class="icon-btn"
+                  title="代码示例"
+                >
+                  <i class="fas fa-file-code"></i>
                 </button>
                 <button 
                   v-if="cellTypes[cellId] === 'code'"
@@ -498,6 +520,13 @@
     >
       <PromptPanel mode="manage" />
     </el-dialog>
+
+    <!-- 添加代码示例库对话框 -->
+    <CodeExampleDialog
+      v-model="showCodeExamples"
+      :mode="exampleDialogMode"
+      @use-example="handleUseExample"
+    />
   </div>
 </template>
 
@@ -524,6 +553,7 @@ import FileExplore from './components/DataExplorer/FileExplore.vue'
 import DataFramePreview from './components/DataFramePreview.vue'
 import SystemPromptConfig from './components/SystemPromptConfig.vue'
 import PromptPanel from './components/prompts/PromptPanel.vue'
+import CodeExampleDialog from './components/examples/CodeExampleDialog.vue'
 
 const cells = ref([])
 const currentFile = ref(null)
@@ -533,6 +563,10 @@ const cellTypes = ref({})
 const markdownEditStates = ref({})
 const currentTheme = ref('light')
 const version = ref('加载中...')
+
+// 添加代码示例对话框状态
+const showCodeExamples = ref(false)
+const exampleDialogMode = ref('use')
 
 // 添加笔记本文件列表和数据文件列表
 const notebookFiles = ref([])
@@ -593,6 +627,9 @@ const systemConfigRef = ref(null)
 
 // 预定义提示词管理状态
 const showPromptManager = ref(false)
+
+// 添加当前单元格引用
+const currentCell = ref(null)
 
 // 提供主题变量给子组件
 provide('currentTheme', currentTheme)
@@ -1387,6 +1424,48 @@ const refreshNotebooks = async () => {
 // 添加显示系统配置的方法
 const showSystemConfig = () => {
   systemConfigRef.value?.show()
+}
+
+// 处理使用代码示例
+const handleUseExample = (code) => {
+  const cellId = currentCell.value?.id?.replace('codeCell', '')
+  if (cellId && cellTypes.value[cellId] === 'code') {
+    // 更新单元格内容
+    cellContents.value[cellId] = code
+    
+    // 获取代码单元格组件实例
+    const codeCell = document.querySelector(`#codeCell${cellId}`)
+    if (codeCell) {
+      // 获取Monaco编辑器实例并更新内容
+      const editor = codeCell.__vueParentComponent?.ctx?.editor
+      if (editor) {
+        editor.setValue(code)
+      }
+    }
+    
+    ElMessage.success('代码示例已插入')
+    showCodeExamples.value = false
+  } else {
+    ElMessage.warning('请先选择代码单元格')
+  }
+}
+
+// 打开代码示例选择器
+const openExampleSelector = (cellId) => {
+  if (cellTypes.value[cellId] === 'code') {
+    const cell = document.querySelector(`#codeCell${cellId}`)
+    if (cell) {
+      currentCell.value = cell
+      exampleDialogMode.value = 'use'
+      showCodeExamples.value = true
+    }
+  }
+}
+
+// 打开代码示例管理器
+const openExampleManager = () => {
+  exampleDialogMode.value = 'manage'
+  showCodeExamples.value = true
 }
 </script>
 
