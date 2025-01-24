@@ -39,9 +39,15 @@
       <!-- 列信息表格 -->
       <div class="columns-info">
         <h4>列信息</h4>
-        <el-table :data="previewData.columns || []" border style="width: 100%; margin-bottom: 20px">
-          <el-table-column prop="name" label="列名" />
-          <el-table-column prop="type" label="数据类型" />
+        <el-table 
+          :data="previewData.columns || []" 
+          border 
+          style="width: 100%; margin-bottom: 20px"
+          height="200"
+          :max-height="200"
+        >
+          <el-table-column prop="name" label="列名" width="180" />
+          <el-table-column prop="type" label="数据类型" width="180" />
           <el-table-column prop="null_count" label="空值数量" />
         </el-table>
       </div>
@@ -330,18 +336,56 @@ export default {
   font-style: italic;
 }
 
+.columns-info {
+  margin-top: 1rem;
+}
+
+.columns-info h4 {
+  margin: 0 0 10px 0;
+  color: #606266;
+  font-size: 14px;
+}
+
 :deep(.el-table) {
   --el-table-border-color: #dcdfe6;
   --el-table-header-background-color: #f5f7fa;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
-:deep(.el-table th) {
+:deep(.el-table__header-wrapper) {
+  background-color: var(--el-table-header-background-color);
+}
+
+:deep(.el-table__header th) {
   background-color: var(--el-table-header-background-color);
   font-weight: bold;
+  color: #606266;
+  padding: 8px 0;
 }
 
-:deep(.el-table td) {
-  padding: 8px 0;
+:deep(.el-table__body td) {
+  padding: 8px;
+}
+
+:deep(.el-table__body-wrapper) {
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+:deep(.el-table__body-wrapper::-webkit-scrollbar) {
+  width: 6px;
+  height: 6px;
+}
+
+:deep(.el-table__body-wrapper::-webkit-scrollbar-thumb) {
+  border-radius: 3px;
+  background: #c0c4cc;
+}
+
+:deep(.el-table__body-wrapper::-webkit-scrollbar-track) {
+  border-radius: 3px;
+  background: #f5f7fa;
 }
 
 .dialog-header {

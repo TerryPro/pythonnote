@@ -4,8 +4,8 @@
 
 # 系统版本信息
 VERSION = {
-    "version": "v0.0.4",
-    "build_date": "2024-01-18",
+    "version": "v0.0.4.3",
+    "build_date": "2025-01-23",
     "description": "Python交互式编程环境",
     "features": [
         "Jupyter笔记本功能",

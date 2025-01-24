@@ -8,10 +8,26 @@ import httpx
 from typing import Dict, Any, Optional
 from openai import OpenAI
 from dotenv import load_dotenv
+from datetime import datetime
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# 配置专门的提示词日志记录器
+prompt_logger = logging.getLogger('prompt_logger')
+prompt_logger.setLevel(logging.INFO)
+
+# 创建日志处理器
+prompt_handler = logging.FileHandler(
+    os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 
+                'logs', 'prompts.log'),
+    encoding='utf-8'
+)
+prompt_handler.setFormatter(
+    logging.Formatter('%(asctime)s - %(message)s')
+)
+prompt_logger.addHandler(prompt_handler)
 
 # 加载环境变量
 load_dotenv()
@@ -57,6 +73,13 @@ class DeepSeekClient:
             
             # 构建用户提示词
             user_prompt = PromptBuilder.build_user_prompt(prompt, dataframe_name) if dataframe_name else prompt
+            
+            # 记录最终的提示词到日志
+            prompt_logger.info(
+                "系统提示词:\n%s\n用户提示词:\n%s", 
+                system_prompt, 
+                user_prompt
+            )
             
             # 调用API生成代码
             response = self.client.chat.completions.create(

@@ -5,6 +5,7 @@
     :close-on-click-modal="false"
     :close-on-press-escape="false"
     destroy-on-close
+    :resize="false"
     class="ai-dialog-wrapper"
   >
     <template #title>
@@ -27,10 +28,9 @@
       <!-- DataFrame选择器 -->
       <el-select
         v-model="selectedDataFrame"
-        placeholder="选择要操作的DataFrame"
-        clearable
-        @change="handleDataFrameChange"
         class="df-select"
+        placeholder="请选择要操作的DataFrame"
+        @change="handleDataFrameChange"
       >
         <el-option
           v-for="df in dataFrames"
@@ -41,37 +41,45 @@
       </el-select>
 
       <!-- DataFrame信息展示 -->
-      <div v-if="dataFrameInfo" class="df-info">
+      <div class="df-info">
         <!-- 基本信息卡片 -->
-        <el-card class="info-card" shadow="never">
+        <el-card v-if="dataFrameInfo?.basic_info" class="info-card">
+          <template #header>
+            <div class="card-header">
+              <span>基本信息</span>
+            </div>
+          </template>
           <div class="info-grid">
             <div class="info-item">
-              <span>行数：</span>
-              <strong>{{ dataFrameInfo.basic_info?.行数 }}</strong>
+              <span class="label">行数：</span>
+              <span class="value">{{ dataFrameInfo.basic_info.行数 }}</span>
             </div>
             <div class="info-item">
-              <span>列数：</span>
-              <strong>{{ dataFrameInfo.basic_info?.列数 }}</strong>
+              <span class="label">列数：</span>
+              <span class="value">{{ dataFrameInfo.basic_info.列数 }}</span>
             </div>
             <div class="info-item">
-              <span>内存占用：</span>
-              <strong>{{ dataFrameInfo.basic_info?.内存占用 }}</strong>
+              <span class="label">内存占用：</span>
+              <span class="value">{{ dataFrameInfo.basic_info.内存占用 }}</span>
             </div>
           </div>
         </el-card>
 
         <!-- 列信息表格 -->
-        <el-card class="columns-card" shadow="never">
+        <el-card class="info-card">
           <template #header>
-            <div class="card-header">列信息</div>
+            <div class="card-header">
+              <span>列信息</span>
+            </div>
           </template>
           <el-table
-            :data="dataFrameInfo.columns"
+            :data="dataFrameInfo?.columns || []"
+            style="width: 100%"
             size="small"
-            :height="200"
+            height="200"
           >
-            <el-table-column prop="name" label="列名" min-width="120" />
-            <el-table-column prop="type" label="数据类型" min-width="120" />
+            <el-table-column prop="name" label="列名" min-width="180" />
+            <el-table-column prop="type" label="数据类型" min-width="180" />
             <el-table-column prop="null_count" label="空值数量" min-width="100" />
           </el-table>
         </el-card>
@@ -81,11 +89,12 @@
       <el-input
         v-model="prompt"
         type="textarea"
-        :rows="4"
+        :rows="12"
         :placeholder="promptPlaceholder"
         :disabled="loading || !selectedDataFrame"
         @keydown.ctrl.enter="handleGenerate"
         class="prompt-input"
+        style="height: 300px"
       />
       
       <!-- 加载提示 -->
@@ -117,7 +126,7 @@
   <el-dialog
     v-model="showPromptPanel"
     title="预定义提示词"
-    width="60%"
+    width="80%"
     destroy-on-close
     class="prompt-panel-dialog"
   >
@@ -305,8 +314,21 @@ defineExpose({
 </script>
 
 <style scoped>
+.ai-dialog-wrapper :deep(.el-dialog) {
+  height: 800px;
+  display: flex;
+  flex-direction: column;
+  margin: 0 !important;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 .ai-dialog-wrapper :deep(.el-dialog__body) {
   padding: 0 20px;
+  flex: 1;
+  overflow: hidden;
 }
 
 .dialog-header {
@@ -320,22 +342,41 @@ defineExpose({
   flex-direction: column;
   gap: 16px;
   padding: 20px 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .df-select {
   width: 100%;
+  flex-shrink: 0;
 }
 
 .df-info {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.info-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.info-card :deep(.el-card__body) {
+  flex: 1;
+  overflow: hidden;
+  padding: 0;
 }
 
 .info-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
+  padding: 16px;
 }
 
 .info-item {
@@ -365,6 +406,13 @@ defineExpose({
 
 .prompt-input {
   margin-top: 8px;
+  flex-shrink: 0;
+  height: 300px;
+}
+
+.prompt-input :deep(.el-textarea__inner) {
+  height: 100% !important;
+  resize: none;
 }
 
 .loading-tip {

@@ -119,7 +119,6 @@
           </div>
           <div class="preview-code">
             <div class="code-header">
-              <span>代码示例</span>
               <div class="code-actions">
                 <template v-if="isManageMode">
                   <el-button type="primary" @click="handleEdit" size="small">
@@ -557,7 +556,7 @@ onMounted(async () => {
 .example-panel {
   display: flex;
   gap: 16px;
-  height: 100%;
+  height: 600px;  /* 设置固定高度 */
 }
 
 .category-panel {
@@ -660,7 +659,8 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  height: calc(100% - 48px); /* 减去header高度 */
+  height: 100%;
+  overflow: hidden;  /* 防止内容溢出 */
 }
 
 .preview-header {
@@ -694,7 +694,9 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  height: 400px; /* 固定代码区域高度 */
+  flex: 1;  /* 自动填充剩余空间 */
+  min-height: 0;  /* 允许内容区域收缩 */
+  overflow: hidden;  /* 防止内容溢出 */
 }
 
 .code-header {
@@ -714,16 +716,16 @@ onMounted(async () => {
 .code-input {
   height: 100%;
   font-family: 'Fira Code', monospace;
+  overflow: hidden;  /* 防止内容溢出 */
 }
 
 .code-input :deep(.el-textarea__inner) {
-  height: 100% !important; /* 强制textarea高度100% */
-  font-family: 'Fira Code', monospace;
-  line-height: 1.6;
+  height: 100% !important;
   padding: 12px;
   background-color: var(--el-fill-color-light);
   border-radius: 4px;
-  resize: none; /* 禁用手动调整大小 */
+  resize: none;
+  overflow-y: auto;  /* 添加垂直滚动条 */
 }
 
 /* 自定义滚动条样式 */

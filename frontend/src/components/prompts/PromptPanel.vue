@@ -100,23 +100,9 @@
       <template v-else>
         <div class="preview-content">
           <div class="preview-header">
-            <h3>{{ selectedPrompt.title }}</h3>
+            <h3>{{ selectedPrompt.title }} <el-tag size="small" type="info">已使用 {{ selectedPrompt.use_count }} 次</el-tag></h3>
           </div>
           <p class="preview-desc">{{ selectedPrompt.description }}</p>
-          <div class="preview-template">
-            <div class="template-header">
-              <span>提示词模板</span>
-              <el-tag size="small" type="info">
-                已使用 {{ selectedPrompt.use_count }} 次
-              </el-tag>
-            </div>
-            <el-input
-              type="textarea"
-              v-model="selectedPrompt.template"
-              :rows="6"
-              readonly
-            />
-          </div>
           <div class="preview-actions">
             <template v-if="isManageMode">
               <el-button type="primary" @click="handleEdit">
@@ -141,6 +127,14 @@
                 复制内容
               </el-button>
             </template>
+          </div>
+          <div class="preview-template">
+            <el-input
+              type="textarea"
+              v-model="selectedPrompt.template"
+              :rows="6"
+              readonly
+            />
           </div>
         </div>
       </template>
@@ -576,10 +570,9 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: 220px 300px 1fr;
   gap: 16px;
-  height: 100%;
+  height: 600px;
   padding: 16px;
   background-color: var(--el-bg-color);
-  min-height: 600px;
 }
 
 .category-panel,
@@ -590,6 +583,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   background-color: var(--el-bg-color-overlay);
+  overflow: hidden;
 }
 
 :deep(.el-card) {
@@ -636,8 +630,9 @@ onMounted(async () => {
 
 .category-menu,
 .prompt-menu {
-  border-right: none;
   flex: 1;
+  overflow-y: auto;
+  border-right: none;
   padding: 8px;
 }
 
@@ -677,61 +672,54 @@ onMounted(async () => {
 }
 
 .preview-content {
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 20px;
+  gap: 16px;
   height: 100%;
-  overflow-y: auto;
 }
 
 .preview-header {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--el-border-color-light);
+  align-items: center;
+  gap: 12px;
 }
 
 .preview-header h3 {
   margin: 0;
-  font-size: 20px;
-  line-height: 1.4;
-  color: var(--el-text-color-primary);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .preview-desc {
-  color: var(--el-text-color-regular);
   margin: 0;
-  line-height: 1.6;
-  font-size: 14px;
+  color: var(--el-text-color-secondary);
+  text-align: left;
 }
 
 .preview-template {
   display: flex;
   flex-direction: column;
-  gap: 16px;
   flex: 1;
-  background-color: var(--el-fill-color-blank);
-  border-radius: 8px;
-  padding: 20px;
+  min-height: 0;
 }
 
-.template-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-  color: var(--el-text-color-regular);
-  font-size: 14px;
+.preview-template :deep(.el-textarea) {
+  height: 100%;
+}
+
+.preview-template :deep(.el-textarea__inner) {
+  height: 100% !important;
+  min-height: unset !important;
+  resize: none;
 }
 
 .preview-actions {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
-  padding-top: 20px;
-  border-top: 1px solid var(--el-border-color-light);
 }
 
 :deep(.el-empty) {
@@ -833,6 +821,7 @@ onMounted(async () => {
   padding: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .header-actions {
