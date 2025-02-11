@@ -1,0 +1,101 @@
+site_name: 数据分析助手文档
+site_description: 数据分析助手后端文档
+site_author: Team
+repo_url: https://github.com/yourusername/your-repo
+repo_name: GitHub
+
+theme:
+  name: material
+  language: zh
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - search.share
+    - search.suggest
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/toggle-switch
+        name: 切换到深色模式
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: 切换到浅色模式
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - footnotes
+  - meta
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+plugins:
+  - search
+
+nav:
+  - 首页: 'index.md'
+  - 快速开始:
+    - '环境配置': 'setup/environment.md'
+    - '快速入门': 'setup/quickstart.md'
+    - '部署指南': 'setup/deployment.md'
+  - 架构设计:
+    - '系统架构': 'architecture/system.md'
+    - '数据流': 'architecture/data_flow.md'
+    - '模块设计': 'architecture/modules.md'
+  - API文档:
+    - 'API概览': 'api/overview.md'
+    - '认证授权': 'api/auth.md'
+    - '数据处理API': 'api/data.md'
+    - 'AI服务API': 'api/ai.md'
+  - 开发指南:
+    - '开发规范': 'development/standards.md'
+    - '代码风格': 'development/code_style.md'
+    - '测试指南': 'development/testing.md'
+    - '错误处理': 'development/error_handling.md'
+  - 运维指南:
+    - '监控方案': 'operations/monitoring.md'
+    - '日志管理': 'operations/logging.md'
+    - '性能优化': 'operations/performance.md'
+    - '故障排查': 'operations/troubleshooting.md'
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/yourusername/your-repo
+  analytics:
+    provider: google
+    property: !ENV GOOGLE_ANALYTICS_KEY
+  alternate:
+    - name: 中文
+      link: /
+      lang: zh 

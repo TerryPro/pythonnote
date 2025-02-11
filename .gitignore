@@ -45,6 +45,3 @@ frontend/yarn-error.log*
 # Project specific
 backend/export/
 backend/logs/
-backend/notebooks/
-notebooks/*.ipynb
-!notebooks/example.ipynb 

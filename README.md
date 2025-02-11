@@ -110,13 +110,13 @@ npm install
 1. 启动后端服务：
 ```bash
 cd backend
-uvicorn main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8000
 ```
 
 2. 启动前端服务：
 ```bash
 cd frontend
-npm run dev
+npm run serve
 ```
 
 ### 生产环境
