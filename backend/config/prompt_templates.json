@@ -12,7 +12,7 @@
           "数据探索",
           "基础信息"
         ],
-        "use_count": 1
+        "use_count": 3
       },
       {
         "id": "numerical_stats",
@@ -24,7 +24,7 @@
           "统计分析",
           "数值分析"
         ],
-        "use_count": 3
+        "use_count": 4
       },
       {
         "id": "categorical_analysis",
@@ -350,7 +350,7 @@
           "折线图",
           "时间序列"
         ],
-        "use_count": 14
+        "use_count": 15
       },
       {
         "id": "scatter_plot",
@@ -762,7 +762,7 @@
           "变点检测",
           "PELT"
         ],
-        "use_count": 1
+        "use_count": 2
       },
       {
         "id": "dtw_clustering",

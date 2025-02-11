@@ -76,7 +76,7 @@
             :data="dataFrameInfo?.columns || []"
             style="width: 100%"
             size="small"
-            height="200"
+            height="300"
           >
             <el-table-column prop="name" label="列名" min-width="180" />
             <el-table-column prop="type" label="数据类型" min-width="180" />
@@ -89,12 +89,11 @@
       <el-input
         v-model="prompt"
         type="textarea"
-        :rows="12"
+        :rows="4"
         :placeholder="promptPlaceholder"
         :disabled="loading || !selectedDataFrame"
         @keydown.ctrl.enter="handleGenerate"
         class="prompt-input"
-        style="height: 300px"
       />
       
       <!-- 加载提示 -->
@@ -407,12 +406,6 @@ defineExpose({
 .prompt-input {
   margin-top: 8px;
   flex-shrink: 0;
-  height: 300px;
-}
-
-.prompt-input :deep(.el-textarea__inner) {
-  height: 100% !important;
-  resize: none;
 }
 
 .loading-tip {
