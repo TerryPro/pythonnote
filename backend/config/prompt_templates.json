@@ -12,7 +12,7 @@
           "数据探索",
           "基础信息"
         ],
-        "use_count": 3
+        "use_count": 5
       },
       {
         "id": "numerical_stats",
@@ -35,7 +35,7 @@
           "数据探索",
           "类别分析"
         ],
-        "use_count": 1
+        "use_count": 2
       },
       {
         "id": "missing_value_analysis",
@@ -176,7 +176,7 @@
           "数据转换",
           "归一化"
         ],
-        "use_count": 0
+        "use_count": 1
       },
       {
         "id": "log_transform",
@@ -428,7 +428,7 @@
           "描述统计",
           "离散程度"
         ],
-        "use_count": 1
+        "use_count": 2
       },
       {
         "id": "distribution_features",

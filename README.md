@@ -129,7 +129,7 @@ npm run build
 2. 启动服务：
 ```bash
 cd backend
-uvicorn main:app --host 0.0.0.0 --port 8000
+uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
 ## 使用指南

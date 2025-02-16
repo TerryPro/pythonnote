@@ -27,8 +27,14 @@ class Settings(BaseSettings):
     CORS_ALLOW_METHODS: List[str] = ["*"]
     CORS_ALLOW_HEADERS: List[str] = ["*"]
     
-    # API密钥配置
+    # AI配置
+    DEEPSEEK_CLIENT_TYPE: str = Field(default="siliconflow", env="DEEPSEEK_CLIENT_TYPE")
+    
     DEEPSEEK_API_KEY: str = Field(default="", env="DEEPSEEK_API_KEY")
+    DEEPSEEK_API_BASE: str = Field(default="https://api.deepseek.com/v1", env="DEEPSEEK_API_BASE")
+
+    SILICONFLOW_API_KEY: str = Field(default="", env="SILICONFLOW_API_KEY")
+    SILICONFLOW_API_BASE: str = Field(default="https://api.siliconflow.com/v1", env="SILICONFLOW_API_BASE")
     
     # 日志配置
     LOG_LEVEL: str = "INFO"

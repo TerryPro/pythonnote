@@ -53,13 +53,13 @@ class DirectDeepSeekClient(BaseDeepSeekClient):
     
     def __init__(self):
         """初始化客户端"""
-        self.api_key = os.getenv('DEEPSEEK_API_KEY')
+        self.api_key = settings.DEEPSEEK_API_KEY
         if not self.api_key:
-            raise ValueError("未找到DEEPSEEK_API_KEY环境变量")
+            raise ValueError("请在配置中设置DEEPSEEK_API_KEY")
             
         self.client = OpenAI(
             api_key=self.api_key,
-            base_url="https://api.deepseek.com"
+            base_url=settings.DEEPSEEK_API_BASE
         )
     
     def generate_code(
@@ -80,11 +80,15 @@ class DirectDeepSeekClient(BaseDeepSeekClient):
             user_prompt = PromptBuilder.build_user_prompt(prompt, dataframe_name) if dataframe_name else prompt
             
             # 记录最终的提示词到日志
-            prompt_logger.info(
-                "系统提示词:\n%s\n用户提示词:\n%s", 
-                system_prompt, 
-                user_prompt
-            )
+            prompt_logger.info("系统提示词:")
+            for line in system_prompt.split('\n'):
+                if line.strip():  # 只记录非空行
+                    prompt_logger.info(line)
+            
+            prompt_logger.info("\n用户提示词:")
+            for line in user_prompt.split('\n'):
+                if line.strip():  # 只记录非空行
+                    prompt_logger.info(line)
             
             # 调用API生成代码
             response = self.client.chat.completions.create(
@@ -111,11 +115,11 @@ class SiliconFlowDeepSeekClient(BaseDeepSeekClient):
     
     def __init__(self):
         """初始化客户端"""
-        self.api_key = os.getenv('SILICONFLOW_API_KEY')
+        self.api_key = settings.SILICONFLOW_API_KEY
         if not self.api_key:
-            raise ValueError("未找到SILICONFLOW_API_KEY环境变量")
+            raise ValueError("请在配置中设置SILICONFLOW_API_KEY")
             
-        self.base_url = "https://api.siliconflow.cn/v1"
+        self.base_url = settings.SILICONFLOW_API_BASE
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
@@ -139,11 +143,15 @@ class SiliconFlowDeepSeekClient(BaseDeepSeekClient):
             user_prompt = PromptBuilder.build_user_prompt(prompt, dataframe_name) if dataframe_name else prompt
             
             # 记录最终的提示词到日志
-            prompt_logger.info(
-                "系统提示词:\n%s\n用户提示词:\n%s", 
-                system_prompt, 
-                user_prompt
-            )
+            prompt_logger.info("系统提示词:")
+            for line in system_prompt.split('\n'):
+                if line.strip():  # 只记录非空行
+                    prompt_logger.info(line)
+            
+            prompt_logger.info("\n用户提示词:")
+            for line in user_prompt.split('\n'):
+                if line.strip():  # 只记录非空行
+                    prompt_logger.info(line)
             
             # 准备请求数据
             payload = {
@@ -195,6 +203,7 @@ class DeepSeekClientFactory:
         Returns:
             BaseDeepSeekClient: 客户端实例
         """
+        logger.info(f"创建DeepSeek客户端: {client_type}")
         if client_type == "direct":
             return DirectDeepSeekClient()
         elif client_type == "siliconflow":
@@ -203,7 +212,7 @@ class DeepSeekClientFactory:
             raise ValueError(f"不支持的客户端类型: {client_type}")
 
 _client = None
-_client_type = os.getenv('DEEPSEEK_CLIENT_TYPE', 'direct')
+_client_type = settings.DEEPSEEK_CLIENT_TYPE
 
 def get_client() -> BaseDeepSeekClient:
     """

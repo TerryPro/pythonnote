@@ -34,24 +34,26 @@ class PromptBuilder:
         instance = PromptBuilder._instance()
         system_prompt = instance.prompt_config.load_prompts()
         
-        if dataframe_info:
-            # 添加DataFrame的基本信息
-            basic_info = dataframe_info.get('basic_info', {})
-            system_prompt.extend([
-                "\n当前DataFrame信息：",
-                f"- 行数：{basic_info.get('行数', 0)}",
-                f"- 列数：{basic_info.get('列数', 0)}",
-                f"- 内存占用：{basic_info.get('内存占用', '0 MB')}"
-            ])
-            
-            # 添加列信息
-            columns = dataframe_info.get('columns', [])
-            if columns:
-                system_prompt.append("\n列信息：")
-                for col in columns:
-                    system_prompt.append(
-                        f"- {col['name']}: 类型={col['type']}, 空值数={col['null_count']}"
-                    )
+        if dataframe_info and isinstance(dataframe_info, dict):
+            # 检查是否已经包含DataFrame信息
+            if not any("DataFrame信息" in prompt for prompt in system_prompt):
+                # 添加DataFrame的基本信息
+                basic_info = dataframe_info.get('basic_info', {})
+                system_prompt.extend([
+                    "\n当前DataFrame信息：",
+                    f"- 行数：{basic_info.get('行数', 0)}",
+                    f"- 列数：{basic_info.get('列数', 0)}",
+                    f"- 内存占用：{basic_info.get('内存占用', '0 MB')}"
+                ])
+                
+                # 添加列信息
+                columns = dataframe_info.get('columns', [])
+                if columns:
+                    system_prompt.append("\n列信息：")
+                    for col in columns:
+                        system_prompt.append(
+                            f"- {col['name']}: 类型={col['type']}, 空值数={col['null_count']}"
+                        )
         
         return "\n".join(system_prompt)
     
@@ -75,8 +77,9 @@ class PromptBuilder:
         instance = PromptBuilder._instance()
         requirements = instance.user_prompt_config.load_requirements()
         
-        # 添加变量名要求
-        requirements.append(f"使用变量名 '{dataframe_name}'")
+        # 检查是否已经包含变量名要求
+        # if not any(f"使用变量名 '{dataframe_name}'" in req for req in requirements):
+        #    requirements.append(f"使用变量名 '{dataframe_name}'")
         
         # 使用textwrap.dedent处理多行字符串
         from textwrap import dedent

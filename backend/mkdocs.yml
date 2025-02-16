@@ -74,9 +74,10 @@ nav:
     - '模块设计': 'architecture/modules.md'
   - API文档:
     - 'API概览': 'api/overview.md'
+    - '数据文件操作': 'api/data_operations.md'
+    - 'DataFrame操作': 'api/dataframe_operations.md'
+    - '笔记本操作': 'api/notebook_operations.md'
     - '认证授权': 'api/auth.md'
-    - '数据处理API': 'api/data.md'
-    - 'AI服务API': 'api/ai.md'
   - 开发指南:
     - '开发规范': 'development/standards.md'
     - '代码风格': 'development/code_style.md'
