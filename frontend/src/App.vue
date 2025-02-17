@@ -555,6 +555,9 @@ import DataFramePreview from './components/DataFramePreview.vue'
 import SystemPromptConfig from './components/SystemPromptConfig.vue'
 import PromptPanel from './components/prompts/PromptPanel.vue'
 import CodeExampleDialog from './components/examples/CodeExampleDialog.vue'
+import { API_ENDPOINTS, apiCall } from '@/config/api'
+import { saveNotebook, loadNotebook, listNotebooks, deleteNotebook, api_renameNotebook } from '@/api/notebook_api'
+import { listDataFiles, previewCsvFile, previewExcelFile, uploadCsvFile, uploadExcelFile, api_renameDataFile, api_deleteDataFile } from '@/api/datafile_api'
 
 const cells = ref([])
 const currentFile = ref(null)
@@ -638,7 +641,7 @@ provide('currentTheme', currentTheme)
 // 创建新笔记本
 const createNewNotebook = async () => {
   // 重置Python上下文
-  await fetch('http://localhost:8000/reset_context', { method: 'POST' })
+  await apiCall(API_ENDPOINTS.EXECUTION.RESET_CONTEXT, { method: 'POST' })
   
   cells.value = []
   cellContents.value = {}
@@ -683,16 +686,10 @@ const handleSaveNotebook = async (fileName = '') => {
       }))
     }
 
-    await fetch('http://localhost:8000/save_notebook', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        filename: currentFile.value,
-        notebook: notebook
-      })
-    })
+    // 使用 notebook_api.js 中的 saveNotebook 函数
+    await saveNotebook(currentFile.value, notebook)
 
-    loadFileList()
+    await loadFileList()
     ElMessage.success('笔记本保存成功')
     saveDialogVisible.value = false
   } catch (error) {
@@ -722,17 +719,19 @@ const confirmSave = () => {
 const openNotebook = async (file) => {
   try {
     // 重置Python上下文
-    await fetch('http://localhost:8000/reset_context', { method: 'POST' })
+    await apiCall(API_ENDPOINTS.EXECUTION.RESET_CONTEXT, { method: 'POST' })
 
-    const response = await fetch(`http://localhost:8000/load_notebook?filename=${file.path}`)
-    const notebook = await response.json()
-    
+    // 使用notebook_api.js中的函数加载笔记本
+    const notebook = await loadNotebook(file.path)
     currentFile.value = file.path
+    
+    // 初始化状态
     cells.value = []
     cellContents.value = {}
     cellOutputs.value = {}
     cellTypes.value = {}
     
+    // 处理笔记本中的单元格
     if (notebook.cells && Array.isArray(notebook.cells)) {
       notebook.cells.forEach(cell => {
         if (cell && cell.id) {
@@ -752,6 +751,7 @@ const openNotebook = async (file) => {
       })
     }
 
+    // 如果笔记本为空，添加一个代码单元格
     if (cells.value.length === 0) {
       addCell('code')
     }
@@ -762,22 +762,32 @@ const openNotebook = async (file) => {
   }
 }
 
+// 加载笔记本文件列表
+const loadNoteList = async () => {
+  try {
+    const notebooks = await listNotebooks()
+    notebookFiles.value = notebooks || []
+  } catch (error) {
+    console.error('加载笔记本列表失败:', error)
+    ElMessage.error('加载笔记本列表失败')
+  }
+}
+
+// 加载数据文件列表
+const loadDataList = async () => {
+  try {
+    const files = await listDataFiles()
+    dataFiles.value = files || []
+  } catch (error) {
+    console.error('加载数据文件列表失败:', error)
+    ElMessage.error('加载数据文件列表失败')
+  }
+}
+
 // 加载文件列表
 const loadFileList = async () => {
-  try {
-    // 加载笔记本文件
-    const notebookResponse = await fetch('http://localhost:8000/list_notebooks')
-    const notebookResult = await notebookResponse.json()
-    notebookFiles.value = notebookResult || []
-
-    // 加载数据文件
-    const dataResponse = await fetch('http://localhost:8000/api/data-files/list')
-    const dataResult = await dataResponse.json()
-    dataFiles.value = dataResult.files || []
-  } catch (error) {
-    console.error('加载文件列表失败:', error)
-    ElMessage.error('加载文件列表失败')
-  }
+  await loadNoteList()
+  await loadDataList()
 }
 
 const addCell = (type = 'code') => {
@@ -850,7 +860,7 @@ const exportPDF = async () => {
       }))
     }
 
-    const response = await fetch('http://localhost:8000/export_pdf', {
+    const response = await fetch('http://127.0.0.1:8000/export_pdf', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -923,16 +933,9 @@ const handleRename = async () => {
     : `${renameForm.value.newName}.ipynb`
   
   try {
-    const response = await fetch('http://localhost:8000/rename_notebook', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        old_filename: renameForm.value.file.path,
-        new_filename: newFilename
-      })
-    })
+    // 使用 notebook_api.js 中的 renameNotebook 函数
+    const result = await api_renameNotebook(renameForm.value.file.path, newFilename)
     
-    const result = await response.json()
     if (result.status === 'success') {
       // 如果当前打开的文件被重命名，更新currentFile
       if (currentFile.value === renameForm.value.file.path) {
@@ -960,11 +963,9 @@ const confirmDelete = (file) => {
 // 处理删除
 const handleDelete = async () => {
   try {
-    const response = await fetch(`http://localhost:8000/delete_notebook?filename=${deleteFile.value.path}`, {
-      method: 'DELETE'
-    })
+    // 使用 notebook_api.js 中的 deleteNotebook 函数
+    const result = await deleteNotebook(deleteFile.value.path)
     
-    const result = await response.json()
     if (result.status === 'success') {
       // 如果删除的是当前打开的文件，创建新笔记本
       if (currentFile.value === deleteFile.value.path) {
@@ -1085,23 +1086,19 @@ const previewDataFile = async (file) => {
   currentDataFile.value = file.path
   if (dataImportRef.value) {
     try {
-      // 加载文件数据
       const fileType = file.name.split('.').pop().toLowerCase()
-      const endpoint = fileType === 'csv' 
-        ? 'http://localhost:8000/api/data-files/preview/csv'
-        : 'http://localhost:8000/api/data-files/preview/excel'
-      
-      const response = await fetch(`${endpoint}?filename=${file.path}`)
-      
-      if (!response.ok) {
-        throw new Error(`加载失败: ${response.status} ${response.statusText}`)
+      var result = null
+      if (fileType === 'csv') {
+        result = await previewCsvFile(file.path)
+      } else if (fileType === 'xlsx' || fileType === 'xls') {
+        result = await previewExcelFile(file.path)
+      } else {
+        throw new Error('不支持的文件类型')
       }
-      
-      const result = await response.json()
+
       if (result.status === 'success') {
-        // 显示预览对话框
         dataImportRef.value.previewData = result.data
-        dataImportRef.value.previewDataFile(file)  // 调用新的预览方法
+        dataImportRef.value.previewDataFile(file)
       } else {
         throw new Error(result.message || '加载失败')
       }
@@ -1115,20 +1112,17 @@ const previewDataFile = async (file) => {
 // 删除数据文件
 const deleteDataFile = async (file) => {
   try {
-    const response = await fetch(`http://localhost:8000/api/data-files/delete?filename=${file.path}`, {
-      method: 'DELETE'
-    })
+    // 使用 datafile_api.js 中的 api_deleteDataFile 函数
+    await api_deleteDataFile(file.path)
     
-    const result = await response.json()
-    if (result.status === 'success') {
-      if (currentDataFile.value === file.path) {
-        currentDataFile.value = null
-      }
-      await loadFileList()
-      ElMessage.success('数据文件删除成功')
-    } else {
-      ElMessage.error(result.message || '删除失败')
+    // 如果当前打开的文件被删除，清空 currentDataFile
+    if (currentDataFile.value === file.path) {
+      currentDataFile.value = null
     }
+    
+    // 重新加载文件列表
+    await loadFileList()
+    ElMessage.success('数据文件删除成功')
   } catch (error) {
     console.error('删除数据文件失败:', error)
     ElMessage.error('删除数据文件失败: ' + error.message)
@@ -1142,40 +1136,21 @@ const handleFileSelect = async (event) => {
     const file = files[0]
     
     try {
-      // 创建 FormData 对象
-      const formData = new FormData()
-      formData.append('file', file)
       
-      // 根据文件类型选择不同的上传端点
       const fileType = file.name.split('.').pop().toLowerCase()
-      let endpoint = ''
-      
+
+      var result = null
       if (fileType === 'csv') {
-        endpoint = 'http://localhost:8000/api/data-files/upload/csv'
-      } else if (['xlsx', 'xls'].includes(fileType)) {
-        endpoint = 'http://localhost:8000/api/data-files/upload/excel'
+        result = await uploadCsvFile(file)
+      } else if (fileType === 'xlsx' || fileType === 'xls') {
+        result = await uploadExcelFile(file)
       } else {
-        throw new Error('不支持的文件格式')
+        throw new Error('不支持的文件类型')
       }
-      
-      // 上传文件
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        body: formData
-      })
-      
-      if (!response.ok) {
-        throw new Error(`上传失败: ${response.status} ${response.statusText}`)
-      }
-      
-      const result = await response.json()
-      
+
       if (result.status === 'success') {
-        // 更新文件列表
         await loadFileList()
         ElMessage.success('文件上传成功')
-        
-        // 更新当前文件
         currentDataFile.value = result.data.file_path
       } else {
         throw new Error(result.message || '上传失败')
@@ -1185,7 +1160,6 @@ const handleFileSelect = async (event) => {
       ElMessage.error('文件上传失败: ' + error.message)
     }
     
-    // 清空文件输入框，允许重复上传同一个文件
     event.target.value = ''
   }
 }
@@ -1244,7 +1218,7 @@ const copyCell = (cellId) => {
 // 获取DataFrame列表
 const fetchDataFrameInfo = async () => {
   try {
-    const response = await fetch('http://localhost:8000/api/dataframes/list')
+    const response = await fetch('http://127.0.0.1:8000/api/dataframes/list')
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
@@ -1304,42 +1278,20 @@ const handleDataFileRename = async () => {
   const newFilename = renameDataFileForm.value.newName + renameDataFileForm.value.extension
   
   try {
-    const response = await fetch('http://localhost:8000/api/data-files/rename', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        old_filename: renameDataFileForm.value.file.path,
-        new_filename: newFilename
-      })
-    })
-    
-    const result = await response.json()
-    if (result.status === 'success') {
-      // 如果当前打开的文件被重命名，更新currentDataFile
-      if (currentDataFile.value === renameDataFileForm.value.file.path) {
-        currentDataFile.value = newFilename
-      }
-      // 重新加载文件列表
-      await loadFileList()
-      renameDataFileDialogVisible.value = false
-      ElMessage.success('重命名成功')
-    } else {
-      ElMessage.error(result.message || '重命名失败')
-    }
+    await api_renameDataFile(renameDataFileForm.value.file.path, newFilename)
+    await loadDataList()
+    renameDataFileDialogVisible.value = false
+    ElMessage.success('文件重命名成功')
   } catch (error) {
-    console.error('重命名失败:', error)
-    ElMessage.error('重命名失败: ' + error.message)
+    console.error('文件重命名失败:', error)
+    ElMessage.error('文件重命名失败: ' + error.message)
   }
 }
 
 // 添加获取版本信息的方法
 const fetchVersion = async () => {
   try {
-    const response = await fetch('http://localhost:8000/api/version')
-    if (!response.ok) {
-      throw new Error('获取版本信息失败')
-    }
-    const result = await response.json()
+    const result = await apiCall(API_ENDPOINTS.SYSTEM.VERSION)
     if (result.status === 'success') {
       version.value = result.data.version
     } else {
@@ -1509,7 +1461,7 @@ body {
 .navbar {
   background-color: var(--toolbarBackground);
   color: var(--toolbarText);
-  padding: 1rem 2rem;
+  padding: 0.5rem 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: space-between;
@@ -1522,7 +1474,7 @@ body {
 
 .navbar h1 {
   margin: 0;
-  font-size: 1.5em;
+  font-size: 1.2em;
   font-weight: 500;
   color: var(--toolbarText);
   transition: color 0.3s ease;
@@ -1531,9 +1483,9 @@ body {
 .toolbar {
   display: flex;
   align-items: center;
-  padding: 8px;
+  padding: 4px;
   background: transparent;
-  gap: 12px;
+  gap: 8px;
 }
 
 .toolbar-btn {
@@ -1554,7 +1506,7 @@ body {
 }
 
 .toolbar-btn i {
-  font-size: 18px;
+  font-size: 16px;
   margin: 0;
 }
 

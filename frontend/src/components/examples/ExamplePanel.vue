@@ -253,6 +253,7 @@ import {
   Refresh,
   Document
 } from '@element-plus/icons-vue'
+import { API_ENDPOINTS, apiCall } from '@/config/api'
 
 const props = defineProps({
   mode: {
@@ -331,37 +332,26 @@ const isManageMode = computed(() => props.mode === 'manage')
 const categories = ref([])
 const examples = ref([])
 
-// 基础 URL 常量
-const BASE_URL = 'http://localhost:8000'
-
 // 加载分类列表
 const loadCategories = async () => {
   try {
-    const response = await fetch(`${BASE_URL}/api/code-examples/categories`)
-    if (response.ok) {
-      const result = await response.json()
-      // 直接使用返回的数组
-      categories.value = result
-      console.log('加载的分类:', categories.value)
-    }
+    const result = await apiCall(API_ENDPOINTS.CODE_EXAMPLES.CATEGORIES)
+    categories.value = result
   } catch (error) {
     ElMessage.error('加载分类失败')
     console.error('加载分类失败:', error)
+    categories.value = []
   }
 }
 
 // 加载分类下的示例
 const loadExamples = async (categoryId) => {
   try {
-    const response = await fetch(`${BASE_URL}/api/code-examples/category/${categoryId}`)
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const result = await response.json()
+    const result = await apiCall(API_ENDPOINTS.CODE_EXAMPLES.CATEGORIES_ID(categoryId))
     examples.value = result
   } catch (error) {
     console.error('加载示例失败:', error)
-    ElMessage.error('加载示例失败')
+    ElMessage.error(`加载示例失败: ${error.message}`)
     examples.value = []
   }
 }
@@ -443,15 +433,13 @@ const handleEdit = () => {
 const handleDelete = async () => {
   if (!selectedExample.value) return
   try {
-    const response = await fetch(`${BASE_URL}/api/code-examples/${selectedExample.value.id}`, {
+    await apiCall(API_ENDPOINTS.CODE_EXAMPLES.CODE_EXAMPLES_ID(selectedExample.value.id), {
       method: 'DELETE'
     })
-    if (response.ok) {
-      ElMessage.success('删除成功')
-      selectedExample.value = null
-      selectedExampleId.value = ''
-      await loadExamples(selectedCategory.value)
-    }
+    ElMessage.success('删除成功')
+    selectedExample.value = null
+    selectedExampleId.value = ''
+    await loadExamples(selectedCategory.value)
   } catch (error) {
     ElMessage.error('删除失败')
   }
@@ -491,7 +479,11 @@ const handleReload = async () => {
 
 const saveCategoryForm = async () => {
   try {
-    const response = await fetch(`${BASE_URL}/api/code-examples/categories`, {
+    const endpoint = editingCategory.value 
+      ? API_ENDPOINTS.CODE_EXAMPLES.CATEGORIES_ID(editingCategory.value.id)
+      : API_ENDPOINTS.CODE_EXAMPLES.CATEGORIES
+    
+    const result = await apiCall(endpoint, {
       method: editingCategory.value ? 'PUT' : 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -501,14 +493,12 @@ const saveCategoryForm = async () => {
         ...categoryForm.value
       })
     })
-    if (response.ok) {
-      const result = await response.json()
-      if (result.code === 200) {
-        ElMessage.success(editingCategory.value ? '更新成功' : '添加成功')
-        showCategoryDialog.value = false
-        await loadCategories()
-      }
-    }
+    
+    console.log(result)
+
+    ElMessage.success(editingCategory.value ? '更新成功' : '添加成功')
+    showCategoryDialog.value = false
+    await loadCategories()
   } catch (error) {
     ElMessage.error('保存失败')
   }
@@ -521,7 +511,11 @@ const saveExampleForm = async () => {
   }
   
   try {
-    const response = await fetch(`${BASE_URL}/api/code-examples`, {
+    const endpoint = editingExample.value
+      ? API_ENDPOINTS.CODE_EXAMPLES.CODE_EXAMPLES_ID(editingExample.value.id)
+      : API_ENDPOINTS.CODE_EXAMPLES.CODE_EXAMPLES
+   
+    const result = await apiCall(endpoint, {
       method: editingExample.value ? 'PUT' : 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -532,14 +526,11 @@ const saveExampleForm = async () => {
         ...exampleForm.value
       })
     })
-    if (response.ok) {
-      const result = await response.json()
-      if (result.code === 200) {
-        ElMessage.success(editingExample.value ? '更新成功' : '添加成功')
-        showExampleDialog.value = false
-        await loadExamples(selectedCategory.value)
-      }
-    }
+    
+    console.log(result)
+    ElMessage.success(editingExample.value ? '更新成功' : '添加成功')
+    showExampleDialog.value = false
+    await loadExamples(selectedCategory.value)
   } catch (error) {
     ElMessage.error('保存失败')
   }

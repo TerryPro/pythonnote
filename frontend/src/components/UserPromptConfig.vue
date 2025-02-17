@@ -68,6 +68,7 @@
 <script setup>
 import { ref, defineExpose } from 'vue'
 import { ElMessage } from 'element-plus'
+import { API_ENDPOINTS, apiCall } from '@/config/api'
 
 const dialogVisible = ref(false)
 const requirements = ref([])
@@ -76,11 +77,8 @@ const saving = ref(false)
 // 加载代码生成要求
 const loadRequirements = async () => {
   try {
-    const response = await fetch('http://localhost:8000/api/ai/user-prompts')
-    if (!response.ok) {
-      throw new Error('加载代码生成要求失败')
-    }
-    requirements.value = await response.json()
+    const result = await apiCall(API_ENDPOINTS.AI.USER_PROMPTS)
+    requirements.value = result
   } catch (error) {
     console.error('加载代码生成要求失败:', error)
     ElMessage.error('加载代码生成要求失败: ' + error.message)
@@ -91,19 +89,11 @@ const loadRequirements = async () => {
 const saveRequirements = async () => {
   saving.value = true
   try {
-    const response = await fetch('http://localhost:8000/api/ai/user-prompts', {
+    const result = await apiCall(API_ENDPOINTS.AI.USER_PROMPTS, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ requirements: requirements.value }),
+      body: JSON.stringify({ requirements: requirements.value })
     })
     
-    if (!response.ok) {
-      throw new Error('保存代码生成要求失败')
-    }
-    
-    const result = await response.json()
     if (result.status === 'success') {
       ElMessage.success('代码生成要求已保存')
       dialogVisible.value = false
@@ -121,15 +111,10 @@ const saveRequirements = async () => {
 // 重置代码生成要求
 const resetRequirements = async () => {
   try {
-    const response = await fetch('http://localhost:8000/api/ai/user-prompts/reset', {
+    const result = await apiCall(API_ENDPOINTS.AI.RESET_USER_PROMPTS, {
       method: 'POST'
     })
     
-    if (!response.ok) {
-      throw new Error('重置代码生成要求失败')
-    }
-    
-    const result = await response.json()
     if (result.status === 'success') {
       ElMessage.success('代码生成要求已重置为默认值')
       await loadRequirements()

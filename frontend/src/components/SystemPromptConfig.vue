@@ -68,6 +68,7 @@
 <script setup>
 import { ref, defineExpose } from 'vue'
 import { ElMessage } from 'element-plus'
+import { API_ENDPOINTS, apiCall } from '@/config/api'
 
 const dialogVisible = ref(false)
 const prompts = ref([])
@@ -76,11 +77,8 @@ const saving = ref(false)
 // 加载系统提示词
 const loadPrompts = async () => {
   try {
-    const response = await fetch('http://localhost:8000/api/ai/system-prompts')
-    if (!response.ok) {
-      throw new Error('加载系统提示词失败')
-    }
-    prompts.value = await response.json()
+    const result = await apiCall(API_ENDPOINTS.AI.SYSTEM_PROMPTS)
+    prompts.value = result
   } catch (error) {
     console.error('加载系统提示词失败:', error)
     ElMessage.error('加载系统提示词失败: ' + error.message)
@@ -91,19 +89,11 @@ const loadPrompts = async () => {
 const savePrompts = async () => {
   saving.value = true
   try {
-    const response = await fetch('http://localhost:8000/api/ai/system-prompts', {
+    const result = await apiCall(API_ENDPOINTS.AI.SYSTEM_PROMPTS, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({ prompts: prompts.value }),
     })
     
-    if (!response.ok) {
-      throw new Error('保存系统提示词失败')
-    }
-    
-    const result = await response.json()
     if (result.status === 'success') {
       ElMessage.success('系统提示词已保存')
       dialogVisible.value = false
@@ -121,15 +111,10 @@ const savePrompts = async () => {
 // 重置系统提示词
 const resetPrompts = async () => {
   try {
-    const response = await fetch('http://localhost:8000/api/ai/system-prompts/reset', {
+    const result = await apiCall(API_ENDPOINTS.AI.SYSTEM_PROMPTS_RESET, {
       method: 'POST'
     })
     
-    if (!response.ok) {
-      throw new Error('重置系统提示词失败')
-    }
-    
-    const result = await response.json()
     if (result.status === 'success') {
       ElMessage.success('系统提示词已重置为默认值')
       await loadPrompts()

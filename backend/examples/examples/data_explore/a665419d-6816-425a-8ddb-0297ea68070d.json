@@ -1,0 +1,13 @@
+{
+  "id": "a665419d-6816-425a-8ddb-0297ea68070d",
+  "title": "加载数据",
+  "description": "手动阀手动阀",
+  "code": "# 导入必要的库\r\nimport pandas as pd\r\n\r\n# 加载CSV文件\r\nsensor_data_df = pd.read_csv('data/sensor_data.csv')",
+  "category_id": "data_explore",
+  "tags": [
+    "pandas"
+  ],
+  "use_count": 0,
+  "created_at": "2025-02-17T00:17:50.047160",
+  "updated_at": "2025-02-17T00:17:50.047160"
+}

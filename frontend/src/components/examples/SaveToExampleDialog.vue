@@ -63,6 +63,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
+import { API_ENDPOINTS, apiCall } from '@/config/api'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -114,9 +115,8 @@ const dialogVisible = computed({
 // 获取分类列表
 const fetchCategories = async () => {
   try {
-    const response = await fetch('http://localhost:8000/api/code-examples/categories')
-    if (!response.ok) throw new Error('获取分类失败')
-    categories.value = await response.json()
+    const result = await apiCall(API_ENDPOINTS.CODE_EXAMPLES.CATEGORIES)
+    categories.value = result
   } catch (error) {
     console.error('获取分类失败:', error)
     ElMessage.error('获取分类失败')
@@ -126,13 +126,11 @@ const fetchCategories = async () => {
 // 保存示例
 const handleSave = async () => {
   if (!formRef.value) return
-  
   await formRef.value.validate(async (valid) => {
     if (!valid) return
-    
     saving.value = true
     try {
-      const response = await fetch('http://localhost:8000/api/code-examples/save-from-cell', {
+      const result = await apiCall(API_ENDPOINTS.CODE_EXAMPLES.SAVE_FROM_CELL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -142,13 +140,6 @@ const handleSave = async () => {
           code: props.code
         })
       })
-      
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.detail || '保存失败')
-      }
-      
-      const result = await response.json()
       ElMessage.success('保存成功')
       emit('saved', result)
       handleClose()

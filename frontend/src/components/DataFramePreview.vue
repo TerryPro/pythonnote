@@ -210,7 +210,7 @@ export default {
       this.loading = true
       this.error = null
       try {
-        const response = await fetch(`http://localhost:8000/api/dataframes/info/${name}`)
+        const response = await fetch(`http://127.0.0.1:8000/api/dataframes/info/${name}`)
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
@@ -241,7 +241,7 @@ export default {
       this.saving = true
       try {
         const fileExtension = this.saveForm.fileType === 'csv' ? '.csv' : '.xlsx'
-        const response = await fetch(`http://localhost:8000/api/dataframes/${encodeURIComponent(this.dataframeName)}/save`, {
+        const response = await fetch(`http://127.0.0.1:8000/api/dataframes/${encodeURIComponent(this.dataframeName)}/save`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

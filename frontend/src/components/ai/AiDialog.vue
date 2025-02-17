@@ -217,7 +217,7 @@ const stopWaitTimer = () => {
 // 获取所有DataFrame列表
 const fetchDataFrames = async () => {
   try {
-    const response = await axios.get('http://localhost:8000/api/dataframes/list')
+    const response = await axios.get('http://127.0.0.1:8000/api/dataframes/list')
     dataFrames.value = response.data
   } catch (e) {
     ElMessage.error('获取DataFrame列表失败')
@@ -227,7 +227,7 @@ const fetchDataFrames = async () => {
 // 获取选中DataFrame的信息
 const fetchDataFrameInfo = async (name) => {
   try {
-    const response = await axios.get(`http://localhost:8000/api/dataframes/info/${name}`)
+    const response = await axios.get(`http://127.0.0.1:8000/api/dataframes/info/${name}`)
     dataFrameInfo.value = response.data
   } catch (e) {
     ElMessage.error('获取DataFrame信息失败')
@@ -268,7 +268,7 @@ const handleGenerate = async () => {
   startWaitTimer()
   
   try {
-    const response = await axios.post('http://localhost:8000/api/ai/generate_code', {
+    const response = await axios.post('http://127.0.0.1:8000/api/ai/generate_code', {
       prompt: prompt.value,
       notebook_context: props.notebookContext,
       dataframe_info: dataFrameInfo.value,

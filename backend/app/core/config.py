@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     
     DEEPSEEK_API_KEY: str = Field(default="", env="DEEPSEEK_API_KEY")
     DEEPSEEK_API_BASE: str = Field(default="https://api.deepseek.com/v1", env="DEEPSEEK_API_BASE")
+    DEEPSEEK_MODEL: str = Field(default="Pro/deepseek-ai/DeepSeek-V3", env="DEEPSEEK_MODEL")
 
     SILICONFLOW_API_KEY: str = Field(default="", env="SILICONFLOW_API_KEY")
     SILICONFLOW_API_BASE: str = Field(default="https://api.siliconflow.com/v1", env="SILICONFLOW_API_BASE")

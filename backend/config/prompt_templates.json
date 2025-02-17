@@ -24,7 +24,7 @@
           "统计分析",
           "数值分析"
         ],
-        "use_count": 4
+        "use_count": 6
       },
       {
         "id": "categorical_analysis",
@@ -35,7 +35,7 @@
           "数据探索",
           "类别分析"
         ],
-        "use_count": 2
+        "use_count": 3
       },
       {
         "id": "missing_value_analysis",
@@ -714,7 +714,7 @@
           "预测",
           "Prophet"
         ],
-        "use_count": 0
+        "use_count": 1
       },
       {
         "id": "ma_anomaly",

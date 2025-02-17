@@ -155,7 +155,7 @@ class SiliconFlowDeepSeekClient(BaseDeepSeekClient):
             
             # 准备请求数据
             payload = {
-                "model": "deepseek-ai/DeepSeek-V3",
+                "model": settings.DEEPSEEK_MODEL,
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}

@@ -228,6 +228,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { API_CONFIG } from '@/config/api'
 import {
   Plus,
   Edit,
@@ -313,13 +314,10 @@ const isManageMode = computed(() => props.mode === 'manage')
 const categories = ref([])
 const prompts = ref([])
 
-// 基础 URL 常量
-const BASE_URL = 'http://localhost:8000'
-
 // 加载分类列表
 const loadCategories = async () => {
   try {
-    const response = await fetch(`${BASE_URL}/api/prompt/categories`)
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/prompt/categories`)
     if (response.ok) {
       const result = await response.json()
       if (result.code === 200) {
@@ -335,7 +333,7 @@ const loadCategories = async () => {
 const loadCategoryPrompts = async (categoryId) => {
   if (!categoryId) return
   try {
-    const response = await fetch(`${BASE_URL}/api/prompt/category/${categoryId}`)
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/prompt/category/${categoryId}`)
     if (response.ok) {
       const result = await response.json()
       if (result.code === 200) {
@@ -406,7 +404,7 @@ const handleEdit = () => {
 const handleDelete = async () => {
   if (!selectedPrompt.value) return
   try {
-    const response = await fetch(`${BASE_URL}/api/prompt/${selectedPrompt.value.id}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/prompt/${selectedPrompt.value.id}`, {
       method: 'DELETE'
     })
     if (response.ok) {
@@ -423,7 +421,7 @@ const handleDelete = async () => {
 const usePrompt = async () => {
   if (!selectedPrompt.value) return
   try {
-    const response = await fetch(`${BASE_URL}/api/prompt/use/${selectedPrompt.value.id}`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/prompt/use/${selectedPrompt.value.id}`, {
       method: 'POST'
     })
     if (response.ok) {
@@ -446,7 +444,7 @@ const copyTemplate = async () => {
 
 const saveCategoryForm = async () => {
   try {
-    const response = await fetch(`${BASE_URL}/api/prompt/categories`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/prompt/categories`, {
       method: editingCategory.value ? 'PUT' : 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -476,7 +474,7 @@ const savePromptForm = async () => {
   }
   
   try {
-    const response = await fetch(`${BASE_URL}/api/prompt`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/prompt`, {
       method: editingPrompt.value ? 'PUT' : 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -503,7 +501,7 @@ const savePromptForm = async () => {
 // 重新加载提示词
 const handleReload = async () => {
   try {
-    const response = await fetch(`${BASE_URL}/api/prompt/reload`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/prompt/reload`, {
       method: 'POST'
     })
     if (!response.ok) {

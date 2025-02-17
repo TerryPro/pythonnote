@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
 from app.services.code_executor import CodeExecutor
 
-router = APIRouter(tags=["execution"])
+router = APIRouter(prefix="/api/execution", tags=["execution"])
 
 # 创建代码执行器实例
 code_executor = CodeExecutor()

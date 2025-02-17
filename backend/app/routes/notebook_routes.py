@@ -5,20 +5,30 @@ import os
 from pathlib import Path
 from app.core.config import settings
 
-router = APIRouter(tags=["notebooks"])
+router = APIRouter(prefix="/api/notebooks", tags=["notebooks"])
 
 @router.get("/list_notebooks")
 async def list_notebooks():
-    notebooks = []
-    for file in settings.NOTEBOOKS_DIR.glob("*.ipynb"):
-        notebooks.append({
-            "name": file.name,
-            "path": file.name,
-            "last_modified": os.path.getmtime(file)
-        })
-    # 按最后修改时间排序
-    notebooks.sort(key=lambda x: x["last_modified"], reverse=True)
-    return notebooks
+    try:
+        notebooks = []
+        for file in settings.NOTEBOOKS_DIR.glob("*.ipynb"):
+            notebooks.append({
+                "name": file.name,
+                "path": file.name,
+                "last_modified": os.path.getmtime(file)
+            })
+        # 按文件名排序
+        notebooks.sort(key=lambda x: x["name"])
+        
+        return {
+            "status": "success",
+            "data": notebooks
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"获取笔记本列表失败: {str(e)}"
+        }
 
 @router.post("/save_notebook")
 async def save_notebook(request: Request):
@@ -107,4 +117,4 @@ async def load_notebook(filename: str):
     with open(file_path, "r", encoding="utf-8") as f:
         notebook = json.load(f)
     
-    return notebook 
+    return {"status": "success", "data": notebook}
