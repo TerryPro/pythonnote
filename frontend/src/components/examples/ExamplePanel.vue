@@ -253,7 +253,7 @@ import {
   Refresh,
   Document
 } from '@element-plus/icons-vue'
-import { API_ENDPOINTS, apiCall } from '@/config/api'
+import { API_ENDPOINTS, apiCall } from '@/api/http'
 
 const props = defineProps({
   mode: {

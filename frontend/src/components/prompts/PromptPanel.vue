@@ -228,7 +228,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { API_CONFIG } from '@/config/api'
+import { API_CONFIG } from '@/api/http'
 import {
   Plus,
   Edit,

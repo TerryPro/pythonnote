@@ -1,6 +1,7 @@
+const { defineConfig } = require('@vue/cli-service')
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
 
-module.exports = {
+module.exports = defineConfig({
   configureWebpack: {
     plugins: [
       new MonacoWebpackPlugin({
@@ -8,5 +9,12 @@ module.exports = {
         features: ['!gotoSymbol']
       })
     ]
+  },
+  css: {
+    loaderOptions: {
+      scss: {
+        additionalData: `@import "~@/styles/_variables.scss";`
+      }
+    }
   }
-} 
+}) 

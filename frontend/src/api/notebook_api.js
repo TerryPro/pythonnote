@@ -1,4 +1,4 @@
-import { apiCall, API_ENDPOINTS } from '@/config/api'
+import { apiCall, API_ENDPOINTS } from '@/api/http'
 
 /**
  * 获取笔记本列表

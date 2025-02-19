@@ -63,7 +63,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { API_ENDPOINTS, apiCall } from '@/config/api'
+import { API_ENDPOINTS, apiCall } from '@/api/http'
 
 const props = defineProps({
   modelValue: Boolean,

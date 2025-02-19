@@ -1,227 +1,46 @@
 <template>
   <div id="app">
-    <nav class="navbar">
-      <div class="navbar-left">
-        <h1>Python 交互式编程环境</h1>
-        <span class="version">{{ version }}</span>
-      </div>
-      <div class="toolbar">
-        <el-dropdown @command="handleThemeChange" trigger="click">
-          <el-button class="toolbar-btn" type="primary" plain>
-            <i class="fas fa-palette"></i>
-            <el-tooltip
-              class="box-item"
-              effect="light"
-              content="选择主题"
-              placement="bottom"
-            >
-              <template #default>
-                <span class="el-dropdown-link"></span>
-              </template>
-            </el-tooltip>
-          </el-button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item 
-                v-for="(theme, key) in themes" 
-                :key="key"
-                :command="key"
-                :class="{ 'is-active': currentTheme === key }"
-              >
-                <i class="fas fa-check" v-if="currentTheme === key"></i>
-                {{ theme.name }}
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-        
-        <el-tooltip content="新建笔记本" placement="bottom" :hide-after="0">
-          <button @click="createNewNotebook" class="toolbar-btn">
-            <i class="fas fa-plus"></i>
-          </button>
-        </el-tooltip>
-
-        <el-tooltip content="保存笔记本" placement="bottom" :hide-after="0">
-          <button @click="showSaveDialog" class="toolbar-btn">
-            <i class="fas fa-save"></i>
-          </button>
-        </el-tooltip>
-
-        <el-tooltip content="导出PDF" placement="bottom" :hide-after="0">
-          <button @click="exportPDF" class="toolbar-btn">
-            <i class="fas fa-file-pdf"></i>
-          </button>
-        </el-tooltip>
-
-        <el-tooltip content="系统配置" placement="bottom" :hide-after="0">
-          <button @click="showSystemConfig" class="toolbar-btn">
-            <i class="fas fa-cog"></i>
-          </button>
-        </el-tooltip>
-
-        <el-tooltip content="添加代码单元格" placement="bottom" :hide-after="0">
-          <button @click="addCell('code')" class="toolbar-btn">
-            <i class="fas fa-code"></i>
-          </button>
-        </el-tooltip>
-
-        <el-tooltip content="添加Markdown单元格" placement="bottom" :hide-after="0">
-          <button @click="addCell('markdown')" class="toolbar-btn">
-            <i class="fas fa-markdown"></i>
-          </button>
-        </el-tooltip>
-
-        <el-tooltip content="上传数据文件" placement="bottom" :hide-after="0">
-          <button @click="triggerFileUpload" class="toolbar-btn upload-btn">
-            <i class="fas fa-upload"></i>
-          </button>
-        </el-tooltip>
-
-        <el-tooltip content="管理预定义提示词" placement="bottom">
-          <div class="tool-item" @click="showPromptManager = true">
-            <i class="fas fa-list-alt"></i>
-          </div>
-        </el-tooltip>
-
-        <!-- 添加代码示例库按钮 -->
-        <el-tooltip content="管理代码示例" placement="bottom">
-          <button class="toolbar-btn" @click="openExampleManager">
-            <i class="fas fa-file-code"></i>
-          </button>
-        </el-tooltip>
-      </div>
-    </nav>
-    
+    <AppNavbar 
+      ref="navbarRef"
+      @create-notebook="createNewNotebook"
+      @show-save-dialog="showSaveDialog"
+      @export-pdf="exportPDF"
+      @show-config="showSystemConfig"
+      @add-cell="addCell"
+      @open-example-manager="openExampleManager"
+      @update-theme="handleThemeChange"
+      @toggle-prompt-manager="showPromptManager = true"
+    />
     <main class="main-container">
-      <div class="file-panel" :style="{ width: panelWidth + 'px' }">
-        <el-collapse v-model="activePanels" accordion>
-          <!-- 笔记本文件列表 -->
-          <el-collapse-item name="notebooks">
-            <template #title>
-              <div class="panel-header">
-                <h3><i class="fas fa-book"></i> 笔记文件</h3>
-                <button 
-                  @click.stop="refreshNotebooks"
-                  class="icon-btn refresh-btn"
-                  title="刷新笔记本列表">
-                  <i class="fas fa-sync-alt"></i>
-                </button>
-              </div>
-            </template>
-            <div class="file-list">
-              <div v-for="file in notebookFiles" 
-                   :key="file.path" 
-                   class="file-item"
-                   :class="{ active: currentFile === file.path }">
-                <div class="file-content" @click="openNotebook(file)">
-                  <i class="fas fa-file-code file-icon"></i>
-                  <span class="file-name">{{ file.name }}</span>
-                </div>
-                <div class="file-actions">
-                  <button 
-                    @click="renameNotebook(file)"
-                    class="icon-btn"
-                    title="重命名">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button 
-                    @click="confirmDelete(file)"
-                    class="icon-btn delete-btn"
-                    title="删除">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </el-collapse-item>
-
-          <!-- 数据文件列表 -->
-          <el-collapse-item name="datafiles">
-            <template #title>
-              <div class="panel-header">
-                <h3><i class="fas fa-file-alt"></i> 数据文件</h3>
-                <button 
-                  @click.stop="refreshDataFiles"
-                  class="icon-btn refresh-btn"
-                  title="刷新文件列表">
-                  <i class="fas fa-sync-alt"></i>
-                </button>
-              </div>
-            </template>
-            <div class="file-list">
-              <div v-for="file in dataFiles" 
-                   :key="file.path" 
-                   class="file-item"
-                   :class="{ active: currentDataFile === file.path }">
-                <div class="file-content">
-                  <i :class="['fas', getDataFileIcon(file)]"></i>
-                  <span class="file-name">{{ file.name }}</span>
-                </div>
-                <div class="file-actions">
-                  <button 
-                    @click="previewDataFile(file)"
-                    class="icon-btn preview-btn"
-                    title="预览数据">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                  <button 
-                    @click="renameDataFile(file)"
-                    class="icon-btn"
-                    title="重命名">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button 
-                    @click="deleteDataFile(file)"
-                    class="icon-btn delete-btn"
-                    title="删除">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </el-collapse-item>
-
-          <!-- DataFrame变量列表 -->
-          <el-collapse-item name="dataframes">
-            <template #title>
-              <div class="panel-header">
-                <h3><i class="fas fa-database"></i> 数据集合</h3>
-                <button 
-                  @click.stop="refreshDataFrames"
-                  class="icon-btn refresh-btn"
-                  title="刷新变量列表">
-                  <i class="fas fa-sync-alt"></i>
-                </button>
-              </div>
-            </template>
-            <div class="file-list">
-              <div v-for="name in dataframes" 
-                   :key="name" 
-                   class="file-item">
-                <div class="file-content">
-                  <i class="fas fa-table text-blue-500"></i>
-                  <span class="file-name">{{ name }}</span>
-                </div>
-                <div class="file-actions">
-                  <button 
-                    @click="previewDataFrame(name)"
-                    class="icon-btn preview-btn"
-                    title="预览变量">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </el-collapse-item>
-        </el-collapse>
-      </div>
-
-      <!-- 添加拖动条 -->
-      <div class="resize-handle" 
-           @mousedown="startResize"
-           title="拖动调整宽度">
-        <div class="resize-handle-line"></div>
-      </div>
+      <AppSidebar 
+        :panel-width="panelWidth" 
+        @update:panel-width="panelWidth = $event"
+        @select-tab="currentTab = $event"
+        @refresh-notebooks="refreshNotebooks"
+        @open-notebook="openNotebook"
+        @rename-notebook="renameNotebook"
+        @delete-notebook="confirmDelete"
+        :notebook-files="notebookFiles"
+        :current-file="currentFile"
+        :data-files="dataFiles"
+        :current-data-file="currentDataFile"
+        :get-file-icon="getDataFileIcon"
+        @preview-datafile="previewDataFile"
+        @rename-datafile="renameDataFile"
+        @delete-datafile="deleteDataFile"
+        @refresh-datafiles="refreshDataFiles"
+        :dataframes="dataframes"
+        @refresh-dataframes="refreshDataFrames"
+        @preview-dataframe="previewDataFrame"
+        @file-uploaded="currentDataFile = $event"
+      >
+      </AppSidebar>
+      
+      <ResizeHandle 
+        @resize-start="startResize"
+        @resize-move="handleResize"
+        @resize-end="stopResize"
+      />
 
       <div class="notebook" v-if="cells.length">
         <div class="notebook-cells">
@@ -532,32 +351,32 @@
 </template>
 
 <script setup>
-import { ref, onMounted, provide, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import CodeCell from './components/CodeCell.vue'
 import MarkdownCell from './components/MarkdownCell.vue'
 import { v4 as uuidv4 } from 'uuid'
-import { themes, applyTheme } from './themes'
 import { 
   ElMessage, 
-  ElDropdown, 
-  ElDropdownMenu, 
-  ElDropdownItem,
   ElDialog,
   ElButton,
   ElInput,
   ElForm,
   ElFormItem,
   ElAlert,
-  ElTooltip
 } from 'element-plus'
-import FileExplore from './components/DataExplorer/FileExplore.vue'
-import DataFramePreview from './components/DataFramePreview.vue'
-import SystemPromptConfig from './components/SystemPromptConfig.vue'
-import PromptPanel from './components/prompts/PromptPanel.vue'
+import FileExplore from '@/components/DataExplorer/FileExplore.vue'
+import DataFramePreview from '@/components/DataFramePreview.vue'
+import SystemPromptConfig from '@/components/SystemPromptConfig.vue'
+import PromptPanel from '@/components/prompts/PromptPanel.vue'
 import CodeExampleDialog from './components/examples/CodeExampleDialog.vue'
-import { API_ENDPOINTS, apiCall } from '@/config/api'
+import { API_ENDPOINTS, apiCall, downloadFile } from '@/api/http'
 import { saveNotebook, loadNotebook, listNotebooks, deleteNotebook, api_renameNotebook } from '@/api/notebook_api'
-import { listDataFiles, previewCsvFile, previewExcelFile, uploadCsvFile, uploadExcelFile, api_renameDataFile, api_deleteDataFile } from '@/api/datafile_api'
+import { listDataFiles, previewCsvFile, previewExcelFile, api_renameDataFile, api_deleteDataFile } from '@/api/datafile_api'
+import { listDataFrames } from '@/api/dataframe_api'
+import { useThemeManager } from '@/composables/useThemeManager'
+import AppNavbar from '@/components/layout/AppNavbar.vue'
+import AppSidebar from '@/components/layout/AppSidebar.vue'
+import ResizeHandle from '@/components/layout/ResizeHandle.vue'
 
 const cells = ref([])
 const currentFile = ref(null)
@@ -565,8 +384,6 @@ const cellContents = ref({})
 const cellOutputs = ref({})
 const cellTypes = ref({})
 const markdownEditStates = ref({})
-const currentTheme = ref('light')
-const version = ref('加载中...')
 
 // 添加代码示例对话框状态
 const showCodeExamples = ref(false)
@@ -620,11 +437,11 @@ const renameDataFileForm = ref({
 })
 
 // 在 script setup 部分添加
-const activePanels = ref(['notebooks']) // 默认展开笔记本列表
-const panelWidth = ref(250) // 初始宽度
+const activePanels = ref(['notebooks']) // eslint-disable-line no-unused-vars
+const panelWidth = ref(320) // 初始宽度
 const isDragging = ref(false)
 const startX = ref(0)
-const startWidth = ref(0)
+const startWidth = ref(300)
 
 // 添加系统配置相关的引用
 const systemConfigRef = ref(null)
@@ -635,8 +452,9 @@ const showPromptManager = ref(false)
 // 添加当前单元格引用
 const currentCell = ref(null)
 
-// 提供主题变量给子组件
-provide('currentTheme', currentTheme)
+// 添加新的主题管理
+const { currentTheme, applyTheme, provideTheme } = useThemeManager()
+provideTheme() // 为子组件提供主题上下文
 
 // 创建新笔记本
 const createNewNotebook = async () => {
@@ -860,29 +678,11 @@ const exportPDF = async () => {
       }))
     }
 
-    const response = await fetch('http://127.0.0.1:8000/export_pdf', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        filename: currentFile.value,
-        notebook: notebook
-      })
-    })
-
-    if (!response.ok) {
-      throw new Error('PDF导出失败')
-    }
-
-    // 获取PDF文件并下载
-    const blob = await response.blob()
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${currentFile.value}.pdf`
-    document.body.appendChild(a)
-    a.click()
-    window.URL.revokeObjectURL(url)
-    document.body.removeChild(a)
+    const data = {
+      filename: currentFile.value,
+      notebook: notebook,
+    };
+    await downloadFile(API_ENDPOINTS.EXPORT_PDF.EXPORT, `${currentFile.value}.pdf`, data);
   } catch (error) {
     console.error('导出PDF失败:', error)
     alert('导出PDF失败: ' + error.message)
@@ -909,9 +709,7 @@ const moveCellDown = (cellId) => {
 
 // 修改主题切换处理方法
 const handleThemeChange = (themeKey) => {
-  currentTheme.value = themeKey
   applyTheme(themeKey)
-  ElMessage.success(`已切换到${themes[themeKey].name}`)
 }
 
 // 修改重命名笔记本函数
@@ -1013,13 +811,19 @@ const handleDeleteCell = () => {
 }
 
 // 在组件挂载时应用默认主题
+const navbarRef = ref(null)
+
 onMounted(async () => {
   await loadFileList()
   addCell('code')
   applyTheme(currentTheme.value)
   fetchDataFrameInfo()
-  // 获取版本信息
-  await fetchVersion()
+  
+  // 通过组件引用获取版本
+  if (navbarRef.value) {
+    await navbarRef.value.fetchVersion()
+  }
+  
   // 每30秒自动刷新一次
   dataframeTimer.value = setInterval(fetchDataFrameInfo, 30000)
 })
@@ -1129,46 +933,6 @@ const deleteDataFile = async (file) => {
   }
 }
 
-// 处理文件选择
-const handleFileSelect = async (event) => {
-  const files = event.target.files
-  if (files.length > 0) {
-    const file = files[0]
-    
-    try {
-      
-      const fileType = file.name.split('.').pop().toLowerCase()
-
-      var result = null
-      if (fileType === 'csv') {
-        result = await uploadCsvFile(file)
-      } else if (fileType === 'xlsx' || fileType === 'xls') {
-        result = await uploadExcelFile(file)
-      } else {
-        throw new Error('不支持的文件类型')
-      }
-
-      if (result.status === 'success') {
-        await loadFileList()
-        ElMessage.success('文件上传成功')
-        currentDataFile.value = result.data.file_path
-      } else {
-        throw new Error(result.message || '上传失败')
-      }
-    } catch (error) {
-      console.error('文件上传失败:', error)
-      ElMessage.error('文件上传失败: ' + error.message)
-    }
-    
-    event.target.value = ''
-  }
-}
-
-// 触发文件上传
-const triggerFileUpload = () => {
-  fileInput.value.click()
-}
-
 // 在当前单元格上方添加新单元格
 const addCellAbove = (cellId) => {
   const currentIndex = cells.value.indexOf(cellId)
@@ -1218,15 +982,10 @@ const copyCell = (cellId) => {
 // 获取DataFrame列表
 const fetchDataFrameInfo = async () => {
   try {
-    const response = await fetch('http://127.0.0.1:8000/api/dataframes/list')
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    const data = await response.json()
-    dataframes.value = data
+    const data = await listDataFrames();
+    dataframes.value = data;
   } catch (error) {
-    console.error('获取DataFrame列表失败:', error)
-    ElMessage.error('获取DataFrame列表失败: ' + error.message)
+    ElMessage.error('获取DataFrame列表失败: ' + error.message);
   }
 }
 
@@ -1288,69 +1047,24 @@ const handleDataFileRename = async () => {
   }
 }
 
-// 添加获取版本信息的方法
-const fetchVersion = async () => {
-  try {
-    const result = await apiCall(API_ENDPOINTS.SYSTEM.VERSION)
-    if (result.status === 'success') {
-      version.value = result.data.version
-    } else {
-      throw new Error(result.message || '获取版本信息失败')
-    }
-  } catch (error) {
-    console.error('获取版本信息失败:', error)
-    version.value = '获取失败'
-  }
-}
-
-// 刷新数据文件列表
-const refreshDataFiles = async () => {
-  const btn = document.querySelector('.panel-section:nth-child(2) .refresh-btn')
-  if (btn) {
-    btn.classList.add('loading')
-  }
-  
-  try {
-    await loadFileList()
-    ElMessage.success('数据文件列表已刷新')
-  } catch (error) {
-    console.error('刷新数据文件列表失败:', error)
-    ElMessage.error('刷新数据文件列表失败: ' + error.message)
-  } finally {
-    if (btn) {
-      btn.classList.remove('loading')
-    }
-  }
-}
-
-// 开始拖动
+// 拖拽开始
 const startResize = (e) => {
   isDragging.value = true
   startX.value = e.clientX
   startWidth.value = panelWidth.value
-  
-  // 添加事件监听
-  document.addEventListener('mousemove', handleResize)
-  document.addEventListener('mouseup', stopResize)
-  
-  // 添加禁止选择类
   document.body.classList.add('resizing')
 }
 
-// 处理拖动
+// 处理拖拽
 const handleResize = (e) => {
   if (!isDragging.value) return
-  
-  const diff = e.clientX - startX.value
-  const newWidth = Math.max(200, Math.min(500, startWidth.value + diff)) // 限制最小/最大宽度
+  const newWidth = Math.max(200, Math.min(500, startWidth.value + (e.clientX - startX.value)))
   panelWidth.value = newWidth
 }
 
-// 停止拖动
+// 结束拖拽
 const stopResize = () => {
   isDragging.value = false
-  document.removeEventListener('mousemove', handleResize)
-  document.removeEventListener('mouseup', stopResize)
   document.body.classList.remove('resizing')
 }
 
@@ -1419,6 +1133,26 @@ const openExampleSelector = (cellId) => {
 const openExampleManager = () => {
   exampleDialogMode.value = 'manage'
   showCodeExamples.value = true
+}
+
+// 刷新数据文件列表
+const refreshDataFiles = async () => {
+  const btn = document.querySelector('.datafile-refresh-btn')
+  if (btn) {
+    btn.classList.add('loading')
+  }
+  
+  try {
+    await loadDataList()
+    ElMessage.success('数据文件列表已刷新')
+  } catch (error) {
+    console.error('刷新数据文件列表失败:', error)
+    ElMessage.error('刷新数据文件列表失败: ' + error.message)
+  } finally {
+    if (btn) {
+      btn.classList.remove('loading')
+    }
+  }
 }
 </script>
 
@@ -1543,14 +1277,33 @@ body {
 }
 
 .file-panel {
-  width: 250px;
-  background: var(--filePanel);
-  border-right: 1px solid var(--border-color);
+  display: flex; /* 使用 Flexbox 布局 */
+  align-items: flex-start; /* 左对齐 */
+  min-width: 200px; /* 最小宽度 */
+  max-width: 500px; /* 最大宽度 */
+  transition: none; /* 移除宽度动画以实现流畅拖动 */
+}
+
+.button-group {
   display: flex;
-  flex-direction: column;
-  transition: background-color 0.3s ease;
-  flex-shrink: 0;
-  position: relative;
+  flex-direction: column; /* 垂直排列 */
+  align-items: flex-start; /* 左对齐 */
+  gap: 4px; /* 按钮之间的间距 */
+  margin-top: 10px; /* 与下方内容的间距 */
+  margin-right: 5px; /* 添加左边距以与按钮组分开 */
+  width: 32px; /* 固定宽度 */
+}
+
+.button-group .el-button {
+  width: 20px; /* 使按钮宽度一致 */
+  margin-left: 0 !important; /* 移除默认的 margin */
+}
+
+.content-area {
+  flex-grow: 1; /* 使内容区域占据剩余空间 */
+  height: calc(100vh - 74px); /* 填充整个页面的高度，减去navbar的高度 */
+  border: 1px solid #ccc;
+  width: 100%;
 }
 
 .file-panel-header {
@@ -1622,37 +1375,15 @@ body {
   flex: 1;
   position: relative;
   overflow: auto;
-  padding: 5px;
+  padding: 2px;
   background: var(--background);
   transition: background-color 0.3s ease;
 }
 
 .notebook-cells {
-  padding: 1rem;
+  padding: 0 4px;
   height: 100%;
   overflow-y: auto;
-}
-
-/* 添加滚动条样式 */
-.notebook-cells::-webkit-scrollbar,
-.file-list::-webkit-scrollbar {
-  width: 8px;
-}
-
-.notebook-cells::-webkit-scrollbar-track,
-.file-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.notebook-cells::-webkit-scrollbar-thumb,
-.file-list::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.1);
-  border-radius: 4px;
-}
-
-.notebook-cells::-webkit-scrollbar-thumb:hover,
-.file-list::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(0, 0, 0, 0.2);
 }
 
 .cell-wrapper {
@@ -1677,20 +1408,6 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@media (max-width: 768px) {
-  .navbar {
-    padding: 1rem;
-  }
-
-  .file-panel {
-    width: 200px;
-  }
-
-  .notebook {
-    padding: 5px;
   }
 }
 
@@ -1783,10 +1500,6 @@ body {
   background-color: var(--cell-background);
   color: var(--text-color);
   padding: 8px;
-}
-
-.notebook-cells {
-  padding: 0 8px;
 }
 
 .editor-container {
@@ -1994,12 +1707,6 @@ body {
   color: #909399;
 }
 
-.file-list {
-  max-height: calc(33vh - 48px);
-  overflow-y: auto;
-  background: var(--el-fill-color-blank);
-}
-
 /* 修改折叠面板样式 */
 .file-panel :deep(.el-collapse) {
   border: none;
@@ -2082,10 +1789,10 @@ body.resizing {
   display: none;
 }
 
-/* 修改文件面板样式 */
-.file-panel {
-  min-width: 200px;
-  max-width: 500px;
-  transition: none; /* 移除宽度动画以实现流畅拖动 */
+.list-toolbar {
+  margin-left: 5px;
+  margin-top: 10px;
+  margin-bottom: 4px !important; /* 设置底部间距 */
+  width: 100%;
 }
 </style>

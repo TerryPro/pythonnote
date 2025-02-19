@@ -1,0 +1,131 @@
+.file-panel {
+  position: relative;
+  height: 100%;
+  background-color: var(--el-bg-color);
+  border-right: 1px solid var(--el-border-color);
+  transition: width 0.2s;
+  display: flex;
+  flex-direction: column;
+
+  .button-group {
+    padding: 8px;
+    border-bottom: 1px solid var(--el-border-color);
+    display: flex;
+    gap: 4px;
+
+    .el-button {
+      flex: 1;
+      padding: 8px 0;
+      
+      &.active {
+        background-color: var(--el-color-primary-light-9);
+        border-color: var(--el-color-primary);
+      }
+    }
+  }
+
+  .content-area {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+}
+
+.file-list {
+  height: 100%;
+  overflow-y: auto;
+  padding: 8px;
+
+  .file-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    transition: all 0.2s;
+    border-bottom: 1px solid;
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--el-color-primary-light-9);
+    }
+
+    &.active {
+      background-color: var(--el-color-primary-light-8);
+    }
+
+    .file-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+
+      .file-icon {
+        color: var(--el-color-primary);
+        min-width: 20px;
+      }
+
+      .file-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
+    .file-actions {
+      display: flex;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity 0.2s;
+
+      .icon-btn {
+        padding: 4px;
+        border: none;
+        background: none;
+        color: var(--el-text-color-secondary);
+        cursor: pointer;
+
+        &:hover {
+          color: var(--el-color-primary);
+        }
+
+        &.delete-btn:hover {
+          color: var(--el-color-danger);
+        }
+      }
+    }
+
+    &:hover .file-actions {
+      opacity: 1;
+    }
+  }
+}
+
+.list-toolbar {
+  padding: 8px;
+  border-bottom: 1px solid var(--el-border-color);
+  display: flex;
+  justify-content: flex-end;
+
+  .refresh-btn {
+    padding: 4px;
+    border: none;
+    background: none;
+    color: var(--el-text-color-secondary);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--el-color-primary);
+    }
+
+    &.loading {
+      animation: spin 1s linear infinite;
+    }
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+} 
