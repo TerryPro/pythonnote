@@ -15,11 +15,12 @@ class Settings(BaseSettings):
     # 基础路径配置
     BASE_DIR: Path = Path(__file__).parent.parent.parent
     EXPORT_DIR: Path = BASE_DIR / "export"
-    NOTEBOOKS_DIR: Path = BASE_DIR / "notebooks"  # Jupyter笔记本存储目录
-    DATA_DIR: Path = BASE_DIR / "data"  # 数据文件存储目录
-    TEMP_DIR: Path = BASE_DIR / "temp"  # 临时文件目录
-    LOGS_DIR: Path = BASE_DIR / "logs"  # 日志文件目录
-    EXAMPLES_DIR: Path = BASE_DIR / "examples"  # 代码示例存储目录
+    NOTEBOOKS_DIR: Path = BASE_DIR / "notebooks"    # 笔记本存储目录
+    DATA_DIR: Path = BASE_DIR / "data"              # 数据文件存储目录
+    TEMP_DIR: Path = BASE_DIR / "temp"              # 临时文件目录
+    LOGS_DIR: Path = BASE_DIR / "logs"              # 日志文件目录
+    EXAMPLES_DIR: Path = BASE_DIR / "examples"      # 代码示例存储目录
+    CONFIG_DIR: Path = BASE_DIR / "config"          # 系统，用户提示词存储目录
     
     # CORS配置
     CORS_ORIGINS: List[str] = ["*"]

@@ -8,11 +8,15 @@
 - **描述**: 获取所有可用的DataFrame变量名列表
 - **响应示例**:
 ```json
-[
-    "df1",
-    "df2",
-    "df3"
-]
+{
+    "status": "success",
+    "data": [
+        "df1",
+        "df2",
+        "df3"
+    ],
+    "message": "获取DataFrame列表成功"
+}
 ```
 
 ### 2. 获取DataFrame信息
@@ -24,38 +28,42 @@
 - **响应示例**:
 ```json
 {
-    "basic_info": {
-        "行数": 1000,
-        "列数": 10,
-        "内存占用": "1.2 MB"
-    },
-    "columns": [
-        {
-            "name": "column1",
-            "type": "int64",
-            "null_count": 0
-        }
-    ],
-    "preview": {
-        "head": [
+    "status": "success",
+    "data": {
+        "basic_info": {
+            "行数": 1000,
+            "列数": 10,
+            "内存占用": "1.2 MB"
+        },
+        "columns": [
             {
-                "column1": 1,
-                "column2": "value"
+                "name": "column1",
+                "type": "int64",
+                "null_count": 0
             }
         ],
-        "summary": {
-            "column1": {
-                "count": 1000,
-                "mean": 50.5,
-                "std": 28.86,
-                "min": 1,
-                "25%": 25.75,
-                "50%": 50.5,
-                "75%": 75.25,
-                "max": 100
+        "preview": {
+            "head": [
+                {
+                    "column1": 1,
+                    "column2": "value"
+                }
+            ],
+            "summary": {
+                "column1": {
+                    "count": 1000,
+                    "mean": 50.5,
+                    "std": 28.86,
+                    "min": 1,
+                    "25%": 25.75,
+                    "50%": 50.5,
+                    "75%": 75.25,
+                    "max": 100
+                }
             }
         }
-    }
+    },
+    "message": "获取信息成功"
 }
 ```
 
@@ -69,16 +77,19 @@
 ```json
 {
     "status": "success",
-    "shape": [1000, 10],
-    "columns": {
-        "column1": "int64",
-        "column2": "object"
+    "data": {
+        "shape": [1000, 10],
+        "columns": {
+            "column1": "int64",
+            "column2": "object"
+        },
+        "memory_usage": 80000,
+        "sample_data": {
+            "column1": [1, 2, 3, 4, 5],
+            "column2": ["a", "b", "c", "d", "e"]
+        }
     },
-    "memory_usage": 80000,
-    "sample_data": {
-        "column1": [1, 2, 3, 4, 5],
-        "column2": ["a", "b", "c", "d", "e"]
-    }
+    "message": "获取预览信息成功"
 }
 ```
 
@@ -103,11 +114,11 @@
 ```json
 {
     "status": "success",
-    "message": "DataFrame保存成功",
-    "file_info": {
-        "path": "output.csv",
+    "data": {
+        "file_path": "output.csv",
         "size": 1024
-    }
+    },
+    "message": "DataFrame保存成功"
 }
 ```
 
@@ -144,7 +155,8 @@ DataFrame API支持以下数据类型的自动处理：
 ```json
 {
     "status": "error",
-    "detail": "错误描述"
+    "data": {},
+    "message": "错误描述"
 }
 ```
 

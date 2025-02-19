@@ -2,9 +2,10 @@ import json
 from pathlib import Path
 from typing import Dict, List, Optional
 import uuid
+from app.core.config import settings
 
 class PromptManager:
-    def __init__(self, config_path: str = "config/prompt_templates.json"):
+    def __init__(self, config_path: str = settings.CONFIG_DIR / "prompt_templates.json"):
         self.config_path = config_path
         self.templates = self._load_templates()
 

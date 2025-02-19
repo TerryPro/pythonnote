@@ -135,11 +135,12 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue'
-import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import { apiCall, API_ENDPOINTS } from '@/api/http' // 导入 api.js 中的函数
 import { Loading } from '@element-plus/icons-vue'
 import UserPromptConfig from '../UserPromptConfig.vue'
 import PromptPanel from '../prompts/PromptPanel.vue'
+import { listDataFrames, getDataFrameInfo } from '@/api/dataframe_api' // 导入新的函数
 
 const props = defineProps({
   modelValue: {
@@ -217,18 +218,19 @@ const stopWaitTimer = () => {
 // 获取所有DataFrame列表
 const fetchDataFrames = async () => {
   try {
-    const response = await axios.get('http://127.0.0.1:8000/api/dataframes/list')
-    dataFrames.value = response.data
+    const data = await listDataFrames(); // 使用新的函数
+    dataFrames.value = data; // 更新dataFrames
   } catch (e) {
-    ElMessage.error('获取DataFrame列表失败')
+    console.error('获取DataFrame列表失败:', e);
+    ElMessage.error('获取DataFrame列表失败: ' + e.message);
   }
 }
 
 // 获取选中DataFrame的信息
 const fetchDataFrameInfo = async (name) => {
   try {
-    const response = await axios.get(`http://127.0.0.1:8000/api/dataframes/info/${name}`)
-    dataFrameInfo.value = response.data
+    const data = await getDataFrameInfo(name)
+    dataFrameInfo.value = data
   } catch (e) {
     ElMessage.error('获取DataFrame信息失败')
     dataFrameInfo.value = null
@@ -268,7 +270,7 @@ const handleGenerate = async () => {
   startWaitTimer()
   
   try {
-    const response = await axios.post('http://127.0.0.1:8000/api/ai/generate_code', {
+    const response = await apiCall(API_ENDPOINTS.AI.GENERATE_CODE, {
       prompt: prompt.value,
       notebook_context: props.notebookContext,
       dataframe_info: dataFrameInfo.value,

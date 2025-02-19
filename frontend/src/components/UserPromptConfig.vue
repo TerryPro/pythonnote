@@ -68,7 +68,7 @@
 <script setup>
 import { ref, defineExpose } from 'vue'
 import { ElMessage } from 'element-plus'
-import { API_ENDPOINTS, apiCall } from '@/config/api'
+import { API_ENDPOINTS, apiCall } from '@/api/http'
 
 const dialogVisible = ref(false)
 const requirements = ref([])

@@ -5,14 +5,14 @@ import os
 import json
 from datetime import datetime
 from typing import List, Dict, Any
+from app.core.config import settings
 
 class UserPromptConfig:
     """用户提示词配置管理类"""
     
     def __init__(self):
         # 配置文件路径
-        self.config_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'config')
-        self.config_path = os.path.join(self.config_dir, 'user_prompts.json')
+        self.config_path = os.path.join(settings.CONFIG_DIR, 'user_prompts.json')
         
         # 默认代码生成要求
         self.default_requirements = [
@@ -49,7 +49,7 @@ class UserPromptConfig:
         """
         try:
             # 确保配置目录存在
-            os.makedirs(self.config_dir, exist_ok=True)
+            os.makedirs(settings.CONFIG_DIR, exist_ok=True)
             
             config = {
                 "version": "1.0",

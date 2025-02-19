@@ -21,17 +21,19 @@ router = APIRouter(prefix="/api/dataframes", tags=["dataframes"])
 
 class DataFrameInfoResponse(BaseModel):
     """DataFrame信息响应模型"""
-    dataframes: List[str]
-    status: str = "success"
-    message: str = "Successfully retrieved DataFrame information"
+    status: str
+    data: Dict[str, Any]
+    message: str
 
-class DataFramePreviewResponse(BaseModel):
-    """DataFrame预览信息响应模型"""
-    shape: tuple
+class DataFrameInfoData(BaseModel):
+    basic_info: Dict[str, Any]
     columns: Dict[str, str]
     memory_usage: int
     sample_data: Dict[str, List[Any]]
+class DataFramePreviewResponse(BaseModel):
+    """DataFrame预览信息响应模型"""
     status: str = "success"
+    data: DataFrameInfoData
     message: str = "Successfully retrieved DataFrame preview"
 
 class SaveDataFrameRequest(BaseModel):
@@ -97,20 +99,21 @@ def process_dict(data: Dict) -> Dict:
             for k, v in data.items()}
 
 @router.get("/list")
-async def get_dataframes() -> List[str]:
+async def get_dataframes() -> dict:
     """获取所有可用的DataFrame变量名列表"""
     manager = get_manager()
-    return manager.get_all_dataframes()
+    dataframes = manager.get_all_dataframes()
+    return {"status": "success", "data": dataframes}
 
-@router.get("/info/{name}")
-async def get_dataframe_info(name: str) -> Dict[str, Any]:
+@router.get("/info/{name}", response_model=DataFrameInfoResponse)
+async def get_dataframe_info(name: str) -> DataFrameInfoResponse:
     """获取指定DataFrame的详细信息
     
     Args:
         name: DataFrame变量名
         
     Returns:
-        Dict包含DataFrame的详细信息
+        DataFrameInfoResponse: 包含状态、数据和消息的字典
     """
     try:
         logger.info(f"获取DataFrame '{name}' 的信息")
@@ -119,8 +122,8 @@ async def get_dataframe_info(name: str) -> Dict[str, Any]:
         
         if df is None:
             logger.warning(f"DataFrame '{name}' 未找到")
-            raise HTTPException(status_code=404, detail=f"DataFrame '{name}' not found")
-            
+            return {"status": "error", "data": {}, "message": f"DataFrame '{name}' 不存在"}
+        
         # 获取基本信息
         basic_info = {
             "行数": len(df),
@@ -176,15 +179,14 @@ async def get_dataframe_info(name: str) -> Dict[str, Any]:
         }
         
         logger.info(f"成功获取DataFrame '{name}' 的信息")
-        logger.info(result)
-        return result
+        return {"status": "success", "data": result, "message": "获取信息成功"}
         
     except Exception as e:
         logger.error(f"获取DataFrame '{name}' 信息时发生错误: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"status": "error", "data": {}, "message": str(e)}
 
-@router.get("/preview/{name}", response_model=DataFramePreviewResponse)
-async def get_dataframe_preview(name: str) -> DataFramePreviewResponse:
+@router.get("/preview/{name}", response_model=Dict[str, Any])
+async def get_dataframe_preview(name: str) -> Dict[str, Any]:
     """
     获取指定DataFrame的预览信息
     
@@ -192,7 +194,7 @@ async def get_dataframe_preview(name: str) -> DataFramePreviewResponse:
         name: DataFrame变量名
         
     Returns:
-        DataFramePreviewResponse: DataFrame的预览信息
+        Dict[str, Any]: 包含状态、数据和消息的字典
     """
     try:
         logger.info(f"正在获取DataFrame {name} 的预览信息...")
@@ -200,7 +202,7 @@ async def get_dataframe_preview(name: str) -> DataFramePreviewResponse:
         df = manager.get_dataframe(name)
         
         if df is None:
-            raise HTTPException(status_code=404, detail=f"DataFrame {name} 不存在")
+            return {"status": "error", "data": {}, "message": f"DataFrame {name} 不存在"}
         
         preview_info = {
             "shape": df.shape,
@@ -210,15 +212,13 @@ async def get_dataframe_preview(name: str) -> DataFramePreviewResponse:
         }
         
         logger.info(f"成功获取DataFrame {name} 的预览信息")
-        return DataFramePreviewResponse(**preview_info)
+        return {"status": "success", "data": preview_info, "message": "获取预览信息成功"}
         
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"获取DataFrame {name} 预览信息失败: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"status": "error", "data": {}, "message": str(e)}
 
-@router.post("/{name}/save", response_model=Dict[str, Any])
+@router.post("/save/{name}", response_model=Dict[str, Any])
 async def save_dataframe(name: str, request: SaveDataFrameRequest) -> Dict[str, Any]:
     """
     保存指定的DataFrame到文件

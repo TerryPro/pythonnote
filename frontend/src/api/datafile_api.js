@@ -1,4 +1,4 @@
-import { apiCall, API_ENDPOINTS } from '@/config/api'
+import { apiCall, API_ENDPOINTS } from '@/api/http'
 
 /**
  * 加载数据文件列表
@@ -25,13 +25,15 @@ export const listDataFiles = async () => {
  */
 export const uploadCsvFile = async (file) => {
   try {
+
+    console.log(file)
     const formData = new FormData()
     formData.append('file', file)
-
+    console.log(formData)
     const result = await apiCall(API_ENDPOINTS.DATA_FILES.UPLOAD_CSV, {
       method: 'POST',
       body: formData,
-      headers: {}
+      headers: { 'Content-Type': 'multipart/form-data' }
     })
 
     if (result.status === 'success') {
@@ -58,7 +60,7 @@ export const uploadExcelFile = async (file) => {
     const result = await apiCall(API_ENDPOINTS.DATA_FILES.UPLOAD_EXCEL, {
       method: 'POST',
       body: formData,
-      headers: {}
+      headers: { 'Content-Type': 'multipart/form-data' }
     })
 
     if (result.status === 'success') {
@@ -152,7 +154,7 @@ export const previewExcelFile = async (filename) => {
     const result = await apiCall(API_ENDPOINTS.DATA_FILES.PREVIEW_EXCEL(filename))
 
     if (result.status === 'success') {
-      return result.data
+      return result
     } else {
       throw new Error(result.message || '文件预览失败')
     }

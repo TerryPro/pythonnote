@@ -4,12 +4,12 @@ from pathlib import Path
 from app.services.pdf.exporter import NotebookPDFExporter
 from app.core.config import settings
 
-router = APIRouter(tags=["export"])
+router = APIRouter(prefix="/api/export", tags=["export"])
 
 # 创建PDF导出器实例
 pdf_exporter = NotebookPDFExporter(settings.EXPORT_DIR)
 
-@router.post("/export_pdf")
+@router.post("/pdf")
 async def export_pdf(request: Request):
     try:
         data = await request.json()

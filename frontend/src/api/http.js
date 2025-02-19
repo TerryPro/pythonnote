@@ -1,10 +1,10 @@
+import axios from 'axios';
+
 // API基础配置
 export const API_CONFIG = {
   BASE_URL: process.env.VUE_APP_API_BASE_URL,
   WS_BASE_URL: process.env.VUE_APP_WS_BASE_URL,
 }
-
-console.log('Loaded VUE_APP_API_BASE_URL:', process.env.VUE_APP_API_BASE_URL)
 
 // API端点配置
 export const API_ENDPOINTS = {
@@ -57,8 +57,17 @@ export const API_ENDPOINTS = {
     RESET_CONTEXT: '/api/execution/reset_context'
   },
 
+  // 数据框相关
   DATAFRAMES: {
-    LIST: '/api/dataframes/list'
+    LIST: '/api/dataframes/list',
+    PREVIEW: (name) => `/api/dataframes/preview/${name}`, // 获取DataFrame预览
+    SAVE: (name) => `/api/dataframes/save/${name}`, // 保存DataFrame
+    INFO: (name) => `/api/dataframes/info/${name}` // 获取DataFrame信息
+  }, 
+
+  // 导出相关
+  EXPORT_PDF: {
+    EXPORT: '/api/export/pdf',
   },
 
   SYSTEM: {
@@ -84,22 +93,62 @@ export const REQUEST_CONFIG = {
   timeout: 30000, // 30秒超时
 }
 
+// 配置axios默认值
+axios.defaults.baseURL = API_CONFIG.BASE_URL;
+axios.defaults.headers.common['Content-Type'] = 'application/json';
+axios.defaults.timeout = REQUEST_CONFIG.timeout;
+
 // 创建通用的API调用方法
 export const apiCall = async (endpoint, options = {}) => {
   try {
-    const response = await fetch(getApiUrl(endpoint), {
-      ...REQUEST_CONFIG,
-      ...options,
-    })
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    
-    const data = await response.json()
-    return data
+    const response = await axios({
+      url: endpoint, // 直接使用 endpoint，axios 会自动拼接 baseURL
+      method: options.method || 'GET',
+      headers: {
+        ...options.headers,
+      },
+      data: options.body,
+      params: options.params,
+    });
+
+    return response.data;
   } catch (error) {
-    console.error('API调用失败:', error)
-    throw error
+    console.error('API调用失败:', error);
+    if (error.response) {
+      // 服务器返回了错误响应
+      throw new Error(error.response.data.message || `HTTP error! status: ${error.response.status}`);
+    } else if (error.request) {
+      // 请求已发出，但没有收到响应
+      throw new Error('网络错误，请检查您的网络连接');
+    } else {
+      // 其他错误
+      throw new Error('请求失败，请重试');
+    }
   }
-} 
+};
+
+// 新增的 downloadFile 函数
+export const downloadFile = async (endpoint, filename, data) => {
+  try {
+    const response = await axios({
+      url: endpoint, // 直接使用 endpoint，axios 会自动拼接 baseURL
+      method: 'POST',
+      data: data,
+      responseType: 'blob', // 指定响应类型为 blob
+    });
+
+    // 获取文件并下载
+    const blob = new Blob([response.data], { type: response.headers['content-type'] });
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(downloadUrl);
+    document.body.removeChild(a);
+  } catch (error) {
+    console.error('下载文件失败:', error);
+    alert('下载文件失败: ' + error.message);
+  }
+}; 

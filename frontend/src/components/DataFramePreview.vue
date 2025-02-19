@@ -115,6 +115,7 @@
 
 <script>
 import { ElMessage } from 'element-plus'
+import { getDataFrameInfo, saveDataFrame } from '@/api/dataframe_api'
 
 export default {
   name: 'DataFramePreview',
@@ -210,11 +211,7 @@ export default {
       this.loading = true
       this.error = null
       try {
-        const response = await fetch(`http://127.0.0.1:8000/api/dataframes/info/${name}`)
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-        const data = await response.json()
+        const data = await getDataFrameInfo(name)
         this.previewData = data
       } catch (err) {
         console.error('加载DataFrame预览失败:', err)
@@ -241,24 +238,13 @@ export default {
       this.saving = true
       try {
         const fileExtension = this.saveForm.fileType === 'csv' ? '.csv' : '.xlsx'
-        const response = await fetch(`http://127.0.0.1:8000/api/dataframes/${encodeURIComponent(this.dataframeName)}/save`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            file_path: this.saveForm.fileName + fileExtension,
-            file_type: this.saveForm.fileType,
-            save_options: {}
-          })
-        })
-        
-        if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.detail || `保存失败: ${response.statusText}`)
+        const options = {
+          file_path: this.saveForm.fileName + fileExtension,
+          file_type: this.saveForm.fileType,
+          save_options: {}
         }
         
-        const result = await response.json()
+        const result = await saveDataFrame(this.dataframeName, options)
         ElMessage.success('保存成功')
         this.saveDialogVisible = false
         
