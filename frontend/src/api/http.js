@@ -34,6 +34,7 @@ export const API_ENDPOINTS = {
     SYSTEM_PROMPTS_RESET: '/api/ai/system-prompts/reset',
     USER_PROMPTS: '/api/ai/user-prompts',
     RESET_USER_PROMPTS: '/api/ai/user-prompts/reset',
+    GENERATE_CODE: '/api/ai/generate_code',
   },
   
   // 代码示例相关

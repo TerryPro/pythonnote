@@ -271,16 +271,18 @@ const handleGenerate = async () => {
   
   try {
     const response = await apiCall(API_ENDPOINTS.AI.GENERATE_CODE, {
-      prompt: prompt.value,
-      notebook_context: props.notebookContext,
-      dataframe_info: dataFrameInfo.value,
-      dataframe_name: selectedDataFrame.value
+      body: {
+        prompt: prompt.value,
+        notebook_context: props.notebookContext,
+        dataframe_info: dataFrameInfo.value,
+        dataframe_name: selectedDataFrame.value
+      },
+      method: 'POST'
     })
     
-    if (response.data.status === 'success') {
-      emit('code-generated', response.data.code)
-      dialogVisible.value = false
-    }
+    emit('code-generated', response.code)
+    dialogVisible.value = false
+
   } catch (e) {
     ElMessage.error(e.response?.data?.detail || '请求失败，请重试')
   } finally {

@@ -26,13 +26,12 @@
         :current-data-file="currentDataFile"
         :get-file-icon="getDataFileIcon"
         @preview-datafile="previewDataFile"
-        @rename-datafile="renameDataFile"
-        @delete-datafile="deleteDataFile"
         @refresh-datafiles="refreshDataFiles"
         :dataframes="dataframes"
         @refresh-dataframes="refreshDataFrames"
         @preview-dataframe="previewDataFrame"
         @file-uploaded="currentDataFile = $event"
+        @insert-code="handleInsertCode"
       >
       </AppSidebar>
       
@@ -252,7 +251,7 @@
     <FileExplore 
       ref="dataImportRef"
       @data-loaded="handleDataLoaded"
-      @insert-code="handleCodeInsert"
+      @insert-code="handleInsertCode"
     />
 
     <!-- 隐藏的文件输入框 -->
@@ -296,33 +295,6 @@
         <span class="dialog-footer">
           <el-button @click="cancelSave">取消</el-button>
           <el-button type="primary" @click="confirmSave" :loading="saveDialogLoading">确认</el-button>
-        </span>
-      </template>
-    </el-dialog>
-
-    <!-- 添加数据文件重命名对话框 -->
-    <el-dialog
-      v-model="renameDataFileDialogVisible"
-      title="重命名数据文件"
-      width="30%"
-      :close-on-click-modal="false"
-      :close-on-press-escape="false"
-    >
-      <el-form :model="renameDataFileForm" label-width="0px">
-        <el-form-item>
-          <el-input
-            v-model="renameDataFileForm.newName"
-            placeholder="请输入新的文件名"
-            @keyup.enter="handleDataFileRename"
-          >
-            <template #append>{{ renameDataFileForm.extension }}</template>
-          </el-input>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="renameDataFileDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleDataFileRename">确认</el-button>
         </span>
       </template>
     </el-dialog>
@@ -371,7 +343,7 @@ import PromptPanel from '@/components/prompts/PromptPanel.vue'
 import CodeExampleDialog from './components/examples/CodeExampleDialog.vue'
 import { API_ENDPOINTS, apiCall, downloadFile } from '@/api/http'
 import { saveNotebook, loadNotebook, listNotebooks, deleteNotebook, api_renameNotebook } from '@/api/notebook_api'
-import { listDataFiles, previewCsvFile, previewExcelFile, api_renameDataFile, api_deleteDataFile } from '@/api/datafile_api'
+import { listDataFiles } from '@/api/datafile_api'
 import { listDataFrames } from '@/api/dataframe_api'
 import { useThemeManager } from '@/composables/useThemeManager'
 import AppNavbar from '@/components/layout/AppNavbar.vue'
@@ -427,14 +399,6 @@ const currentDataframeName = ref('')
 const saveDialogVisible = ref(false)
 const newFileName = ref('')
 const saveDialogLoading = ref(false)
-
-// 添加数据文件重命名相关的响应式变量
-const renameDataFileDialogVisible = ref(false)
-const renameDataFileForm = ref({
-  newName: '',
-  file: null,
-  extension: ''
-})
 
 // 在 script setup 部分添加
 const activePanels = ref(['notebooks']) // eslint-disable-line no-unused-vars
@@ -844,31 +808,18 @@ const handleDataLoaded = (data) => {
 }
 
 // 处理代码插入
-const handleCodeInsert = (code) => {
-  // 获取最后一个单元格
-  const lastCellId = cells.value[cells.value.length - 1]
-  
-  // 检查最后一个单元格是否为代码单元格且内容为空
-  if (lastCellId && 
-      cellTypes.value[lastCellId] === 'code' && 
-      (!cellContents.value[lastCellId] || cellContents.value[lastCellId].trim() === '')) {
-    // 如果是空的代码单元格，直接使用它
-    cellContents.value[lastCellId] = code
-    ElMessage.success('代码已插入到当前单元格')
-  } else {
-    // 否则创建新的代码单元格
-    const newCellId = uuidv4()
-    cells.value.push(newCellId)
-    cellContents.value[newCellId] = code
-    cellTypes.value[newCellId] = 'code'
-    cellOutputs.value[newCellId] = {
-      output: '',
-      plot: '',
-      plotly_html: '',
-      status: 'idle'
-    }
-    ElMessage.success('代码已插入到新的单元格')
+const handleInsertCode = (code) => {
+  const newCellId = uuidv4()
+  cells.value.push(newCellId)
+  cellContents.value[newCellId] = code
+  cellTypes.value[newCellId] = 'code'
+  cellOutputs.value[newCellId] = {
+    output: '',
+    plot: '',
+    plotly_html: '',
+    status: 'idle'
   }
+  ElMessage.success('代码已插入到新的单元格')
 }
 
 // 获取数据文件图标
@@ -882,54 +833,6 @@ const getDataFileIcon = (file) => {
       return 'fa-file-excel'
     default:
       return 'fa-file'
-  }
-}
-
-// 预览数据文件
-const previewDataFile = async (file) => {
-  currentDataFile.value = file.path
-  if (dataImportRef.value) {
-    try {
-      const fileType = file.name.split('.').pop().toLowerCase()
-      var result = null
-      if (fileType === 'csv') {
-        result = await previewCsvFile(file.path)
-      } else if (fileType === 'xlsx' || fileType === 'xls') {
-        result = await previewExcelFile(file.path)
-      } else {
-        throw new Error('不支持的文件类型')
-      }
-
-      if (result.status === 'success') {
-        dataImportRef.value.previewData = result.data
-        dataImportRef.value.previewDataFile(file)
-      } else {
-        throw new Error(result.message || '加载失败')
-      }
-    } catch (error) {
-      console.error('加载数据文件失败:', error)
-      ElMessage.error('加载数据文件失败: ' + error.message)
-    }
-  }
-}
-
-// 删除数据文件
-const deleteDataFile = async (file) => {
-  try {
-    // 使用 datafile_api.js 中的 api_deleteDataFile 函数
-    await api_deleteDataFile(file.path)
-    
-    // 如果当前打开的文件被删除，清空 currentDataFile
-    if (currentDataFile.value === file.path) {
-      currentDataFile.value = null
-    }
-    
-    // 重新加载文件列表
-    await loadFileList()
-    ElMessage.success('数据文件删除成功')
-  } catch (error) {
-    console.error('删除数据文件失败:', error)
-    ElMessage.error('删除数据文件失败: ' + error.message)
   }
 }
 
@@ -1014,37 +917,6 @@ const previewDataFrame = async (name) => {
   currentDataframeName.value = name  // 更新当前DataFrame名称
   dataFramePreviewTitle.value = `DataFrame预览: ${name}`
   showDataFramePreview.value = true
-}
-
-// 添加重命名数据文件的方法
-const renameDataFile = (file) => {
-  const extension = '.' + file.name.split('.').pop()
-  renameDataFileForm.value = {
-    newName: file.name.replace(extension, ''),
-    file: file,
-    extension: extension
-  }
-  renameDataFileDialogVisible.value = true
-}
-
-// 处理数据文件重命名
-const handleDataFileRename = async () => {
-  if (!renameDataFileForm.value.newName.trim()) {
-    ElMessage.warning('文件名不能为空')
-    return
-  }
-  
-  const newFilename = renameDataFileForm.value.newName + renameDataFileForm.value.extension
-  
-  try {
-    await api_renameDataFile(renameDataFileForm.value.file.path, newFilename)
-    await loadDataList()
-    renameDataFileDialogVisible.value = false
-    ElMessage.success('文件重命名成功')
-  } catch (error) {
-    console.error('文件重命名失败:', error)
-    ElMessage.error('文件重命名失败: ' + error.message)
-  }
 }
 
 // 拖拽开始

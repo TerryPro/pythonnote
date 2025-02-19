@@ -70,10 +70,10 @@
           :current-file="props.currentDataFile"
           :get-file-icon="props.getFileIcon"
           @refresh="$emit('refresh-datafiles')"
-          @preview="$emit('preview-datafile', $event)"
-          @rename="$emit('rename-datafile', $event)"
-          @delete="$emit('delete-datafile', $event)"
           @file-uploaded="$emit('file-uploaded', $event)"
+          @data-loaded="$emit('data-loaded', $event)"
+          @insert-code="$emit('insert-code', $event)"
+          @update:currentFile="$emit('update:currentFile', $event)"
         />
       </template>
 
@@ -91,8 +91,8 @@
 
 <script setup>
 import { ref } from 'vue'
-import DataFileList from './DataFileList.vue'
-import DataFrameList from './DataFrameList.vue'
+import DataFileList from '../datalist/DataFileList.vue'
+import DataFrameList from '../dataframe/DataFrameList.vue'
 
 const props = defineProps({
   panelWidth: {
@@ -137,7 +137,10 @@ const emit = defineEmits([
   'rename-datafile',
   'delete-datafile',
   'refresh-dataframes',
-  'file-uploaded'
+  'file-uploaded',
+  'data-loaded',
+  'insert-code',
+  'update:currentFile'
 ])
 
 const currentTab = ref('notebooks')
