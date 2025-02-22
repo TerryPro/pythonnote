@@ -1,131 +1,140 @@
 .file-panel {
-  position: relative;
-  height: 100%;
-  background-color: var(--el-bg-color);
-  border-right: 1px solid var(--el-border-color);
-  transition: width 0.2s;
+  display: flex;
+  align-items: flex-start;
+  min-width: 200px;
+  max-width: 500px;
+  transition: none;
+}
+
+.button-group {
   display: flex;
   flex-direction: column;
-
-  .button-group {
-    padding: 8px;
-    border-bottom: 1px solid var(--el-border-color);
-    display: flex;
-    gap: 4px;
-
-    .el-button {
-      flex: 1;
-      padding: 8px 0;
-      
-      &.active {
-        background-color: var(--el-color-primary-light-9);
-        border-color: var(--el-color-primary);
-      }
-    }
-  }
-
-  .content-area {
-    flex: 1;
-    overflow: hidden;
-    position: relative;
-  }
+  align-items: flex-start;
+  gap: 4px;
+  margin-top: 10px;
+  margin-left: 5px;
+  margin-right: 5px;
+  width: 32px;
 }
 
-.file-list {
-  height: 100%;
-  overflow-y: auto;
-  padding: 8px;
-
-  .file-item {
-    display: flex;
-    align-items: center;
-    padding: 8px;
-    border-radius: 4px;
-    margin-bottom: 4px;
-    transition: all 0.2s;
-    border-bottom: 1px solid;
-    cursor: pointer;
-
-    &:hover {
-      background-color: var(--el-color-primary-light-9);
-    }
-
-    &.active {
-      background-color: var(--el-color-primary-light-8);
-    }
-
-    .file-content {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      overflow: hidden;
-
-      .file-icon {
-        color: var(--el-color-primary);
-        min-width: 20px;
-      }
-
-      .file-name {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-    }
-
-    .file-actions {
-      display: flex;
-      gap: 4px;
-      opacity: 0;
-      transition: opacity 0.2s;
-
-      .icon-btn {
-        padding: 4px;
-        border: none;
-        background: none;
-        color: var(--el-text-color-secondary);
-        cursor: pointer;
-
-        &:hover {
-          color: var(--el-color-primary);
-        }
-
-        &.delete-btn:hover {
-          color: var(--el-color-danger);
-        }
-      }
-    }
-
-    &:hover .file-actions {
-      opacity: 1;
-    }
-  }
+.button-group .el-button {
+  width: 20px;
+  margin-left: 0 !important;
 }
 
-.list-toolbar {
-  padding: 8px;
-  border-bottom: 1px solid var(--el-border-color);
-  display: flex;
-  justify-content: flex-end;
+/* 修改折叠面板样式 */
+.file-panel :deep(.el-collapse) {
+  border: none;
+  --el-collapse-header-height: auto;
+}
 
-  .refresh-btn {
-    padding: 4px;
-    border: none;
-    background: none;
-    color: var(--el-text-color-secondary);
-    cursor: pointer;
+.file-panel :deep(.el-collapse-item__header) {
+  padding: 0;
+  border: none;
+}
 
-    &:hover {
-      color: var(--el-color-primary);
-    }
+.file-panel :deep(.el-collapse-item__content) {
+  padding: 0;
+  background-color: var(--el-fill-color-blank);
+}
 
-    &.loading {
-      animation: spin 1s linear infinite;
-    }
-  }
+.file-panel :deep(.el-collapse-item__wrap) {
+  border: none;
+}
+
+.file-panel :deep(.el-collapse-item__arrow) {
+  margin: 0 8px;
+}
+
+.refresh-btn i {
+  font-size: 0.9rem;
+}
+
+.refresh-btn.loading i {
+  animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
-} 
+}
+
+/* 添加拖动相关样式 */
+.resize-handle {
+  width: 8px;
+  height: 100%;
+  cursor: ew-resize;
+  background-color: transparent;
+}
+
+/* 文件项相关样式 */
+.file-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--filePanelText);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  &:hover {
+    background-color: var(--filePanelHover);
+  }
+
+  &.active {
+    background-color: var(--filePanelActive);
+    border-right: 3px solid var(--primary-color);
+  }
+}
+
+.file-icon {
+  font-size: 1em;
+  color: var(--primary-color);
+  opacity: 0.8;
+  transition: all 0.3s ease;
+
+  .file-item:hover & {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+
+  .file-item.active & {
+    opacity: 1;
+    color: var(--primary-color);
+  }
+}
+
+.file-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 文件内容和操作相关样式 */
+.file-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.file-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+
+  .file-item:hover & {
+    opacity: 1;
+  }
+
+  .icon-btn {
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+}

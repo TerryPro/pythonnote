@@ -136,11 +136,11 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { apiCall, API_ENDPOINTS } from '@/api/http' // 导入 api.js 中的函数
+import { apiCall, API_ENDPOINTS } from '@/api/http'
 import { Loading } from '@element-plus/icons-vue'
-import UserPromptConfig from '../UserPromptConfig.vue'
+import UserPromptConfig from '@/components/config/UserPromptConfig.vue'
 import PromptPanel from '../prompts/PromptPanel.vue'
-import { listDataFrames, getDataFrameInfo } from '@/api/dataframe_api' // 导入新的函数
+import { useDataFrameStore } from '@/stores/dataframeStore'
 
 const props = defineProps({
   modelValue: {
@@ -159,6 +159,9 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'code-generated'])
 
+// 添加DataFrame store
+const dataframeStore = useDataFrameStore()
+
 // 状态变量
 const prompt = ref('')
 const loading = ref(false)
@@ -166,7 +169,7 @@ const waitTime = ref(0)
 let waitTimer = null
 
 // DataFrame相关状态
-const dataFrames = ref([])
+const dataFrames = computed(() => dataframeStore.dataframes)
 const selectedDataFrame = ref('')
 const dataFrameInfo = ref(null)
 
@@ -215,21 +218,14 @@ const stopWaitTimer = () => {
   }
 }
 
-// 获取所有DataFrame列表
+// 修改后的获取DataFrame列表方法
 const fetchDataFrames = async () => {
-  try {
-    const data = await listDataFrames(); // 使用新的函数
-    dataFrames.value = data; // 更新dataFrames
-  } catch (e) {
-    console.error('获取DataFrame列表失败:', e);
-    ElMessage.error('获取DataFrame列表失败: ' + e.message);
-  }
 }
 
-// 获取选中DataFrame的信息
+// 修改后的获取DataFrame信息方法
 const fetchDataFrameInfo = async (name) => {
   try {
-    const data = await getDataFrameInfo(name)
+    const data = await dataframeStore.fetchDataFrameInfo(name)
     dataFrameInfo.value = data
   } catch (e) {
     ElMessage.error('获取DataFrame信息失败')

@@ -54,10 +54,11 @@
 
 <script setup>
 import { ref, inject, onMounted, watch, nextTick } from 'vue'
-import MonacoEditor from './MonacoEditor.vue'
-import AiDialog from './ai/AiDialog.vue'
-import SaveToExampleDialog from './examples/SaveToExampleDialog.vue'
+import MonacoEditor from '@/components/notebook/MonacoEditor.vue'
+import AiDialog from '@/components/ai/AiDialog.vue'
+import SaveToExampleDialog from '@/components/examples/SaveToExampleDialog.vue'
 import { ElLoading, ElMessage } from 'element-plus'
+import { useDataFrameStore } from '@/stores/dataframeStore'
 
 const props = defineProps({
   cellId: {
@@ -94,6 +95,9 @@ const currentTheme = inject('currentTheme', ref('light'))
 const localContent = ref(props.content)
 const showAiDialog = ref(false)
 const isExecuting = ref(false)
+
+// 在setup部分添加
+const dataframeStore = useDataFrameStore()
 
 // 监听props变化
 watch(() => props.content, (newValue) => {
@@ -146,9 +150,9 @@ const executeCode = async () => {
       status: result.status || 'idle'
     })
     
-    // 如果有DataFrame变量，触发刷新
+    // 如果有DataFrame变量，直接通过store刷新
     if (result.has_dataframes) {
-      emit('refresh-dataframes')
+      dataframeStore.fetchDataFrames()
     }
     
     // 触发执行完成事件

@@ -10,9 +10,8 @@
           <i class="fas fa-palette"></i>
           <el-tooltip
             class="box-item"
-            effect="light"
             content="选择主题"
-            placement="bottom"
+            :hide-after="0"
           >
             <span class="el-dropdown-link"></span>
           </el-tooltip>
@@ -50,37 +49,52 @@
         </button>
       </el-tooltip>
 
-      <el-tooltip content="系统配置" placement="bottom" :hide-after="0">
-        <button @click="showSystemConfig" class="toolbar-btn">
-          <i class="fas fa-cog"></i>
-        </button>
-      </el-tooltip>
-
       <el-tooltip content="添加代码单元格" placement="bottom" :hide-after="0">
-        <button @click="addCell('code')" class="toolbar-btn">
+        <button @click="handleAddCell('code')" class="toolbar-btn">
           <i class="fas fa-code"></i>
         </button>
       </el-tooltip>
 
       <el-tooltip content="添加Markdown单元格" placement="bottom" :hide-after="0">
-        <button @click="addCell('markdown')" class="toolbar-btn">
+        <button @click="handleAddCell('markdown')" class="toolbar-btn">
           <i class="fas fa-markdown"></i>
         </button>
       </el-tooltip>
 
-      <el-tooltip content="管理预定义提示词" placement="bottom">
+      
+      <el-tooltip content="系统提示词配置" placement="bottom" :hide-after="0">
+        <button @click="showSystemConfig" class="toolbar-btn">
+          <i class="fas fa-cog"></i>
+        </button>
+      </el-tooltip>
+
+      <el-tooltip content="数据处理提示词" placement="bottom">
         <div class="tool-item" @click="togglePromptManager">
           <i class="fas fa-list-alt"></i>
         </div>
       </el-tooltip>
 
-      <el-tooltip content="管理代码示例" placement="bottom">
+      <el-tooltip content="代码示例管理" placement="bottom">
         <button class="toolbar-btn" @click="openExampleManager">
           <i class="fas fa-file-code"></i>
         </button>
       </el-tooltip>
     </div>
   </nav>
+
+  <!-- 添加系统配置对话框组件 -->
+  <SystemPromptConfig ref="systemConfigRef" />
+
+  <!-- 添加预定义提示词管理弹窗 -->
+  <el-dialog
+    v-model="showPromptManager"
+    title="管理预定义提示词"
+    width="80%"
+    :close-on-click-modal="false"
+    destroy-on-close
+  >
+    <PromptPanel mode="manage" />
+  </el-dialog>
 </template>
 
 <script setup>
@@ -93,19 +107,18 @@ import {
 } from 'element-plus'
 import { useTheme } from '@/composables/useThemeManager'
 import { API_ENDPOINTS, apiCall } from '@/api/http'
+import SystemPromptConfig from '@/components/config/SystemPromptConfig.vue'
+import PromptPanel from '@/components/prompts/PromptPanel.vue'
+import { useNotebook } from '@/composables/useNotebook'
 
 const { currentTheme, themes } = useTheme()
+const { createNewNotebook, exportPDF, addCell } = useNotebook()
 
 // 定义事件
 const emit = defineEmits([
-  'create-notebook',
   'show-save-dialog',
-  'export-pdf',
-  'show-config',
-  'add-cell',
   'open-example-manager',
-  'update-theme',
-  'toggle-prompt-manager'
+  'update-theme'
 ])
 
 // 版本信息
@@ -127,36 +140,36 @@ const handleThemeChange = (themeKey) => {
   emit('update-theme', themeKey)
 }
 
-const createNewNotebook = () => {
-  emit('create-notebook')
-}
-
 const showSaveDialog = () => {
   emit('show-save-dialog')
 }
 
-const exportPDF = () => {
-  emit('export-pdf')
-}
+const systemConfigRef = ref(null)
 
 const showSystemConfig = () => {
-  emit('show-config')
+  systemConfigRef.value?.show()
 }
 
-const addCell = (type) => {
-  emit('add-cell', type)
+const handleAddCell = (type) => {
+  addCell(type)
 }
 
 const openExampleManager = () => {
   emit('open-example-manager')
 }
 
+const showPromptManager = ref(false)
+
 const togglePromptManager = () => {
-  emit('toggle-prompt-manager')
+  showPromptManager.value = true
 }
 
 // 暴露方法给父组件
 defineExpose({
   fetchVersion
 })
-</script> 
+</script>
+
+<style scoped lang="scss">
+@import '@/styles/layout/_navbar.scss';
+</style>

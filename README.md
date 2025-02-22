@@ -167,11 +167,3 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000
 ## 许可证
 
 本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
-
-## 新架构说明
-├── composables/    # 组合式API模块
-├── stores/         # Pinia状态管理
-└── components/     # 组件分类
-    ├── layout/     # 布局组件
-    └── notebook/   # 核心业务组件
-

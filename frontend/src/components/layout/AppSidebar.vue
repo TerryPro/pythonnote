@@ -24,75 +24,30 @@
     <div class="content-area">
       <!-- 各选项卡内容 -->
       <template v-if="currentTab === 'notebooks'">
-        <!-- 工具栏 -->
-        <div class="list-toolbar">
-          <el-button @click="$emit('refresh-notebooks')" class="refresh-btn icon-btn">
-            <i class="fas fa-sync-alt"></i>
-          </el-button>
-        </div>
-        
-        <!-- 文件列表 -->
-        <div class="file-list">
-          <div 
-            v-for="file in props.notebookFiles" 
-            :key="file.path" 
-            class="file-item"
-            :class="{ active: props.currentFile === file.path }"
-          >
-            <div class="file-content" @click="$emit('open-notebook', file)">
-              <i class="fas fa-file-code file-icon"></i>
-              <span class="file-name">{{ file.name }}</span>
-            </div>
-            <div class="file-actions">
-              <button 
-                @click="$emit('rename-notebook', file)"
-                class="icon-btn"
-                title="重命名"
-              >
-                <i class="fas fa-edit"></i>
-              </button>
-              <button 
-                @click="$emit('delete-notebook', file)"
-                class="icon-btn delete-btn"
-                title="删除"
-              >
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-          </div>
-        </div>
+        <!-- 使用NoteList组件 -->
+        <NoteList/>
       </template>
 
       <!-- 添加数据文件列表 -->
       <template v-else-if="currentTab === 'dataFiles'">
         <DataFileList
-          :files="props.dataFiles"
-          :current-file="props.currentDataFile"
-          :get-file-icon="props.getFileIcon"
-          @refresh="$emit('refresh-datafiles')"
-          @file-uploaded="$emit('file-uploaded', $event)"
-          @data-loaded="$emit('data-loaded', $event)"
           @insert-code="$emit('insert-code', $event)"
-          @update:currentFile="$emit('update:currentFile', $event)"
         />
       </template>
 
       <!-- 添加DataFrame列表 -->
       <template v-else-if="currentTab === 'dataFrames'">
-        <DataFrameList
-          :dataframes="props.dataframes"
-          @refresh="$emit('refresh-dataframes')"
-          @preview="$emit('preview-dataframe', $event)"
-        />
+        <DataFrameList/>
       </template>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import DataFileList from '../datalist/DataFileList.vue'
-import DataFrameList from '../dataframe/DataFrameList.vue'
+import { ref, defineProps, defineEmits } from 'vue'
+import NoteList from '@/components/notefile/NoteList.vue'
+import DataFileList from '@/components/filepanel/DataFileList.vue'
+import DataFrameList from '@/components/datapanel/DataFrameList.vue'
 
 const props = defineProps({
   panelWidth: {
@@ -107,40 +62,15 @@ const props = defineProps({
     type: String,
     default: ''
   },
-  dataFiles: {
-    type: Array,
-    required: true
-  },
-  currentDataFile: {
-    type: String,
-    default: ''
-  },
-  getFileIcon: {
-    type: Function,
-    required: true
-  },
-  dataframes: {
-    type: Array,
-    required: true
-  }
 })
 
 const emit = defineEmits([
-  'update:panel-width',
-  'select-tab',
-  'refresh-notebooks',
-  'refresh-datafiles',
-  'open-notebook',
   'rename-notebook',
   'delete-notebook',
   'preview-datafile',
-  'rename-datafile',
-  'delete-datafile',
-  'refresh-dataframes',
-  'file-uploaded',
   'data-loaded',
   'insert-code',
-  'update:currentFile'
+  'select-tab'
 ])
 
 const currentTab = ref('notebooks')
@@ -149,4 +79,4 @@ const selectTab = (tab) => {
   currentTab.value = tab
   emit('select-tab', tab)
 }
-</script> 
+</script>

@@ -134,7 +134,7 @@ export const previewCsvFile = async (filename) => {
     const result = await apiCall(API_ENDPOINTS.DATA_FILES.PREVIEW_CSV(filename))
 
     if (result.status === 'success') {
-      return result
+      return result.data
     } else {
       throw new Error(result.message || '文件预览失败')
     }
@@ -154,7 +154,7 @@ export const previewExcelFile = async (filename) => {
     const result = await apiCall(API_ENDPOINTS.DATA_FILES.PREVIEW_EXCEL(filename))
 
     if (result.status === 'success') {
-      return result
+      return result.data
     } else {
       throw new Error(result.message || '文件预览失败')
     }
