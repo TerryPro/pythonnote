@@ -6,12 +6,12 @@
         <div class="card-header">
           <span class="header-title">代码分类</span>
           <div class="header-actions">
-            <button class="icon-btn" @click="handleReload" title="重新加载">
+            <button class="icon-btn borderless" @click="handleReload" title="重新加载">
               <el-icon><Refresh /></el-icon>
             </button>
             <button
               v-if="isManageMode"
-              class="icon-btn"
+              class="icon-btn borderless"
               @click="handleAddCategory"
               title="添加分类"
             >

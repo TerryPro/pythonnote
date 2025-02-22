@@ -1,0 +1,66 @@
+// 图标按钮基础样式
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--cell-background);
+  color: var(--text-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+
+  i {
+    font-size: 14px;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--button-hover);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:active:not(:disabled) {
+    background: var(--button-active);
+  }
+
+  // 删除按钮变体
+  &.delete-btn {
+    color: #f56c6c;
+
+    &:hover {
+      background: #fef0f0;
+      border-color: #f56c6c;
+      color: #f56c6c;
+    }
+  }
+
+  // 无边框变体
+  &.borderless {
+    border: none;
+    background: none;
+    color: var(--el-text-color-regular);
+
+    &:hover {
+      color: var(--el-color-primary);
+      background-color: var(--el-color-primary-light-9);
+    }
+  }
+
+  // 小尺寸变体
+  &.small {
+    width: 24px;
+    height: 24px;
+    
+    i {
+      font-size: 12px;
+    }
+  }
+} 

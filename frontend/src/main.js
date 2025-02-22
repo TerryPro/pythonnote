@@ -5,7 +5,7 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import '@fortawesome/fontawesome-free/css/all.min.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
-
+import './styles/index.scss'  // 导入主样式文件
 const app = createApp(App)
 const pinia = createPinia()
 // 注册所有图标

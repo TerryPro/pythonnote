@@ -188,7 +188,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 const store = useNotebookStore()
 const { cells, cellContents, cellOutputs, cellTypes, markdownEditStates } = storeToRefs(store)
-const { addCell, handleExecutionComplete, changeCellType } = useNotebook()
+const { addCell, handleExecutionComplete, changeCellType, addCellAbove, addCellBelow, moveCellUp, moveCellDown, deleteCell } = useNotebook()
 
 // 添加代码示例对话框状态
 const showCodeExamples = ref(false)
@@ -258,24 +258,9 @@ const confirmDeleteCell = (cellId) => {
 
 // 处理删除单元格
 const handleDeleteCell = () => {
-  const index = cells.value.indexOf(deleteCellId.value)
-  if (index > -1) {
-    // 从数组中移除单元格ID
-    cells.value.splice(index, 1)
-    // 删除相关的内容和状态
-    delete cellContents.value[deleteCellId.value]
-    delete cellOutputs.value[deleteCellId.value]
-    delete cellTypes.value[deleteCellId.value]
-    delete markdownEditStates.value[deleteCellId.value]
-    
-    // 如果删除后没有单元格了，添加一个新的代码单元格
-    if (cells.value.length === 0) {
-      addCell('code')
-    }
-    
-    deleteCellDialogVisible.value = false
-    ElMessage.success('单元格已删除')
-  }
+  deleteCell(deleteCellId.value)
+  deleteCellDialogVisible.value = false
+  ElMessage.success('单元格已删除')
 }
 
 // 在组件挂载时应用默认主题
@@ -307,40 +292,6 @@ const handleInsertCode = (code) => {
     status: 'idle'
   }
   ElMessage.success('代码已插入到新的单元格')
-}
-
-// 在当前单元格上方添加新单元格
-const addCellAbove = (cellId) => {
-  const currentIndex = cells.value.indexOf(cellId)
-  const newCellId = uuidv4()
-  
-  // 在当前单元格前插入新单元格
-  cells.value.splice(currentIndex, 0, newCellId)
-  cellContents.value[newCellId] = ''
-  cellTypes.value[newCellId] = 'code'
-  cellOutputs.value[newCellId] = {
-    output: '',
-    plot: '',
-    plotly_html: '',
-    status: 'idle'
-  }
-}
-
-// 在当前单元格下方添加新单元格
-const addCellBelow = (cellId) => {
-  const currentIndex = cells.value.indexOf(cellId)
-  const newCellId = uuidv4()
-  
-  // 在当前单元格后插入新单元格
-  cells.value.splice(currentIndex + 1, 0, newCellId)
-  cellContents.value[newCellId] = ''
-  cellTypes.value[newCellId] = 'code'
-  cellOutputs.value[newCellId] = {
-    output: '',
-    plot: '',
-    plotly_html: '',
-    status: 'idle'
-  }
 }
 
 // 添加复制功能
@@ -420,9 +371,6 @@ const openExampleManager = () => {
 </script>
 
 <style lang="scss">
-@import '@/styles/layout/_sidebar.scss';
-@import '@/styles/base/_base.scss';
-@import '@/styles/layout/_notebook.scss';
 
 .main-container {
   flex: 1;
@@ -437,39 +385,6 @@ const openExampleManager = () => {
   border: 1px solid #ccc;
   height: calc(100vh - 74px); /* 减去navbar的高度 */
   width: 100%;
-}
-
-.icon-btn {
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: var(--cell-background);
-  color: var(--text-color);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.icon-btn:hover:not(:disabled) {
-  background: var(--button-hover);
-  border-color: var(--primary-color);
-  color: var(--primary-color);
-}
-
-.icon-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.icon-btn:active:not(:disabled) {
-  background: var(--button-active);
-}
-
-.icon-btn i {
-  font-size: 14px;
 }
 
 /* 添加对话框相关样式 */
@@ -493,30 +408,6 @@ const openExampleManager = () => {
   color: #f56c6c;
 }
 
-.delete-dialog-content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.file-info {
-  margin-top: 8px;
-  padding: 12px;
-  background: #f8f9fa;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.file-info .label {
-  color: #606266;
-  margin-right: 8px;
-}
-
-.file-info .value {
-  color: #303133;
-  font-weight: 500;
-}
-
 .hidden-input {
   width: 0;
   height: 0;
@@ -524,16 +415,6 @@ const openExampleManager = () => {
   overflow: hidden;
   position: absolute;
   z-index: -1;
-}
-
-.upload-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.upload-btn i {
-  font-size: 16px;
 }
 
 .panel-section {
@@ -545,41 +426,6 @@ const openExampleManager = () => {
 
 .panel-section:last-child {
   border-bottom: none;
-}
-
-.panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 16px;
-  width: 100%;
-}
-
-.panel-header h3 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  font-size: 14px;
-  color: #606266;
-}
-
-.panel-header h3 i {
-  font-size: 16px;
-  color: #909399;
-}
-
-.refresh-btn i {
-  font-size: 0.9rem;
-}
-
-.refresh-btn.loading i {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }
 
 /* 添加拖动相关样式 */
@@ -627,10 +473,4 @@ body.resizing {
   display: none;
 }
 
-.list-toolbar {
-  margin-left: 5px;
-  margin-top: 10px;
-  margin-bottom: 4px !important; /* 设置底部间距 */
-  width: 100%;
-}
 </style>

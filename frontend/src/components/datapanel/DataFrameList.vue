@@ -107,8 +107,6 @@ const previewDataFrame = (name) => {
 </script>
 
 <style scoped lang="scss">
-@import '@/styles/components/_menu.scss'; // 直接使用已定义的类
-
 .file-item {
   padding: 0.5rem;
   &:hover {

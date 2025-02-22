@@ -7,7 +7,7 @@
           <span>提示词分类</span>
           <div class="header-actions">
             <button
-              class="icon-btn"
+              class="icon-btn borderless"
               @click="handleReload"
               title="重新加载"
             >
@@ -15,7 +15,7 @@
             </button>
             <button
               v-if="isManageMode"
-              class="icon-btn"
+              class="icon-btn borderless"
               @click="handleAddCategory"
               title="添加分类"
             >
@@ -834,9 +834,9 @@ onMounted(async () => {
   cursor: pointer;
   color: var(--el-text-color-regular);
   transition: color 0.2s;
-}
 
-.icon-btn:hover {
-  color: var(--el-color-primary);
+  &:hover {
+    color: var(--el-color-primary);
+  }
 }
 </style> 

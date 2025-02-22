@@ -240,7 +240,6 @@ const closeContextMenu = () => {
 </script>
 
 <style scoped lang="scss">
-@import '@/styles/components/_menu.scss';
 
 .file-item {
   padding: 0.5rem;

@@ -102,34 +102,6 @@ defineExpose({
   padding: 4px 8px;
 }
 
-.icon-btn {
-  width: 32px;
-  height: 32px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: white;
-  color: #666;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.icon-btn:hover {
-  background: #f5f5f5;
-  border-color: #ccc;
-  color: #333;
-}
-
-.icon-btn:active {
-  background: #e8e8e8;
-}
-
-.icon-btn i {
-  font-size: 14px;
-}
-
 .editor-container {
   background: #ffffff;
   border: 1px solid #e0e0e0;
