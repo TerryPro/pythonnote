@@ -77,10 +77,7 @@
     </el-dialog>
 
     <!-- 添加数据预览组件 -->
-    <FileExplore 
-      ref="dataImportRef"
-      @insert-code="$emit('insert-code', $event)"
-    />
+    <FileExplore ref="dataImportRef"/>
   </div>
 </template>
 

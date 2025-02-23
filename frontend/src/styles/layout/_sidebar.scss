@@ -1,3 +1,11 @@
+
+.content-area {
+  flex-grow: 1; /* 使内容区域占据剩余空间 */
+  border: 1px solid #ccc;
+  height: calc(100vh - 74px); /* 减去navbar的高度 */
+  width: 100%;
+}
+
 .file-panel {
   display: flex;
   align-items: flex-start;

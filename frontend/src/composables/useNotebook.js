@@ -203,6 +203,26 @@ export function useNotebook() {
     }
   }
 
+  // 新增插入代码函数
+  const insertCode = (code) => {
+    const newCellId = uuidv4()
+
+    if (store.cells.length === 0 || store.cellContents[store.cells[store.cells.length - 1]] !== '') {
+      store.cells.push(newCellId)
+    } else {
+      store.cellContents[store.cells[store.cells.length - 1]] = code
+    }
+
+    store.cellContents[newCellId] = code
+    store.cellTypes[newCellId] = 'code'
+    store.cellOutputs[newCellId] = {
+      output: '',
+      plot: '',
+      plotly_html: '',
+      status: 'idle'
+    }
+  }
+
   return {
     createNewNotebook,
     openNotebook,
@@ -214,6 +234,7 @@ export function useNotebook() {
     moveCellDown,
     deleteCell,
     addCellAbove,
-    addCellBelow
+    addCellBelow,
+    insertCode
   }
 }
