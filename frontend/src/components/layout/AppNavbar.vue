@@ -2,7 +2,7 @@
   <nav class="navbar">
     <div class="navbar-left">
       <h1>AI Data Note</h1>
-      <span class="version">{{ version }}</span>
+      <VersionDisplay />
     </div>
     <div class="toolbar">
       <el-dropdown @command="handleThemeChange" trigger="click">
@@ -75,7 +75,7 @@
       </el-tooltip>
 
       <el-tooltip content="代码示例管理" placement="bottom">
-        <button class="toolbar-btn" @click="openExampleManager">
+        <button class="toolbar-btn" @click="codeExampleRef?.openExampleManager()">
           <i class="fas fa-file-code"></i>
         </button>
       </el-tooltip>
@@ -84,6 +84,12 @@
 
   <!-- 添加系统配置对话框组件 -->
   <SystemPromptConfig ref="systemConfigRef" />
+  
+  <!-- 添加保存笔记本处理组件 -->
+  <SaveNotebookHandler ref="saveNotebookRef" />
+
+  <!-- 添加代码示例管理组件 -->
+  <CodeExampleManage ref="codeExampleRef" />
 
   <!-- 添加预定义提示词管理弹窗 -->
   <el-dialog
@@ -98,50 +104,36 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { 
   ElDropdown, 
   ElDropdownMenu, 
   ElDropdownItem,
   ElTooltip
 } from 'element-plus'
-import { useTheme } from '@/composables/useThemeManager'
-import { API_ENDPOINTS, apiCall } from '@/api/http'
+import { useThemeManager } from '@/composables/useThemeManager'
 import SystemPromptConfig from '@/components/config/SystemPromptConfig.vue'
 import PromptPanel from '@/components/prompts/PromptPanel.vue'
 import { useNotebook } from '@/composables/useNotebook'
+import SaveNotebookHandler from '@/components/notebook/SaveNotebookHandler.vue'
+import CodeExampleManage from '@/components/examples/CodeExampleManage.vue'
+import VersionDisplay from '@/components/layout/VersionDisplay.vue'
 
-const { currentTheme, themes } = useTheme()
+const { currentTheme, themes, applyTheme, provideTheme } = useThemeManager()
+provideTheme() // 为子组件提供主题上下文
 const { createNewNotebook, exportPDF, addCell } = useNotebook()
 
-// 定义事件
-const emit = defineEmits([
-  'show-save-dialog',
-  'open-example-manager',
-  'update-theme'
-])
-
-// 版本信息
-const version = ref('加载中...')
-
-// 暴露版本获取方法
-const fetchVersion = async () => {
-  try {
-    const result = await apiCall(API_ENDPOINTS.SYSTEM.VERSION)
-    version.value = result.data.version
-  } catch (error) {
-    console.error('获取版本信息失败:', error)
-    version.value = '未知版本'
-  }
-}
+const codeExampleRef = ref(null)
 
 // 事件处理
 const handleThemeChange = (themeKey) => {
-  emit('update-theme', themeKey)
+  applyTheme(themeKey)
 }
 
+const saveNotebookRef = ref(null)
+
 const showSaveDialog = () => {
-  emit('show-save-dialog')
+  saveNotebookRef.value?.showSaveDialog()
 }
 
 const systemConfigRef = ref(null)
@@ -154,19 +146,14 @@ const handleAddCell = (type) => {
   addCell(type)
 }
 
-const openExampleManager = () => {
-  emit('open-example-manager')
-}
-
 const showPromptManager = ref(false)
 
 const togglePromptManager = () => {
   showPromptManager.value = true
 }
 
-// 暴露方法给父组件
-defineExpose({
-  fetchVersion
+onMounted(() => {
+  applyTheme(currentTheme.value)
 })
 </script>
 

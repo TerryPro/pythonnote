@@ -87,49 +87,6 @@
   gap: 4px;
 }
 
-.icon-btn {
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: var(--cell-background);
-  color: var(--text-color);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-
-  i {
-    font-size: 14px;
-  }
-
-  &:hover:not(:disabled) {
-    background: var(--button-hover);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  &:active:not(:disabled) {
-    background: var(--button-active);
-  }
-
-  &.delete-btn {
-    color: #f56c6c;
-
-    &:hover {
-      background: #fef0f0;
-      border-color: #f56c6c;
-      color: #f56c6c;
-    }
-  }
-}
-
 .editor-container {
   background: var(--cell-background);
   border: 1px solid var(--border-color);

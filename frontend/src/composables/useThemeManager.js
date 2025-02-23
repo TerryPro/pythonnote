@@ -1,4 +1,4 @@
-import { ref, provide, inject } from 'vue'
+import { ref, provide } from 'vue'
 import { themes } from '@/themes'
 
 const ThemeSymbol = Symbol('theme')
@@ -26,16 +26,8 @@ export function useThemeManager() {
 
   return {
     currentTheme,
+    themes,
     applyTheme,
     provideTheme
   }
 }
-
-// 子组件注入用
-export function useTheme() {
-  return inject(ThemeSymbol, {
-    currentTheme: ref('light'),
-    applyTheme: () => {},
-    themes: {}
-  })
-} 
