@@ -5,6 +5,9 @@
       <AppSidebar/>
       <ResizeHandle />
       <NoteBook />
+      <AppSidebar/>
+      <ResizeHandle />
+      <NoteBook />
     </main>
   </div>
 </template>
