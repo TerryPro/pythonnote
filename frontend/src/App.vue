@@ -5,9 +5,6 @@
       <AppSidebar/>
       <ResizeHandle />
       <NoteBook />
-      <AppSidebar/>
-      <ResizeHandle />
-      <NoteBook />
     </main>
   </div>
 </template>
@@ -87,5 +84,4 @@ body.resizing {
 .resize-handle-line {
   display: none;
 }
-
 </style>
