@@ -213,6 +213,7 @@ const handleRename = async (newName) => {
 </script>
 
 <style scoped lang="scss">
+@import '@/styles/components/menu.scss';
 
 .file-item {
   padding: 0.5rem;

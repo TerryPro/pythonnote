@@ -1,5 +1,5 @@
 <template>
-  <div class="file-panel" :style="{ width: props.panelWidth + 'px' }">
+  <div class="file-panel" :style="{ width: panelWidth + 'px' }">
     <div class="button-group">
       <el-button 
         @click="selectTab('notebooks')" 
@@ -30,9 +30,7 @@
 
       <!-- 添加数据文件列表 -->
       <template v-else-if="currentTab === 'dataFiles'">
-        <DataFileList
-          @insert-code="$emit('insert-code', $event)"
-        />
+        <DataFileList/>
       </template>
 
       <!-- 添加DataFrame列表 -->
@@ -44,39 +42,20 @@
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits } from 'vue'
+import { ref } from 'vue'
 import NoteList from '@/components/notefile/NoteList.vue'
 import DataFileList from '@/components/filepanel/DataFileList.vue'
 import DataFrameList from '@/components/datapanel/DataFrameList.vue'
 
-const props = defineProps({
-  panelWidth: {
-    type: Number,
-    required: true
-  },
-  notebookFiles: {
-    type: Array,
-    required: true
-  },
-  currentFile: {
-    type: String,
-    default: ''
-  },
-})
+import { useResizePanelStore } from '@/stores/resizePanelStore'
+import { computed } from 'vue'
 
-const emit = defineEmits([
-  'rename-notebook',
-  'delete-notebook',
-  'preview-datafile',
-  'data-loaded',
-  'insert-code',
-  'select-tab'
-])
+const resizePanelStore = useResizePanelStore()
+const panelWidth = computed(() => resizePanelStore.panelWidth)
 
 const currentTab = ref('notebooks')
 
 const selectTab = (tab) => {
   currentTab.value = tab
-  emit('select-tab', tab)
 }
 </script>

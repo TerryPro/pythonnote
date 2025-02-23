@@ -2,51 +2,50 @@
   <div 
     class="resize-handle"
     @mousedown="handleMouseDown"
-    @touchstart="handleTouchStart"
+    @touchstart="handleTouchStartWrapper"
   >
     <div class="resize-handle-line"></div>
   </div>
 </template>
 
 <script setup>
+import { useResizePanel } from '@/composables/useResizePanel'
 
-const emit = defineEmits(['resize-start', 'resize-move', 'resize-end'])
+const { startResize, handleResize, stopResize, handleTouchStart, handleTouchMove, handleTouchEnd } = useResizePanel()
 
 const handleMouseDown = (e) => {
   e.preventDefault()
-  emit('resize-start', e)
+  startResize(e)
   
   const handleMouseMove = (e) => {
-    emit('resize-move', e)
+    handleResize(e)
   }
   
   const handleMouseUp = () => {
     document.removeEventListener('mousemove', handleMouseMove)
     document.removeEventListener('mouseup', handleMouseUp)
-    emit('resize-end')
+    stopResize()
   }
 
   document.addEventListener('mousemove', handleMouseMove)
   document.addEventListener('mouseup', handleMouseUp)
 }
 
-const handleTouchStart = (e) => {
-  const touch = e.touches[0]
-  emit('resize-start', touch)
+const handleTouchStartWrapper = (e) => {
+  handleTouchStart(e)
   
-  const handleTouchMove = (e) => {
-    const touch = e.touches[0]
-    emit('resize-move', touch)
+  const handleTouchMoveWrapper = (e) => {
+    handleTouchMove(e)
   }
   
-  const handleTouchEnd = () => {
-    document.removeEventListener('touchmove', handleTouchMove)
-    document.removeEventListener('touchend', handleTouchEnd)
-    emit('resize-end')
+  const handleTouchEndWrapper = () => {
+    document.removeEventListener('touchmove', handleTouchMoveWrapper)
+    document.removeEventListener('touchend', handleTouchEndWrapper)
+    handleTouchEnd()
   }
 
-  document.addEventListener('touchmove', handleTouchMove)
-  document.addEventListener('touchend', handleTouchEnd)
+  document.addEventListener('touchmove', handleTouchMoveWrapper)
+  document.addEventListener('touchend', handleTouchEndWrapper)
 }
 </script>
 
@@ -73,4 +72,4 @@ const handleTouchStart = (e) => {
 .resize-handle:active .resize-handle-line {
   background-color: var(--el-color-primary);
 }
-</style> 
+</style>

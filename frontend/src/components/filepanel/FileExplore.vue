@@ -69,10 +69,12 @@
 import { ref, computed } from 'vue'
 import { ElButton, ElDialog, ElMessage } from 'element-plus'
 import { useDataFileStore } from '@/stores/dataFileStore'
+import { useNotebook } from '@/composables/useNotebook'
 
 const store = useDataFileStore()
 const dialogVisible = ref(false)
 const error = ref(null)
+const { insertCode } = useNotebook()
 
 const currentPreviewFile = computed(() => {
   return store.currentFileMeta
@@ -85,8 +87,6 @@ const previewDataFile = () => {
 const closeDialog = () => {
   dialogVisible.value = false
 }
-
-const emit = defineEmits(['insert-code'])
 
 // 统一处理代码生成
 const handleGenerateCode = (type) => {
@@ -111,9 +111,9 @@ const handleGenerateCode = (type) => {
   }
 
   if (Array.isArray(code)) {
-    code.forEach(item => emit('insert-code', item))
+    code.forEach(item => insertCode(item))
   } else if (code) {
-    emit('insert-code', code)
+    insertCode(code)
   }
   closeDialog()
 }
