@@ -43,7 +43,7 @@
       <!-- DataFrame信息展示 -->
       <div class="df-info">
         <!-- 基本信息卡片 -->
-        <el-card v-if="dataFrameInfo?.basic_info" class="info-card">
+        <el-card class="info-card">
           <template #header>
             <div class="card-header">
               <span>基本信息</span>
@@ -52,15 +52,15 @@
           <div class="info-grid">
             <div class="info-item">
               <span class="label">行数：</span>
-              <span class="value">{{ dataFrameInfo.basic_info.行数 }}</span>
+              <span class="value">{{ dataFrameInfo?.basic_info?.行数 }}</span>
             </div>
             <div class="info-item">
               <span class="label">列数：</span>
-              <span class="value">{{ dataFrameInfo.basic_info.列数 }}</span>
+              <span class="value">{{ dataFrameInfo?.basic_info?.列数 }}</span>
             </div>
             <div class="info-item">
               <span class="label">内存占用：</span>
-              <span class="value">{{ dataFrameInfo.basic_info.内存占用 }}</span>
+              <span class="value">{{ dataFrameInfo?.basic_info?.内存占用 }}</span>
             </div>
           </div>
         </el-card>
@@ -76,7 +76,7 @@
             :data="dataFrameInfo?.columns || []"
             style="width: 100%"
             size="small"
-            height="300"
+            height="200"
           >
             <el-table-column prop="name" label="列名" min-width="180" />
             <el-table-column prop="type" label="数据类型" min-width="180" />
@@ -313,22 +313,6 @@ defineExpose({
 </script>
 
 <style scoped>
-.ai-dialog-wrapper :deep(.el-dialog) {
-  height: 800px;
-  display: flex;
-  flex-direction: column;
-  margin: 0 !important;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.ai-dialog-wrapper :deep(.el-dialog__body) {
-  padding: 0 20px;
-  flex: 1;
-  overflow: hidden;
-}
 
 .dialog-header {
   display: flex;
@@ -355,14 +339,15 @@ defineExpose({
   flex-direction: column;
   gap: 16px;
   flex: 1;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .info-card {
-  flex: 1;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-height: 100px;
 }
 
 .info-card :deep(.el-card__body) {
@@ -376,25 +361,6 @@ defineExpose({
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   padding: 16px;
-}
-
-.info-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.info-item span {
-  color: var(--el-text-color-secondary);
-}
-
-.info-item strong {
-  color: var(--el-text-color-primary);
-}
-
-.columns-card :deep(.el-card__header) {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
 .card-header {
@@ -416,18 +382,4 @@ defineExpose({
   font-size: 14px;
 }
 
-.dialog-footer {
-  text-align: right;
-}
-
-/* 使用Element Plus的变量来保持一致性 */
-:deep(.el-button--text) {
-  padding: 8px;
-  height: 32px;
-}
-
-:deep(.el-table) {
-  --el-table-border-color: var(--el-border-color-lighter);
-  --el-table-header-bg-color: var(--el-fill-color-light);
-}
-</style> 
+</style>
