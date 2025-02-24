@@ -50,26 +50,4 @@ const handleTouchStartWrapper = (e) => {
 </script>
 
 <style scoped>
-.resize-handle {
-  position: relative;
-  width: 6px;
-  cursor: col-resize;
-  background-color: transparent;
-  z-index: 100;
-  height: 100%;
-}
-
-.resize-handle-line {
-  position: absolute;
-  left: 2px;
-  width: 2px;
-  height: 100%;
-  background-color: var(--el-border-color);
-  transition: background-color 0.2s;
-}
-
-.resize-handle:hover .resize-handle-line,
-.resize-handle:active .resize-handle-line {
-  background-color: var(--el-color-primary);
-}
 </style>

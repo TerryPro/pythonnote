@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="list-toolbar">
-      <el-button @click="dataframeStore.fetchDataFrames()" class="refresh-btn icon-btn">
+      <el-button @click="handleRefresh" class="refresh-btn icon-btn">
         <i class="fas fa-sync-alt"></i>
       </el-button>
     </div>
@@ -25,7 +25,7 @@
         class="file-item"
         @contextmenu.prevent="showContextMenu($event, name)"
       >
-        <div class="file-content">
+        <div class="file-content" @click="previewDataFrame(name)">
           <i class="fas fa-table text-blue-500"></i>
           <span class="file-name">{{ name }}</span>
         </div>
@@ -43,6 +43,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import DataFramePreview from '@/components/datapanel/DataFramePreview.vue'
 import { useDataFrameStore } from '@/stores/dataframeStore'
 
@@ -104,19 +105,16 @@ const previewDataFrame = (name) => {
   previewTitle.value = name
   showPreview.value = true
 }
+
+const handleRefresh = async () => {
+  try {
+    await dataframeStore.fetchDataFrames()
+    ElMessage.success('变量列表已刷新')
+  } catch (error) {
+    console.error(error.message)
+  }
+}
 </script>
 
 <style scoped lang="scss">
-.file-item {
-  padding: 0.5rem;
-  &:hover {
-    background-color: #dbeafe;
-  }
-  &.active {
-    background-color: #eff6ff;
-  }
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
 </style>

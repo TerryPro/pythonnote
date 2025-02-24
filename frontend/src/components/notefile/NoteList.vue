@@ -35,7 +35,7 @@
         @click="openNotebook(file)"
       >
         <div class="file-content">
-          <i class="fas fa-file-code file-icon"></i>
+          <i class="fas fa-file-code"></i>
           <span class="file-name">{{ file.name }}</span>
         </div>
       </div>
@@ -213,19 +213,4 @@ const handleRename = async (newName) => {
 </script>
 
 <style scoped lang="scss">
-@import '@/styles/components/menu.scss';
-
-.file-item {
-  padding: 0.5rem;
-  &:hover {
-    background-color: #dbeafe;
-  }
-  &.active {
-    background-color: #eff6ff;
-  }
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
 </style>

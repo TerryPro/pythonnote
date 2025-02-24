@@ -1,13 +1,14 @@
-// 导入变量
-@import 'variables';
+@use 'variables';
 
 // 导入基础样式
-@import 'base/base';
+@use 'base/base';
 
 // 导入布局样式
-@import 'layout/sidebar';
-@import 'layout/notebook';
+@use 'layout/sidebar';
+@use 'layout/notebook';
+@use 'layout/navbar';
 
 // 导入组件样式
-@import 'components/menu';
-@import 'components/icon_btn'; 
+@use 'components/menu';
+@use 'components/icon_btn';
+@use 'components/resize-handle';

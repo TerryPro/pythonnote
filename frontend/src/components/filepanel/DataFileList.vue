@@ -34,7 +34,7 @@
         :class="{ active: store.currentFile === file.path }"
         @contextmenu.prevent="showContextMenu($event, file)"
       >
-        <div class="file-content">
+        <div class="file-content" @click="handlePreview(file)">
           <i :class="['fas', getFileIcon(file)]"></i>
           <span class="file-name">{{ file.name }}</span>
         </div>
@@ -70,22 +70,22 @@
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="renameDialogVisible = false">取消</el-button>
+          <elData-button @click="renameDialogVisible = false">取消</elData-button>
           <el-button type="primary" @click="handleRename">确认</el-button>
         </span>
       </template>
     </el-dialog>
 
     <!-- 添加数据预览组件 -->
-    <FileExplore ref="dataImportRef"/>
+    <DataFileExplore ref="dataImportRef"/>
   </div>
 </template>
-
+Data
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useDataFileStore } from '@/stores/dataFileStore'
-import FileExplore from '@/components/filepanel/FileExplore.vue'
+import DataFileExplore from '@/components/filepanel/DataFileExplore.vue'
 
 const store = useDataFileStore()
 const fileInput = ref(null)
@@ -237,17 +237,4 @@ const closeContextMenu = () => {
 </script>
 
 <style scoped lang="scss">
-
-.file-item {
-  padding: 0.5rem;
-  &:hover {
-    background-color: #dbeafe;
-  }
-  &.active {
-    background-color: #eff6ff;
-  }
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
 </style> 

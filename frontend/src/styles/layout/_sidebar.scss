@@ -4,13 +4,12 @@
   border: 1px solid #ccc;
   height: calc(100vh - 47px); /* 减去navbar的高度 */
   width: 100%;
+  overflow: hidden;
 }
 
 .file-panel {
   display: flex;
   align-items: flex-start;
-  min-width: 200px;
-  max-width: 500px;
   transition: none;
 }
 
@@ -42,51 +41,6 @@
   }
 }
 
-/* 修改折叠面板样式 */
-.file-panel :deep(.el-collapse) {
-  border: none;
-  --el-collapse-header-height: auto;
-}
-
-.file-panel :deep(.el-collapse-item__header) {
-  padding: 0;
-  border: none;
-}
-
-.file-panel :deep(.el-collapse-item__content) {
-  padding: 0;
-  background-color: var(--el-fill-color-blank);
-}
-
-.file-panel :deep(.el-collapse-item__wrap) {
-  border: none;
-}
-
-.file-panel :deep(.el-collapse-item__arrow) {
-  margin: 0 8px;
-}
-
-.refresh-btn i {
-  font-size: 0.9rem;
-}
-
-.refresh-btn.loading i {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* 添加拖动相关样式 */
-.resize-handle {
-  width: 8px;
-  height: 100%;
-  cursor: ew-resize;
-  background-color: transparent;
-}
-
 /* 文件项相关样式 */
 .file-item {
   padding: 0.75rem 1rem;
@@ -108,23 +62,6 @@
   }
 }
 
-.file-icon {
-  font-size: 1em;
-  color: var(--primary-color);
-  opacity: 0.8;
-  transition: all 0.3s ease;
-
-  .file-item:hover & {
-    opacity: 1;
-    transform: scale(1.1);
-  }
-
-  .file-item.active & {
-    opacity: 1;
-    color: var(--primary-color);
-  }
-}
-
 .file-name {
   flex: 1;
   overflow: hidden;
@@ -132,29 +69,11 @@
   white-space: nowrap;
 }
 
-/* 文件内容和操作相关样式 */
+/* 文件内容相关样式 */
 .file-content {
   display: flex;
   align-items: center;
   gap: 8px;
   flex: 1;
   min-width: 0;
-}
-
-.file-actions {
-  display: flex;
-  gap: 4px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-
-  .file-item:hover & {
-    opacity: 1;
-  }
-
-  .icon-btn {
-    padding: 0;
-    width: 24px;
-    height: 24px;
-    font-size: 12px;
-  }
 }

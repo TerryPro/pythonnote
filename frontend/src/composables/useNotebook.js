@@ -223,6 +223,18 @@ export function useNotebook() {
     }
   }
 
+  // 添加复制功能
+  const copyCell = (cellId) => {
+    const content = store.cellContents[cellId]
+    if (content) {
+      navigator.clipboard.writeText(content).then(() => {
+        ElMessage.success('内容已复制到剪贴板')
+      }).catch(() => {
+        ElMessage.error('复制失败')
+      })
+    }
+  }
+
   return {
     createNewNotebook,
     openNotebook,
@@ -235,6 +247,7 @@ export function useNotebook() {
     deleteCell,
     addCellAbove,
     addCellBelow,
-    insertCode
+    insertCode,
+    copyCell
   }
 }

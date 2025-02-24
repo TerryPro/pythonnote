@@ -28,9 +28,6 @@ onMounted(async () => {
 </script>
 
 <style lang="scss">
-@import '@/styles/layout/_navbar.scss';
-@import '@/styles/layout/_sidebar.scss';
-@import '@/styles/base/_base.scss';
 
 .main-container {
   flex: 1;
@@ -40,48 +37,5 @@ onMounted(async () => {
   position: relative;
 }
 
-/* 添加拖动相关样式 */
-.resize-handle {
-  width: 8px;
-  height: 100%;
-  cursor: ew-resize;
-  background-color: transparent;
-  position: relative;
-  transition: background-color 0.2s;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 
-.resize-handle::after {
-  content: "⋮";
-  color: var(--el-border-color);
-  font-size: 20px;
-  line-height: 1;
-  opacity: 0;
-  transition: opacity 0.2s, color 0.2s;
-}
-
-.resize-handle:hover::after,
-.resizing .resize-handle::after {
-  opacity: 1;
-  color: var(--el-color-primary);
-}
-
-.resize-handle:hover,
-.resizing .resize-handle {
-  background-color: var(--el-border-color-lighter);
-}
-
-/* 拖动时禁止选择文本 */
-body.resizing {
-  user-select: none;
-  cursor: ew-resize !important;
-}
-
-/* 移除原来的分隔线样式 */
-.resize-handle-line {
-  display: none;
-}
 </style>
