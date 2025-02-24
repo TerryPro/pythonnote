@@ -7,7 +7,3 @@
 - plotly图形输出支持
 - DataFrame变量管理
 """
-
-from .code_executor import CodeExecutor
-
-__all__ = ['CodeExecutor'] 

@@ -239,6 +239,17 @@ class CodeExecutor:
         
         plotly.io.show = custom_plotly_show 
 
+    def set_dataframes(self, variables : Dict[str, Any]):
+        manager = get_manager()
+        self.locals_dict.update(variables)
+        for var_name, var_value in self.locals_dict.items():
+            if isinstance(var_value, pd.DataFrame):
+                manager.register_dataframe(var_name, var_value)
+                
+    def get_dataframes(self):
+        manager = get_manager()
+        return manager.get_dataframes()
+    
     def _register_dataframes(self):
         """注册所有DataFrame变量到管理器"""
         manager = get_manager()
@@ -254,4 +265,14 @@ class CodeExecutor:
             if var_name.startswith('__') or isinstance(var_value, type(pd)):
                 continue
             if isinstance(var_value, pd.DataFrame):
-                manager.register_dataframe(var_name, var_value) 
+                manager.register_dataframe(var_name, var_value)
+
+# 创建单例实例
+_executor: Optional[CodeExecutor] = None
+
+def get_executor() -> CodeExecutor:
+    """获取DataFrameManager的单例实例"""
+    global _executor
+    if _executor is None:
+        _executor = CodeExecutor()
+    return _executor

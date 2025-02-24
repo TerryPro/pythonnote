@@ -4,8 +4,12 @@ import json
 import os
 from pathlib import Path
 from app.core.config import settings
+from app.services.notebook.env_manager import NotebookEnvManager
+from app.services.data_explorer.data_loader import get_manager
+from app.services.code_executor.code_executor import get_executor
 
 router = APIRouter(prefix="/api/notebooks", tags=["notebooks"])
+env_manager = NotebookEnvManager()
 
 @router.get("/list_notebooks")
 async def list_notebooks():
@@ -29,21 +33,32 @@ async def list_notebooks():
             "status": "error",
             "message": f"获取笔记本列表失败: {str(e)}"
         }
-
+    
 @router.post("/save_notebook")
 async def save_notebook(request: Request):
     data = await request.json()
     filename = data.get("filename")
     notebook = data.get("notebook")
-    
+   
     if not filename or not notebook:
         return {"status": "error", "message": "Missing filename or notebook data"}
     
-    file_path = settings.NOTEBOOKS_DIR / filename
-    with open(file_path, "w", encoding="utf-8") as f:
-        json.dump(notebook, f, ensure_ascii=False, indent=2)
-    
-    return {"status": "success"}
+    try:
+        # 保存笔记本文件
+        file_path = settings.NOTEBOOKS_DIR / filename
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(notebook, f, ensure_ascii=False, indent=2)
+        
+        # 获取当前执行环境中的变量
+        code_executor = get_executor()
+        variables = code_executor.get_dataframes()
+        
+        # 保存执行环境
+        env_manager.save_environment(filename, variables)
+        
+        return {"status": "success"}
+    except Exception as e:
+        return {"status": "error", "message": f"保存笔记本失败: {str(e)}"}
 
 @router.post("/rename_notebook")
 async def rename_notebook(request: Request):
@@ -71,8 +86,12 @@ async def rename_notebook(request: Request):
         return {"status": "error", "message": "A notebook with this name already exists"}
     
     try:
-        # 重命名文件
+        # 重命名笔记本文件
         old_path.rename(new_path)
+        
+        # 重命名执行环境文件
+        env_manager.rename_environment(old_filename, new_filename)
+        
         return {"status": "success", "message": "Notebook renamed successfully"}
     except Exception as e:
         return {"status": "error", "message": f"Failed to rename notebook: {str(e)}"}
@@ -100,8 +119,11 @@ async def delete_notebook(filename: str):
         if not filename.endswith('.ipynb'):
             return {"status": "error", "message": "无效的文件类型"}
         
-        # 删除文件
+        # 删除笔记本文件
         file_path.unlink()
+        
+        # 删除执行环境文件
+        env_manager.delete_environment(filename)
         
         return {"status": "success", "message": "笔记本删除成功"}
     except Exception as e:
@@ -114,7 +136,22 @@ async def load_notebook(filename: str):
     if not file_path.exists():
         return {"status": "error", "message": "Notebook not found"}
     
-    with open(file_path, "r", encoding="utf-8") as f:
-        notebook = json.load(f)
-    
-    return {"status": "success", "data": notebook}
+    try:
+        # 加载笔记本文件
+        with open(file_path, "r", encoding="utf-8") as f:
+            notebook = json.load(f)
+        
+        # 加载执行环境
+        variables = env_manager.load_environment(filename)
+        
+        code_executor = get_executor()
+        code_executor.reset()
+        code_executor.set_dataframes(variables)
+        
+        return {
+            "status": "success", 
+            "data": notebook
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": f"加载笔记本失败: {str(e)}"}

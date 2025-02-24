@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     BASE_DIR: Path = Path(__file__).parent.parent.parent
     EXPORT_DIR: Path = BASE_DIR / "export"
     NOTEBOOKS_DIR: Path = BASE_DIR / "notebooks"    # 笔记本存储目录
+    NOTEDATAS_DIR: Path = BASE_DIR / "notedatas"
     DATA_DIR: Path = BASE_DIR / "data"              # 数据文件存储目录
     TEMP_DIR: Path = BASE_DIR / "temp"              # 临时文件目录
     LOGS_DIR: Path = BASE_DIR / "logs"              # 日志文件目录

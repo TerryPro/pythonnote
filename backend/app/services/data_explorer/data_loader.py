@@ -217,6 +217,9 @@ class DataFrameManager:
         """
         return list(self._dataframes.keys())
     
+    def get_dataframes(self):
+        return self._dataframes
+    
     def clear(self):
         """清空所有注册的DataFrame信息"""
         self._dataframes.clear()
