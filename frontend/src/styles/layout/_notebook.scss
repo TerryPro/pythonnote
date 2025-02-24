@@ -2,13 +2,12 @@
   flex: 1;
   position: relative;
   overflow: auto;
-  padding: 2px;
   background: var(--background);
   transition: background-color 0.3s ease;
 }
 
 .notebook-cells {
-  padding: 0 4px;
+  padding: 0px;
   height: 100%;
   overflow-y: auto;
 }

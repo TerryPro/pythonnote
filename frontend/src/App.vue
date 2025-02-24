@@ -28,14 +28,11 @@ onMounted(async () => {
 </script>
 
 <style lang="scss">
-
 .main-container {
   flex: 1;
   display: flex;
-  height: calc(100vh - 47px); /* 减去navbar的高度 */
+  height: calc(100vh - var(--navbar-height));
   overflow: hidden;
   position: relative;
 }
-
-
 </style>
