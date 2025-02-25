@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Dict, Any
 from app.core.config import settings
 
-class NotebookEnvManager:
+class NoteDataLoader:
     """Python笔记本执行环境管理器"""
     
     def __init__(self):
@@ -11,7 +11,7 @@ class NotebookEnvManager:
         self.env_dir = settings.NOTEDATAS_DIR
         self.env_dir.mkdir(exist_ok=True)
     
-    def get_env_path(self, notebook_name: str) -> Path:
+    def _get_data_path(self, notebook_name: str) -> Path:
         """
         获取环境文件路径
         
@@ -25,7 +25,7 @@ class NotebookEnvManager:
         env_name = notebook_name.replace('.ipynb', '.dat')
         return self.env_dir / env_name
     
-    def save_environment(self, notebook_name: str, variables: Dict[str, Any]) -> bool:
+    def save_notedata(self, notebook_name: str, variables: Dict[str, Any]) -> bool:
         """
         保存Python执行环境
         
@@ -37,7 +37,7 @@ class NotebookEnvManager:
             bool: 保存是否成功
         """
         try:
-            env_path = self.get_env_path(notebook_name)
+            env_path = self._get_data_path(notebook_name)
             
             print(env_path)
             
@@ -59,7 +59,7 @@ class NotebookEnvManager:
             print(f"保存执行环境失败: {str(e)}")
             return False
     
-    def load_environment(self, notebook_name: str) -> Dict[str, Any]:
+    def load_notedata(self, notebook_name: str) -> Dict[str, Any]:
         """
         加载Python执行环境
         
@@ -70,7 +70,7 @@ class NotebookEnvManager:
             Dict[str, Any]: 加载的变量字典
         """
         try:
-            env_path = self.get_env_path(notebook_name)
+            env_path = self._get_data_path(notebook_name)
             
             if not env_path.exists():
                 return {}
@@ -81,7 +81,7 @@ class NotebookEnvManager:
             print(f"加载执行环境失败: {str(e)}")
             return {}
     
-    def delete_environment(self, notebook_name: str) -> bool:
+    def delete_notedata(self, notebook_name: str) -> bool:
         """
         删除Python执行环境文件
         
@@ -92,7 +92,7 @@ class NotebookEnvManager:
             bool: 删除是否成功
         """
         try:
-            env_path = self.get_env_path(notebook_name)
+            env_path = self._get_data_path(notebook_name)
             if env_path.exists():
                 env_path.unlink()
             return True
@@ -100,7 +100,7 @@ class NotebookEnvManager:
             print(f"删除执行环境失败: {str(e)}")
             return False
     
-    def rename_environment(self, old_name: str, new_name: str) -> bool:
+    def rename_notedata(self, old_name: str, new_name: str) -> bool:
         """
         重命名Python执行环境文件
         
@@ -112,8 +112,8 @@ class NotebookEnvManager:
             bool: 重命名是否成功
         """
         try:
-            old_path = self.get_env_path(old_name)
-            new_path = self.get_env_path(new_name)
+            old_path = self._get_data_path(old_name)
+            new_path = self._get_data_path(new_name)
             
             if old_path.exists():
                 old_path.rename(new_path)

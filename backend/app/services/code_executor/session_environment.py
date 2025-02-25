@@ -17,13 +17,25 @@ from contextlib import redirect_stdout, redirect_stderr
 import base64
 from io import BytesIO
 import uuid
-from app.services.data_explorer.data_loader import get_manager
+from app.services.code_executor.dataframe_manager import DataFrameManager
 
 # 过滤掉特定的警告
 warnings.filterwarnings('ignore', category=UserWarning, message='FigureCanvasAgg is non-interactive')
 
-class CodeExecutor:
-    def __init__(self):
+class SessionEnvironment:
+    """
+    为每个笔记提供一个隔离的Python执行环境
+    """
+    def __init__(self, session_id: str, df_manager: DataFrameManager):
+        """
+        初始化会话环境
+        
+        Args:
+            session_id: 会话ID，通常对应笔记本ID
+            df_manager: DataFrame管理器实例
+        """
+        self.session_id = session_id
+        self.df_manager = df_manager
         # 设置matplotlib的全局配置
         plt.ioff()  # 确保关闭交互模式
         plt.rcParams.update({
@@ -34,7 +46,7 @@ class CodeExecutor:
         # 设置plotly的默认模板
         pio.templates.default = "plotly_white"
         self.reset()
-                
+    
     def _capture_plot(self) -> str:
         """捕获matplotlib图形并转换为base64字符串"""
         if plt.get_fignums():  # 只要有图形就捕获
@@ -52,7 +64,6 @@ class CodeExecutor:
             return ''
             
         try:
-            # 配置输出选项，使用小写的 true/false
             config = {
                 'displayModeBar': 'true',
                 'responsive': 'true',
@@ -69,24 +80,19 @@ class CodeExecutor:
                 }
             }
             
-            # 准备图表数据
             try:
                 plot_data = self._last_plotly_fig.to_json()
-                # 替换 Python 的布尔值为 JavaScript 的布尔值
                 plot_data = plot_data.replace('True', 'true').replace('False', 'false')
                 
                 plot_layout = self._last_plotly_fig.layout.to_plotly_json()
-                # 替换 Python 的布尔值为 JavaScript 的布尔值
                 plot_layout = str(plot_layout).replace('True', 'true').replace('False', 'false')
-            except Exception as e:
+            except Exception:
                 import json
                 plot_data = json.dumps(self._last_plotly_fig.data)
                 plot_layout = json.dumps(self._last_plotly_fig.layout)
-                # 替换 Python 的布尔值为 JavaScript 的布尔值
                 plot_data = plot_data.replace('True', 'true').replace('False', 'false')
                 plot_layout = plot_layout.replace('True', 'true').replace('False', 'false')
             
-            # 构建HTML
             html = f'''
             <div class="plotly-graph-div" style="height:100%; width:100%;">
             <script type="text/javascript">
@@ -97,7 +103,7 @@ class CodeExecutor:
                             var layout = {plot_layout};
                             layout.autosize = true;
                             layout.margin = {{ t: 30, r: 10, b: 30, l: 60 }};
-                            layout.height = null; // 让高度自适应容器
+                            layout.height = null;
                             var config = {config};
                             
                             var container = document.currentScript.parentElement;
@@ -114,30 +120,22 @@ class CodeExecutor:
             </div>
             '''
             
-            # 清除存储的图形
             self._last_plotly_fig = None
             return html
             
-        except Exception as e:
+        except Exception:
             return ''
 
     def execute(self, code: str) -> Dict[str, Any]:
         """
-        执行Python代码
+        在当前会话环境中执行Python代码
         
         Args:
             code: 要执行的Python代码
             
         Returns:
-            Dict包含执行结果：
-            {
-                "output": str,  # 标准输出和错误
-                "error": Optional[str],  # 如果有错误，则包含错误信息
-                "status": str  # 执行状态：'success' 或 'error'
-            }
+            Dict包含执行结果
         """
-        
-        # 捕获标准输出和错误
         stdout = io.StringIO()
         stderr = io.StringIO()
         
@@ -145,29 +143,21 @@ class CodeExecutor:
             "output": "",
             "error": None,
             "status": "success",
-            "has_dataframes": False,  # 添加标志位表示是否有新的DataFrame变量
-            "plot": "",  # 添加matplotlib图像输出
-            "plotly_html": ""  # 添加plotly图像输出
+            "has_dataframes": False,
+            "plot": "",
+            "plotly_html": ""
         }
         
         try:
-            # 执行代码并捕获输出
             with redirect_stdout(stdout), redirect_stderr(stderr):
                 exec(code, self.globals_dict, self.locals_dict)
                 
-            # 清空已注册的DataFrame变量
-            get_manager().clear()
-            # 注册所有DataFrame变量
             self._register_dataframes()
-            # 检查是否有DataFrame变量
-            result["has_dataframes"] = len(get_manager().get_all_dataframes()) > 0
+            result["has_dataframes"] = len(self.df_manager.get_dataframes_names()) > 0
             
-            # 捕获matplotlib图像
             result["plot"] = self._capture_plot()
-            # 捕获plotly图像
             result["plotly_html"] = self._capture_plotly()
             
-            # 获取输出
             output = stdout.getvalue()
             errors = stderr.getvalue()
             
@@ -177,8 +167,7 @@ class CodeExecutor:
             
             result["output"] = output if output else errors
             
-        except Exception as e:
-            # 获取完整的错误追踪
+        except Exception:
             error_msg = traceback.format_exc()
             result["error"] = str(error_msg)
             result["status"] = "error"
@@ -191,17 +180,15 @@ class CodeExecutor:
         return result
 
     def reset(self):
-        """重置执行器状态"""
-        # 清除所有图形
+        """重置会话环境状态"""
         plt.close('all')
         self._last_plotly_fig = None
-        self._show_called = False  # 添加标志
+        self._show_called = False
         
-        # 清除所有已注册的DataFrame对象
-        manager = get_manager()
-        manager.clear()
+        # 清除当前会话的DataFrame对象
+        self.df_manager.clear()
         
-        # 初始化全局和局部命名空间
+        # 初始化命名空间
         self.globals_dict = {
             '__name__': '__main__',
             'np': np,
@@ -213,66 +200,47 @@ class CodeExecutor:
         }
         self.locals_dict = {}
         
-        # 添加所有内置函数到全局命名空间
+        # 添加内置函数
         for name in dir(builtins):
             if not name.startswith('_'):
                 self.globals_dict[name] = getattr(builtins, name)
                 
-        # 设置matplotlib为内联模式并禁用警告
         plt.switch_backend('Agg')
-        plt.ioff()  # 关闭交互模式
-        # 设置图形显示参数
+        plt.ioff()
         plt.rcParams['figure.max_open_warning'] = 50
         plt.rcParams['figure.dpi'] = 100
 
-        # 重写 plt.show 函数来跟踪调用
         def custom_show(*args, **kwargs):
             self._show_called = True
             return None
         
         plt.show = custom_show
 
-        # 重写plotly的show函数来捕获图形
         def custom_plotly_show(fig, *args, **kwargs):
             self._last_plotly_fig = fig
             return None
         
-        plotly.io.show = custom_plotly_show 
+        plotly.io.show = custom_plotly_show
 
-    def set_dataframes(self, variables : Dict[str, Any]):
-        manager = get_manager()
+    def set_dataframes(self, variables: Dict[str, Any]):
+        """设置DataFrame变量到当前会话"""
         self.locals_dict.update(variables)
         for var_name, var_value in self.locals_dict.items():
             if isinstance(var_value, pd.DataFrame):
-                manager.register_dataframe(var_name, var_value)
+                self.df_manager.register_dataframe(var_name, var_value)
                 
     def get_dataframes(self):
-        manager = get_manager()
-        return manager.get_dataframes()
+        """获取当前会话的所有DataFrame"""
+        return self.df_manager.get_dataframes()
     
     def _register_dataframes(self):
         """注册所有DataFrame变量到管理器"""
-        manager = get_manager()
-        
-        # 遍历所有局部变量
         for var_name, var_value in self.locals_dict.items():
             if isinstance(var_value, pd.DataFrame):
-                manager.register_dataframe(var_name, var_value)
+                self.df_manager.register_dataframe(var_name, var_value)
         
-        # 遍历所有全局变量
         for var_name, var_value in self.globals_dict.items():
-            # 跳过模块和内置变量
             if var_name.startswith('__') or isinstance(var_value, type(pd)):
                 continue
             if isinstance(var_value, pd.DataFrame):
-                manager.register_dataframe(var_name, var_value)
-
-# 创建单例实例
-_executor: Optional[CodeExecutor] = None
-
-def get_executor() -> CodeExecutor:
-    """获取DataFrameManager的单例实例"""
-    global _executor
-    if _executor is None:
-        _executor = CodeExecutor()
-    return _executor
+                self.df_manager.register_dataframe(var_name, var_value) 

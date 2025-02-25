@@ -47,15 +47,55 @@ async def delete_data_file(filename: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+async def _save_data_file(file: UploadFile, allowed_extensions: List[str]):
+    """保存数据文件的通用函数"""
+    try:
+        # 检查文件扩展名
+        file_ext = Path(file.filename).suffix.lower()
+        if file_ext not in allowed_extensions:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"不支持的文件格式。支持的格式：{', '.join(allowed_extensions)}"
+            )
+        
+        # 生成安全的文件名
+        safe_filename = Path(file.filename).name
+        file_path = settings.DATA_DIR / safe_filename
+        
+        # 如果文件已存在，添加数字后缀
+        counter = 1
+        while file_path.exists():
+            stem = Path(file.filename).stem
+            file_path = settings.DATA_DIR / f"{stem}_{counter}{file_ext}"
+            counter += 1
+        
+        # 保存文件
+        with file_path.open("wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        return {
+            "status": "success",
+            "message": "文件上传成功",
+            "data": {
+                "file_path": str(file_path.relative_to(settings.DATA_DIR)),
+                "file_name": file_path.name,
+                "file_size": file_path.stat().st_size
+            }
+        }
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) 
+    
 @router.post("/upload/csv")
 async def upload_csv(file: UploadFile):
     """上传CSV文件"""
-    return await save_data_file(file, ['.csv'])
+    return await _save_data_file(file, ['.csv'])
 
 @router.post("/upload/excel")
 async def upload_excel(file: UploadFile):
     """上传Excel文件"""
-    return await save_data_file(file, ['.xlsx', '.xls'])
+    return await _save_data_file(file, ['.xlsx', '.xls'])
 
 @router.get("/preview/csv")
 async def preview_csv(filename: str):
@@ -123,43 +163,3 @@ async def rename_data_file(request: Request):
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-async def save_data_file(file: UploadFile, allowed_extensions: List[str]):
-    """保存数据文件的通用函数"""
-    try:
-        # 检查文件扩展名
-        file_ext = Path(file.filename).suffix.lower()
-        if file_ext not in allowed_extensions:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"不支持的文件格式。支持的格式：{', '.join(allowed_extensions)}"
-            )
-        
-        # 生成安全的文件名
-        safe_filename = Path(file.filename).name
-        file_path = settings.DATA_DIR / safe_filename
-        
-        # 如果文件已存在，添加数字后缀
-        counter = 1
-        while file_path.exists():
-            stem = Path(file.filename).stem
-            file_path = settings.DATA_DIR / f"{stem}_{counter}{file_ext}"
-            counter += 1
-        
-        # 保存文件
-        with file_path.open("wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-        
-        return {
-            "status": "success",
-            "message": "文件上传成功",
-            "data": {
-                "file_path": str(file_path.relative_to(settings.DATA_DIR)),
-                "file_name": file_path.name,
-                "file_size": file_path.stat().st_size
-            }
-        }
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 

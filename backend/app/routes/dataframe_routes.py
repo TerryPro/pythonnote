@@ -3,12 +3,12 @@ DataFrame相关的API路由
 """
 from typing import List, Dict, Any
 import logging
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 import numpy as np
 import math
-from app.services.data_explorer.data_loader import get_manager
 from app.core.config import settings
+from app.services.code_executor.note_executor import get_executor
 
 # 配置日志
 logging.basicConfig(
@@ -38,6 +38,7 @@ class DataFramePreviewResponse(BaseModel):
 
 class SaveDataFrameRequest(BaseModel):
     """保存DataFrame的请求模型"""
+    session_id: str
     file_path: str
     file_type: str = "csv"
     save_options: Dict[str, Any] = {}
@@ -99,14 +100,13 @@ def process_dict(data: Dict) -> Dict:
             for k, v in data.items()}
 
 @router.get("/list")
-async def get_dataframes() -> dict:
-    """获取所有可用的DataFrame变量名列表"""
-    manager = get_manager()
-    dataframes = manager.get_all_dataframes()
+async def get_dataframes(session_id: str) -> dict:
+    executor = get_executor()
+    dataframes = executor.get_dataframes_names(session_id)
     return {"status": "success", "data": dataframes}
 
-@router.get("/info/{name}", response_model=DataFrameInfoResponse)
-async def get_dataframe_info(name: str) -> DataFrameInfoResponse:
+@router.get("/info", response_model=DataFrameInfoResponse)
+async def get_dataframe_info(session_id: str, name: str) -> DataFrameInfoResponse:
     """获取指定DataFrame的详细信息
     
     Args:
@@ -117,8 +117,9 @@ async def get_dataframe_info(name: str) -> DataFrameInfoResponse:
     """
     try:
         logger.info(f"获取DataFrame '{name}' 的信息")
-        manager = get_manager()
-        df = manager.get_dataframe(name)
+        
+        executor = get_executor()
+        df = executor.get_dataframe(session_id, name)
         
         if df is None:
             logger.warning(f"DataFrame '{name}' 未找到")
@@ -186,7 +187,7 @@ async def get_dataframe_info(name: str) -> DataFrameInfoResponse:
         return {"status": "error", "data": {}, "message": str(e)}
 
 @router.get("/preview/{name}", response_model=Dict[str, Any])
-async def get_dataframe_preview(name: str) -> Dict[str, Any]:
+async def get_dataframe_preview(name: str, request: Request) -> Dict[str, Any]:
     """
     获取指定DataFrame的预览信息
     
@@ -198,8 +199,12 @@ async def get_dataframe_preview(name: str) -> Dict[str, Any]:
     """
     try:
         logger.info(f"正在获取DataFrame {name} 的预览信息...")
-        manager = get_manager()
-        df = manager.get_dataframe(name)
+        
+        data = await request.json()
+        session_id = data.get("session_id", "")
+        
+        executor = get_executor()
+        df = executor.get_dataframe(session_id, name)
         
         if df is None:
             return {"status": "error", "data": {}, "message": f"DataFrame {name} 不存在"}
@@ -232,9 +237,11 @@ async def save_dataframe(name: str, request: SaveDataFrameRequest) -> Dict[str, 
     """
     try:
         logger.info(f"正在保存DataFrame {name} 到文件 {request.file_path}...")
-        manager = get_manager()
-        
-        result = manager.save_dataframe(
+        data = await request.json()
+        session_id = data.get("session_id", "")
+        executor = get_executor()       
+        result = executor.save_dataframe_to_file(
+            session_id=session_id,
             name=name,
             file_path=request.file_path,
             file_type=request.file_type,

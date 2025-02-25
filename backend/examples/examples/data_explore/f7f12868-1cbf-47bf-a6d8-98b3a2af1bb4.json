@@ -1,0 +1,13 @@
+{
+  "id": "f7f12868-1cbf-47bf-a6d8-98b3a2af1bb4",
+  "title": "test",
+  "description": "test1",
+  "code": "# 导入必要的库\nimport pandas as pd\n\n# 加载CSV文件\ncountry_gdp_df = pd.read_csv('data/country_gdp.csv')",
+  "category_id": "data_explore",
+  "tags": [
+    "数据处理"
+  ],
+  "use_count": 0,
+  "created_at": "2025-02-25T09:52:20.387105",
+  "updated_at": "2025-02-25T09:52:20.387105"
+}

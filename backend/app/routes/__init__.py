@@ -3,10 +3,9 @@ from app.routes.dataframe_routes import router as dataframe_router
 from app.routes.prompt_routes import router as prompt_router
 from app.routes.example_routes import router as example_router
 from app.routes.notebook_routes import router as notebook_router
-from app.routes.execution_routes import router as execution_router
+from app.routes.note_executor_routes import router as execution_router
 from app.routes.export_routes import router as export_router
 from app.routes.system_routes import router as system_router
-from app.routes.data_explorer import router as data_explorer_router
 from app.routes.data_files import router as data_files_router
 from app.routes.ai_routes import router as ai_router
 import logging
@@ -26,8 +25,6 @@ def register_routes(app: FastAPI):
     logger.info("注册路由...")
     # 注册系统相关路由
     app.include_router(system_router)
-    # 注册数据探索相关路由
-    app.include_router(data_explorer_router)
     # 注册数据文件管理相关路由
     app.include_router(data_files_router)
     # 注册 AI 功能相关路由
