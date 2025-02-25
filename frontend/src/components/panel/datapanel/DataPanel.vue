@@ -33,7 +33,7 @@
     </div>
 
     <!-- 添加DataFrame预览组件 -->
-    <DataFramePreview
+    <DataExplore
       v-model="showPreview"
       :title="previewTitle"
       :session-id="session_id"
@@ -45,7 +45,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import DataFramePreview from '@/components/panel/datapanel/DataFramePreview.vue'
+import DataExplore from '@/components/panel/datapanel/DataExplore.vue'
 import { useDataFrameStore } from '@/stores/dataframeStore'
 import { useNotebookStore } from '@/stores/notebookStore'
 

@@ -34,21 +34,12 @@
       <div class="plot-container" v-if="outputContent.plot" v-html="outputContent.plot"></div>
       <div class="plotly-container" :id="`plotly-container-${cellId}`" v-if="outputContent.plotly_html" v-html="outputContent.plotly_html"></div>
     </div>
-    
-    <!-- AI对话框 -->
-    <AiDialog
-      v-model="showAiDialog"
-      :notebook-context="notebookContext"
-      :dataframe-info="dataframeInfo"
-      @code-generated="handleCodeGenerated"
-    />
   </div>
 </template>
 
 <script setup>
 import { ref, inject, onMounted, watch, nextTick } from 'vue'
 import MonacoEditor from '@/components/notebook/MonacoEditor.vue'
-import AiDialog from '@/components/ai/AiDialog.vue'
 import { ElLoading } from 'element-plus'
 import { useDataFrameStore } from '@/stores/dataframeStore'
 
@@ -70,10 +61,6 @@ const props = defineProps({
       status: 'idle'
     })
   },
-  notebookContext: {
-    type: Object,
-    default: () => ({})
-  },
   dataframeInfo: {
     type: Object,
     default: () => ({})
@@ -85,7 +72,6 @@ const currentTheme = inject('currentTheme', ref('light'))
 
 // 本地状态
 const localContent = ref(props.content)
-const showAiDialog = ref(false)
 const isExecuting = ref(false)
 
 // 在setup部分添加
@@ -101,12 +87,6 @@ const emit = defineEmits(['execution-complete', 'update:content', 'update:output
 // 处理编辑器内容变化
 const handleEditorChange = (value) => {
   emit('update:content', value || '')
-}
-
-// 处理AI生成的代码
-const handleCodeGenerated = (code) => {
-  localContent.value = code
-  emit('update:content', code)
 }
 
 const executeCode = async (session_id) => {
@@ -211,8 +191,7 @@ watch(() => props.outputContent?.plotly_html, (newVal) => {
 
 // 暴露属性给父组件
 defineExpose({
-  executeCode,
-  showAiDialog
+  executeCode
 })
 </script>
 

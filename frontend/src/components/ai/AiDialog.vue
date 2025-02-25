@@ -141,6 +141,7 @@ import { Loading } from '@element-plus/icons-vue'
 import UserPromptConfig from '@/components/config/UserPromptConfig.vue'
 import PromptPanel from '../prompts/PromptPanel.vue'
 import { useDataFrameStore } from '@/stores/dataframeStore'
+import { useNotebookStore } from '@/stores/notebookStore'
 
 const props = defineProps({
   modelValue: {
@@ -159,6 +160,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'code-generated'])
 
+const notebookStore = useNotebookStore()
 // 添加DataFrame store
 const dataframeStore = useDataFrameStore()
 const dataFrames = computed(() => dataframeStore.dataframes)
@@ -190,9 +192,7 @@ watch(() => props.modelValue, (newVal) => {
 
 watch(dialogVisible, (newVal) => {
   emit('update:modelValue', newVal)
-  if (newVal) {
-    fetchDataFrames()
-  } else {
+  if (!newVal) {
     resetState()
   }
 })
@@ -219,14 +219,10 @@ const stopWaitTimer = () => {
   }
 }
 
-// 修改后的获取DataFrame列表方法
-const fetchDataFrames = async () => {
-}
-
 // 修改后的获取DataFrame信息方法
 const fetchDataFrameInfo = async (name) => {
   try {
-    const data = await dataframeStore.fetchDataFrameInfo(name)
+    const data = await dataframeStore.fetchDataFrameInfo(notebookStore.session_id, name)
     dataFrameInfo.value = data
   } catch (e) {
     ElMessage.error('获取DataFrame信息失败')
