@@ -147,7 +147,7 @@ const handleDelete = async () => {
 }
 
 // 处理右键菜单操作
-const handleContextMenuAction = (action) => {
+const handleContextMenuAction =  (action) => {
   const file = contextMenu.value.selectedFile;
   if (!file) return;
 

@@ -25,17 +25,17 @@
       <!-- 各选项卡内容 -->
       <template v-if="currentTab === 'notebooks'">
         <!-- 使用NoteList组件 -->
-        <NoteList/>
+        <NotePanel/>
       </template>
 
       <!-- 添加数据文件列表 -->
       <template v-else-if="currentTab === 'dataFiles'">
-        <DataFileList/>
+        <FilePanel/>
       </template>
 
       <!-- 添加DataFrame列表 -->
       <template v-else-if="currentTab === 'dataFrames'">
-        <DataFrameList/>
+        <DataPanel/>
       </template>
     </div>
   </div>
@@ -43,9 +43,9 @@
 
 <script setup>
 import { ref } from 'vue'
-import NoteList from '@/components/notefile/NoteList.vue'
-import DataFileList from '@/components/filepanel/DataFileList.vue'
-import DataFrameList from '@/components/datapanel/DataFrameList.vue'
+import NotePanel from '@/components/panel/notepanel/NotePanel.vue'
+import FilePanel from '@/components/panel/filepanel/FilePanel.vue'
+import DataPanel from '@/components/panel/datapanel/DataPanel.vue'
 
 import { useResizePanelStore } from '@/stores/resizePanelStore'
 import { computed } from 'vue'

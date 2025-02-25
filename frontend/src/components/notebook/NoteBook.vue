@@ -8,7 +8,7 @@
           :is-first="cells.indexOf(cellId) === 0"
           :is-last="cells.indexOf(cellId) === cells.length - 1"
           @update:type="(v) => changeCellType(cellId, v)"
-          @execute="$refs[`codeCell${cellId}`]?.[0]?.executeCode()"
+          @execute="$refs[`codeCell${cellId}`]?.[0]?.executeCode(session_id)"
           @open-example="openExampleSelector(cellId)"
           @open-ai-dialog="openAiDialog($refs[`codeCell${cellId}`])"
           @toggle-edit="$refs[`markdownCell${cellId}`]?.[0]?.toggleEdit()"
@@ -18,7 +18,7 @@
           @move-up="moveCellUp(cellId)"
           @move-down="moveCellDown(cellId)"
           @delete="confirmDeleteCell(cellId)"
-          @save-to-example="$refs[`codeCell${cellId}`]?.[0]?.handleSaveToExample()"
+          @save-to-example="handleSaveToExample(cellId)"
         />
         <CodeCell
           v-if="cellTypes[cellId] === 'code'"
@@ -44,6 +44,8 @@
   <DeleteCellHandler ref="deleteCellHandler"/>
   <!-- 添加代码示例使用组件 -->
   <CodeExampleUse ref="codeExampleUse"/>
+  <!-- 添加保存示例处理组件 -->
+  <SaveToExampleHandler ref="saveToExampleHandler"/>
 </template>
 
 <script setup>
@@ -54,16 +56,19 @@ import MarkdownCell from '@/components/notebook/MarkdownCell.vue'
 import { useNotebook } from '@/composables/useNotebook'
 import CodeExampleUse from '../examples/CodeExampleUse.vue'
 import DeleteCellHandler from '@/components/notebook/DeleteCellHandler.vue'
+import SaveToExampleHandler from '@/components/notebook/SaveToExampleHandler.vue'
 import { useNotebookStore } from '@/stores/notebookStore'
 import { storeToRefs } from 'pinia'
 
 const store = useNotebookStore()
-const { cells, cellContents, cellOutputs, cellTypes, markdownEditStates } = storeToRefs(store)
+const { session_id, cells, cellContents, cellOutputs, cellTypes, markdownEditStates } = storeToRefs(store)
 const { handleExecutionComplete, changeCellType, addCellAbove, addCellBelow, moveCellDown, moveCellUp, copyCell } = useNotebook()
 
-// 添加删除单元格处理组件引用
+// 添加组件引用
 const deleteCellHandler = ref(null)
 const codeExampleUse = ref(null)
+const saveToExampleHandler = ref(null)
+
 // 确认删除单元格
 const confirmDeleteCell = (cellId) => {
   deleteCellHandler.value?.confirmDeleteCell(cellId)
@@ -76,10 +81,15 @@ const openExampleSelector = (cellId) => {
 
 // 打开AI对话框
 const openAiDialog = (cell) => {
-  console.log(cell)
   if (cell && cell[0]) {
     cell[0].showAiDialog = true
   }
+}
+
+// 处理保存到示例库
+const handleSaveToExample = (cellId) => {
+  const content = cellContents.value[cellId]
+  saveToExampleHandler.value?.handleSaveToExample(content)
 }
 </script>
 

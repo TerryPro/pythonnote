@@ -77,7 +77,7 @@
     </el-dialog>
 
     <!-- 添加数据预览组件 -->
-    <DataFileExplore ref="dataImportRef"/>
+    <FileExplore ref="dataImportRef"/>
   </div>
 </template>
 Data
@@ -85,7 +85,7 @@ Data
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useDataFileStore } from '@/stores/dataFileStore'
-import DataFileExplore from '@/components/filepanel/DataFileExplore.vue'
+import FileExplore from '@/components/panel/filepanel/FileExplore.vue'
 
 const store = useDataFileStore()
 const fileInput = ref(null)

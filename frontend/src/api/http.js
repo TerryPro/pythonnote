@@ -60,10 +60,10 @@ export const API_ENDPOINTS = {
 
   // 数据框相关
   DATAFRAMES: {
-    LIST: '/api/dataframes/list',
+    LIST: (session_id) => `/api/dataframes/list?session_id=${session_id}`,
     PREVIEW: (name) => `/api/dataframes/preview/${name}`, // 获取DataFrame预览
     SAVE: (name) => `/api/dataframes/save/${name}`, // 保存DataFrame
-    INFO: (name) => `/api/dataframes/info/${name}` // 获取DataFrame信息
+    INFO: (session_id, name) => `/api/dataframes/info?session_id=${session_id}&name=${name}` // 获取DataFrame信息
   }, 
 
   // 导出相关

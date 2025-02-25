@@ -2,11 +2,12 @@ import { apiCall, API_ENDPOINTS } from '@/api/http'
 
 /**
  * 获取所有DataFrame列表
+ * @param {string} session_id 会话ID 
  * @returns {Promise<Array<string>>} DataFrame名称列表
  */
-export const listDataFrames = async () => {
+export const listDataFrames = async (session_id) => {
   try {
-    const result = await apiCall(API_ENDPOINTS.DATAFRAMES.LIST);
+    const result = await apiCall(API_ENDPOINTS.DATAFRAMES.LIST(session_id));
     if (result.status === "success") {
       return result.data;
     } else {
@@ -20,12 +21,13 @@ export const listDataFrames = async () => {
 
 /**
  * 获取指定DataFrame的详细信息
+ * @param {string} session_id 会话ID
  * @param {string} name DataFrame名称
  * @returns {Promise<Object>} DataFrame的详细信息
  */
-export const getDataFrameInfo = async (name) => {
+export const getDataFrameInfo = async (session_id, name) => {
   try {
-    const result = await apiCall(API_ENDPOINTS.DATAFRAMES.INFO(name));
+    const result = await apiCall(API_ENDPOINTS.DATAFRAMES.INFO(session_id, name));
     if (result.status === "success") {
       return result.data;
     } else {

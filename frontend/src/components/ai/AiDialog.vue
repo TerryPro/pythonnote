@@ -161,6 +161,7 @@ const emit = defineEmits(['update:modelValue', 'code-generated'])
 
 // 添加DataFrame store
 const dataframeStore = useDataFrameStore()
+const dataFrames = computed(() => dataframeStore.dataframes)
 
 // 状态变量
 const prompt = ref('')
@@ -169,7 +170,7 @@ const waitTime = ref(0)
 let waitTimer = null
 
 // DataFrame相关状态
-const dataFrames = computed(() => dataframeStore.dataframes)
+
 const selectedDataFrame = ref('')
 const dataFrameInfo = ref(null)
 

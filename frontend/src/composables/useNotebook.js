@@ -1,16 +1,19 @@
 import { ElMessage } from 'element-plus'
-import { API_ENDPOINTS, apiCall, downloadFile } from '@/api/http'
+import { API_ENDPOINTS, downloadFile } from '@/api/http'
 import { useNotebookStore } from '@/stores/notebookStore'
 import { v4 as uuidv4 } from 'uuid'
+import { useDataFrameStore } from '@/stores/dataframeStore'
 
 export function useNotebook() {
   const store = useNotebookStore()
-  
+  const dataframeStore = useDataFrameStore()
+
   // 创建新笔记本
   const createNewNotebook = async () => {
     try {
-      await apiCall(API_ENDPOINTS.EXECUTION.RESET_CONTEXT, { method: 'POST' })
+      // await apiCall(API_ENDPOINTS.EXECUTION.RESET_CONTEXT, { method: 'POST' })
       store.clearNotebookState()
+      store.session_id = uuidv4()
       store.currentFile = null
       addCell('code')
     } catch (error) {
@@ -19,10 +22,18 @@ export function useNotebook() {
     }
   }
 
+  const _refreshDataFrame = async (session_id) => {
+    try {
+      await dataframeStore.fetchDataFrames(session_id)
+      ElMessage.success('变量已刷新')
+    } catch (error) {
+      console.error(error.message)
+    }
+  }
+
   // 打开笔记本
   const openNotebook = async (file) => {
     try {
-      await apiCall(API_ENDPOINTS.EXECUTION.RESET_CONTEXT, { method: 'POST' })
       const notebook = await store.loadNotebook(file)
       
       if (!notebook) {
@@ -33,6 +44,9 @@ export function useNotebook() {
       if (store.cells.length === 0) {
         addCell('code')
       }
+
+      _refreshDataFrame(store.session_id)
+
     } catch (error) {
       console.error('打开笔记本失败:', error)
       ElMessage.error('打开笔记本失败')

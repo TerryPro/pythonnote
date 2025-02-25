@@ -42,13 +42,6 @@
       :dataframe-info="dataframeInfo"
       @code-generated="handleCodeGenerated"
     />
-    
-    <!-- 保存到示例库对话框 -->
-    <SaveToExampleDialog
-      v-model="showSaveDialog"
-      :code="localContent"
-      @saved="handleExampleSaved"
-    />
   </div>
 </template>
 
@@ -56,8 +49,7 @@
 import { ref, inject, onMounted, watch, nextTick } from 'vue'
 import MonacoEditor from '@/components/notebook/MonacoEditor.vue'
 import AiDialog from '@/components/ai/AiDialog.vue'
-import SaveToExampleDialog from '@/components/examples/SaveToExampleDialog.vue'
-import { ElLoading, ElMessage } from 'element-plus'
+import { ElLoading } from 'element-plus'
 import { useDataFrameStore } from '@/stores/dataframeStore'
 
 const props = defineProps({
@@ -117,7 +109,7 @@ const handleCodeGenerated = (code) => {
   emit('update:content', code)
 }
 
-const executeCode = async () => {
+const executeCode = async (session_id) => {
   if (!props.content.trim()) return
   
   const loading = ElLoading.service({
@@ -133,7 +125,7 @@ const executeCode = async () => {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ code: props.content })
+      body: JSON.stringify({ session_id: session_id, code: props.content})
     })
     
     if (!response.ok) {
@@ -152,7 +144,7 @@ const executeCode = async () => {
     
     // 如果有DataFrame变量，直接通过store刷新
     if (result.has_dataframes) {
-      dataframeStore.fetchDataFrames()
+      dataframeStore.fetchDataFrames(session_id)
     }
     
     // 触发执行完成事件
@@ -217,27 +209,10 @@ watch(() => props.outputContent?.plotly_html, (newVal) => {
   }
 });
 
-// 保存到示例库相关
-const showSaveDialog = ref(false)
-
-const handleSaveToExample = () => {
-  if (!localContent.value?.trim()) {
-    ElMessage.warning('请先输入代码')
-    return
-  }
-  showSaveDialog.value = true
-}
-
-const handleExampleSaved = () => {
-  ElMessage.success('示例代码保存成功')
-  showSaveDialog.value = false
-}
-
 // 暴露属性给父组件
 defineExpose({
   executeCode,
-  showAiDialog,
-  handleSaveToExample
+  showAiDialog
 })
 </script>
 
@@ -385,4 +360,4 @@ defineExpose({
   padding: 8px;
   border-bottom: 1px solid var(--border-color);
 }
-</style> 
+</style>

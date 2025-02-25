@@ -36,6 +36,7 @@
     <DataFramePreview
       v-model="showPreview"
       :title="previewTitle"
+      :session-id="session_id"
       :dataframe-name="currentDataframe"
     />
   </div>
@@ -44,20 +45,24 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import DataFramePreview from '@/components/datapanel/DataFramePreview.vue'
+import DataFramePreview from '@/components/panel/datapanel/DataFramePreview.vue'
 import { useDataFrameStore } from '@/stores/dataframeStore'
+import { useNotebookStore } from '@/stores/notebookStore'
 
 const dataframeStore = useDataFrameStore()
+const notebookStore = useNotebookStore()
+
+const { session_id } = notebookStore
 
 // 组件挂载时启动自动刷新
 onMounted(async () => {
-  await dataframeStore.fetchDataFrames()
-  dataframeStore.startAutoRefresh()
+  await dataframeStore.fetchDataFrames(session_id)
+  // dataframeStore.startAutoRefresh()
 })
 
 // 组件卸载时停止自动刷新
 onUnmounted(() => {
-  dataframeStore.stopAutoRefresh()
+  // dataframeStore.stopAutoRefresh()
 })
 
 const dataframes = computed(() => dataframeStore.dataframes)
@@ -108,7 +113,7 @@ const previewDataFrame = (name) => {
 
 const handleRefresh = async () => {
   try {
-    await dataframeStore.fetchDataFrames()
+    await dataframeStore.fetchDataFrames(session_id)
     ElMessage.success('变量列表已刷新')
   } catch (error) {
     console.error(error.message)

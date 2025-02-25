@@ -11,10 +11,10 @@ export const useDataFrameStore = defineStore('dataframe', () => {
   let refreshTimer = null
 
   // 获取DataFrame列表
-  const fetchDataFrames = async () => {
+  const fetchDataFrames = async (session_id) => {
     try {
       loading.value = true
-      dataframes.value = await listDataFrames()
+      dataframes.value = await listDataFrames(session_id)
       error.value = null
     } catch (err) {
       error.value = err.message
@@ -25,9 +25,9 @@ export const useDataFrameStore = defineStore('dataframe', () => {
   }
 
   // 获取单个DataFrame详情
-  const fetchDataFrameInfo = async (name) => {
+  const fetchDataFrameInfo = async (session_id, name) => {
     try {
-      return await getDataFrameInfo(name)
+      return await getDataFrameInfo(session_id, name)
     } catch (err) {
       ElMessage.error('获取DataFrame信息失败: ' + err.message)
       return null

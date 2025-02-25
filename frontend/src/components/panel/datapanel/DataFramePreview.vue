@@ -121,6 +121,10 @@ const props = defineProps({
     type: String,
     default: 'DataFrame预览'
   },
+  sessionId: {
+    type: String,
+    required: true
+  },
   dataframeName: {
     type: String,
     required: true
@@ -166,11 +170,11 @@ const formatCellValue = (value) => {
   return value
 }
 
-const loadPreview = async (name) => {
+const loadPreview = async (session_id, name) => {
   loading.value = true
   error.value = null
   try {
-    previewData.value = await getDataFrameInfo(name)
+    previewData.value = await getDataFrameInfo(session_id, name)
   } catch (err) {
     console.error('加载DataFrame预览失败:', err)
     error.value = err.message
@@ -217,10 +221,10 @@ const handleSave = async () => {
 
 // 监听器
 watch(
-  [() => props.modelValue, () => props.dataframeName],
-  debounce(([newModelVal, newDfName]) => {
-    if (newModelVal && newDfName) {
-      loadPreview(newDfName)
+  [() => props.modelValue, ()=>props.sessionId, () => props.dataframeName],
+  debounce(([newModelVal, newsessionId, newDfName]) => {
+    if (newModelVal && newsessionId && newDfName) {
+      loadPreview(newsessionId, newDfName)
     }
   }, 100),
   { immediate: true }
@@ -228,8 +232,8 @@ watch(
 
 // 生命周期钩子
 onMounted(() => {
-  if (props.modelValue && props.dataframeName) {
-    loadPreview(props.dataframeName)
+  if (props.modelValue && props.sessionId && props.dataframeName) {
+    loadPreview(props.sessionId, props.dataframeName)
   }
 
   // 修复ResizeObserver报错

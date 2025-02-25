@@ -3,7 +3,7 @@
   <!-- 数据预览对话框 -->
   <el-dialog v-model="dialogVisible" title="文件预览" width="80%" :close-on-click-modal="false" destroy-on-close>
     <!-- 文件信息 -->
-    <el-descriptions title="文件信息" :column="3" border class="info-section">
+    <el-descriptions column="3" border class="info-section">
       <el-descriptions-item v-for="(value, key) in store.previewData.file_info" :key="key" :label="key"
         label-class-name="info-label">
         {{ value }}
@@ -11,7 +11,7 @@
     </el-descriptions>
 
     <!-- 数据基本信息 -->
-    <el-descriptions title="数据信息" :column="3" border class="info-section">
+    <el-descriptions :column="3" border class="info-section">
       <el-descriptions-item v-for="(value, key) in store.previewData.info" :key="key" :label="key"
         label-class-name="info-label">
         <template v-if="Array.isArray(value)">
