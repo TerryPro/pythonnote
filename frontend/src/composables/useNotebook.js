@@ -1,11 +1,13 @@
 import { ElMessage } from 'element-plus'
 import { API_ENDPOINTS, downloadFile } from '@/api/http'
 import { useNotebookStore } from '@/stores/notebookStore'
+import { useTabsStore } from '@/stores/tabsStore'
 import { v4 as uuidv4 } from 'uuid'
 import { useDataFrameStore } from '@/stores/dataframeStore'
 
 export function useNotebook() {
   const store = useNotebookStore()
+  const tabsStore = useTabsStore()
   const dataframeStore = useDataFrameStore()
 
   // 创建新笔记本
@@ -13,9 +15,17 @@ export function useNotebook() {
     try {
       // await apiCall(API_ENDPOINTS.EXECUTION.RESET_CONTEXT, { method: 'POST' })
       store.clearNotebookState()
-      store.session_id = uuidv4()
+      const sessionId = uuidv4()
+      store.SetSessionId(sessionId)
       store.currentFile = null
       addCell('code')
+      
+      // 更新当前标签页的标题
+      if (tabsStore.activeTabId) {
+        tabsStore.updateTabTitle(tabsStore.activeTabId, '未命名')
+      }
+      
+      return sessionId
     } catch (error) {
       console.error('创建新笔记本失败:', error)
       ElMessage.error('创建新笔记本失败')
@@ -45,13 +55,24 @@ export function useNotebook() {
         addCell('code')
       }
 
+      // 创建新标签页并加载笔记本
+      const tabId = tabsStore.addTab(file, file.name.replace('.ipynb', ''))
+      
+      // 更新标签页的会话ID
+      const tab = tabsStore.tabs.find(t => t.id === tabId)
+      if (tab) {
+        tab.sessionId = store.session_id
+        tab.notebookFile = file.path
+      }
+      
       _refreshDataFrame(store.session_id)
-
+      
+      return tabId
     } catch (error) {
       console.error('打开笔记本失败:', error)
       ElMessage.error('打开笔记本失败')
       // 如果打开失败，创建一个新的笔记本
-      createNewNotebook()
+      return createNewNotebook()
     }
   }
 
@@ -249,6 +270,29 @@ export function useNotebook() {
     }
   }
 
+  // 保存笔记本
+  const saveNotebook = async (fileName = '') => {
+    try {
+      const result = await store.saveNotebook(fileName)
+      
+      if (result && tabsStore.activeTabId) {
+        // 更新标签页标题和修改状态
+        const title = fileName || store.currentFile.replace('.ipynb', '')
+        tabsStore.updateTabTitle(tabsStore.activeTabId, title)
+        tabsStore.markTabAsModified(tabsStore.activeTabId, false)
+        
+        // 更新标签页的笔记本文件信息
+        tabsStore.updateTabNotebook(tabsStore.activeTabId, store.currentFile)
+      }
+      
+      return result
+    } catch (error) {
+      console.error('保存笔记本失败:', error)
+      ElMessage.error('保存笔记本失败')
+      return false
+    }
+  }
+
   return {
     createNewNotebook,
     openNotebook,
@@ -262,6 +306,7 @@ export function useNotebook() {
     addCellAbove,
     addCellBelow,
     insertCode,
-    copyCell
+    copyCell,
+    saveNotebook
   }
 }

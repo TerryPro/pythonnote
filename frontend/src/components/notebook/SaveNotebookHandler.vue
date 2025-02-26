@@ -8,12 +8,17 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import SaveDialog from '@/components/notebook/SaveDialog.vue'
-import { useNotebookStore } from '@/stores/notebookStore'
+import { useTabsStore } from '@/stores/tabsStore'
+import { useNotebook } from '@/composables/useNotebook'
 
-const store = useNotebookStore()
+const tabsStore = useTabsStore()
+const { saveNotebook } = useNotebook()
+
+// 获取当前活动标签页
+const activeTab = computed(() => tabsStore.activeTab)
 
 // 保存对话框相关的响应式变量
 const saveDialogVisible = ref(false)
@@ -21,10 +26,10 @@ const saveDialogLoading = ref(false)
 
 // 显示保存对话框
 const showSaveDialog = () => {
-  if (!store.currentFile) {
-    saveDialogVisible.value = true
-  } else {
+  if (activeTab.value && activeTab.value.notebookFile) {
     handleSaveNotebook()
+  } else {
+    saveDialogVisible.value = true
   }
 }
 
@@ -32,7 +37,7 @@ const showSaveDialog = () => {
 const handleSaveNotebook = async (fileName = '') => {
   try {
     saveDialogLoading.value = true
-    const success = await store.saveNotebook(fileName)
+    const success = await saveNotebook(fileName)
     if (success) {
       saveDialogVisible.value = false
       ElMessage.success('笔记本保存成功')

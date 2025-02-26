@@ -31,14 +31,14 @@
         </template>
       </el-dropdown>
       
-      <el-tooltip content="新建笔记本" placement="bottom" :hide-after="0">
-        <button @click="createNewNotebook" class="toolbar-btn">
+      <el-tooltip content="新建标签页" placement="bottom" :hide-after="0">
+        <button @click="createNewTab" class="toolbar-btn">
           <i class="fas fa-plus"></i>
         </button>
       </el-tooltip>
 
       <el-tooltip content="保存笔记本" placement="bottom" :hide-after="0">
-        <button @click="showSaveDialog" class="toolbar-btn">
+        <button @click="saveCurrentNotebook" class="toolbar-btn">
           <i class="fas fa-save"></i>
         </button>
       </el-tooltip>
@@ -121,7 +121,7 @@ import VersionDisplay from '@/components/layout/VersionDisplay.vue'
 
 const { currentTheme, themes, applyTheme, provideTheme } = useThemeManager()
 provideTheme() // 为子组件提供主题上下文
-const { createNewNotebook, exportPDF, addCell } = useNotebook()
+const { exportPDF, addCell } = useNotebook()
 
 const codeExampleRef = ref(null)
 
@@ -131,10 +131,6 @@ const handleThemeChange = (themeKey) => {
 }
 
 const saveNotebookRef = ref(null)
-
-const showSaveDialog = () => {
-  saveNotebookRef.value?.showSaveDialog()
-}
 
 const systemConfigRef = ref(null)
 

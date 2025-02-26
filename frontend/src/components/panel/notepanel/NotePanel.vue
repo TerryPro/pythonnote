@@ -32,7 +32,7 @@
         class="file-item"
         :class="{ active: store.currentFile === file.path }"
         @contextmenu.prevent="showContextMenu($event, file)"
-        @click="openNotebook(file)"
+        @click="openNotebookInTab(file)"
       >
         <div class="file-content">
           <i class="fas fa-file-code"></i>
@@ -68,9 +68,11 @@ import DeleteDialog from '@/components/panel/notepanel/DeleteDialog.vue'
 import { api_renameNotebook } from '@/api/notebook_api'
 import { deleteNotebook } from '@/api/notebook_api'
 import { useNotebook } from '@/composables/useNotebook'
+import { useTabsStore } from '@/stores/tabsStore'
 
 const store = useNotebookStore()
-const { openNotebook, createNewNotebook } = useNotebook()
+const tabsStore = useTabsStore()
+const { createNewNotebook } = useNotebook()
 
 // 重命名相关的响应式变量
 const renameDialogVisible = ref(false)
@@ -146,14 +148,30 @@ const handleDelete = async () => {
   }
 }
 
+// 打开笔记本到新标签页
+const openNotebookInTab = async (file) => {
+  try {
+    // 在新标签页中打开笔记本
+    const tabId = await useNotebook().openNotebook(file)
+    
+    // 激活新创建的标签页
+    if (tabId) {
+      tabsStore.activateTab(tabId)
+    }
+  } catch (error) {
+    console.error('打开笔记本失败:', error)
+    ElMessage.error('打开笔记本失败: ' + error.message)
+  }
+}
+
 // 处理右键菜单操作
-const handleContextMenuAction =  (action) => {
+const handleContextMenuAction = (action) => {
   const file = contextMenu.value.selectedFile;
   if (!file) return;
 
   switch (action) {
     case 'open':
-      openNotebook(file);
+      openNotebookInTab(file);
       break;
     case 'rename':
       renameNotebook(file);
@@ -210,6 +228,7 @@ const handleRename = async (newName) => {
     ElMessage.error('重命名失败: ' + error.message)
   }
 }
+
 </script>
 
 <style scoped lang="scss">

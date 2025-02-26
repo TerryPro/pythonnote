@@ -4,7 +4,7 @@
     <main class="main-container">
       <AppSidebar/>
       <ResizeHandle />
-      <NoteBook />
+      <NotebookContainer />
     </main>
   </div>
 </template>
@@ -14,16 +14,19 @@ import { onMounted } from 'vue'
 import AppNavbar from '@/components/layout/AppNavbar.vue'
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import ResizeHandle from '@/components/layout/ResizeHandle.vue'
-import NoteBook from '@/components/notebook/NoteBook.vue'
+import NotebookContainer from '@/components/notebook/NotebookContainer.vue'
 import { useNotebookStore } from '@/stores/notebookStore'
-import { useNotebook } from '@/composables/useNotebook'
+import { useTabsStore } from '@/stores/tabsStore'
 
-const store = useNotebookStore()
-const { createNewNotebook } = useNotebook()
+const notebookStore = useNotebookStore()
+const tabsStore = useTabsStore()
 
 onMounted(async () => {
-  await store.fetchNotebooks()
-  createNewNotebook()
+  await notebookStore.fetchNotebooks()
+  // 创建初始标签页
+  if (tabsStore.tabCount === 0) {
+    tabsStore.addTab()
+  }
 })
 </script>
 
