@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-import { ref, watch, defineProps, defineEmits } from 'vue'
+import { ref, watch, defineProps, defineEmits, onMounted } from 'vue'
 import CellToolsBar from '@/components/notebook/CellToolsBar.vue'
 import CodeCell from '@/components/notebook/CodeCell.vue'
 import MarkdownCell from '@/components/notebook/MarkdownCell.vue'
@@ -80,6 +80,9 @@ const emit = defineEmits(['modified'])
 
 const store = useNotebookStore()
 
+// 添加一个标志位，用于控制是否触发modified事件
+const isInitialLoad = ref(true)
+
 const { cells, cellContents, cellOutputs, cellTypes, markdownEditStates } = storeToRefs(store)
 const { handleExecutionComplete, changeCellType, addCellAbove, addCellBelow, moveCellDown, moveCellUp, copyCell } = useNotebook()
 
@@ -96,14 +99,30 @@ const dataframeInfo = ref({})
 // 监听session_id变化
 watch(() => props.sessionId, (newSessionId) => {
   if (newSessionId) {
-    store.SetSessionId(newSessionId)
+    store.setSessionId(newSessionId)
+    // 设置标志位，表示正在加载笔记本
+    isInitialLoad.value = true
+    // 使用setTimeout确保在初始数据加载完成后重置标志位
+    setTimeout(() => {
+      isInitialLoad.value = false
+    }, 500)
   }
 }, { immediate: true })
 
 // 监听笔记本内容变化，发出modified事件
 watch([cellContents, cellTypes], () => {
-  emit('modified')
+  // 只有在非初始加载状态下才触发modified事件
+  if (!isInitialLoad.value) {
+    emit('modified')
+  }
 }, { deep: true })
+
+// 在组件挂载后，设置一个定时器重置标志位
+onMounted(() => {
+  setTimeout(() => {
+    isInitialLoad.value = false
+  }, 1000)
+})
 
 // 确认删除单元格
 const confirmDeleteCell = (cellId) => {

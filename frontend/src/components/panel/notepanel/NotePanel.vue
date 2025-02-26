@@ -69,10 +69,12 @@ import { api_renameNotebook } from '@/api/notebook_api'
 import { deleteNotebook } from '@/api/notebook_api'
 import { useNotebook } from '@/composables/useNotebook'
 import { useTabsStore } from '@/stores/tabsStore'
+import { useLoadingStore } from '@/stores/loadingStore'
 
 const store = useNotebookStore()
 const tabsStore = useTabsStore()
 const { createNewNotebook } = useNotebook()
+const loadingStore = useLoadingStore()
 
 // 重命名相关的响应式变量
 const renameDialogVisible = ref(false)
@@ -151,6 +153,9 @@ const handleDelete = async () => {
 // 打开笔记本到新标签页
 const openNotebookInTab = async (file) => {
   try {
+
+    loadingStore.startLoading('正在加载 Notebook...')
+
     // 在新标签页中打开笔记本
     const tabId = await useNotebook().openNotebook(file)
     
@@ -158,9 +163,12 @@ const openNotebookInTab = async (file) => {
     if (tabId) {
       tabsStore.activateTab(tabId)
     }
+
   } catch (error) {
     console.error('打开笔记本失败:', error)
     ElMessage.error('打开笔记本失败: ' + error.message)
+  } finally {
+    loadingStore.endLoading()
   }
 }
 

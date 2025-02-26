@@ -31,24 +31,6 @@
         </template>
       </el-dropdown>
       
-      <el-tooltip content="新建标签页" placement="bottom" :hide-after="0">
-        <button @click="createNewTab" class="toolbar-btn">
-          <i class="fas fa-plus"></i>
-        </button>
-      </el-tooltip>
-
-      <el-tooltip content="保存笔记本" placement="bottom" :hide-after="0">
-        <button @click="saveCurrentNotebook" class="toolbar-btn">
-          <i class="fas fa-save"></i>
-        </button>
-      </el-tooltip>
-
-      <el-tooltip content="导出PDF" placement="bottom" :hide-after="0">
-        <button @click="exportPDF" class="toolbar-btn">
-          <i class="fas fa-file-pdf"></i>
-        </button>
-      </el-tooltip>
-
       <el-tooltip content="添加代码单元格" placement="bottom" :hide-after="0">
         <button @click="handleAddCell('code')" class="toolbar-btn">
           <i class="fas fa-code"></i>
@@ -85,9 +67,6 @@
   <!-- 添加系统配置对话框组件 -->
   <SystemPromptConfig ref="systemConfigRef" />
   
-  <!-- 添加保存笔记本处理组件 -->
-  <SaveNotebookHandler ref="saveNotebookRef" />
-
   <!-- 添加代码示例管理组件 -->
   <CodeExampleManage ref="codeExampleRef" />
 
@@ -115,13 +94,12 @@ import { useThemeManager } from '@/composables/useThemeManager'
 import SystemPromptConfig from '@/components/config/SystemPromptConfig.vue'
 import PromptPanel from '@/components/prompts/PromptPanel.vue'
 import { useNotebook } from '@/composables/useNotebook'
-import SaveNotebookHandler from '@/components/notebook/SaveNotebookHandler.vue'
 import CodeExampleManage from '@/components/examples/CodeExampleManage.vue'
 import VersionDisplay from '@/components/layout/VersionDisplay.vue'
 
 const { currentTheme, themes, applyTheme, provideTheme } = useThemeManager()
 provideTheme() // 为子组件提供主题上下文
-const { exportPDF, addCell } = useNotebook()
+const { addCell } = useNotebook()
 
 const codeExampleRef = ref(null)
 
@@ -129,8 +107,6 @@ const codeExampleRef = ref(null)
 const handleThemeChange = (themeKey) => {
   applyTheme(themeKey)
 }
-
-const saveNotebookRef = ref(null)
 
 const systemConfigRef = ref(null)
 

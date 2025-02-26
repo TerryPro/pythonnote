@@ -13,16 +13,22 @@ export function useNotebook() {
   // 创建新笔记本
   const createNewNotebook = async () => {
     try {
-      // await apiCall(API_ENDPOINTS.EXECUTION.RESET_CONTEXT, { method: 'POST' })
-      store.clearNotebookState()
+      // 创建新的标签页（不再在这里创建标签页，而是由TabsManager.vue中的createNewTab函数调用tabsStore.addTab）
+      const tabId = tabsStore.addTab(null, '未命名')
       const sessionId = uuidv4()
-      store.SetSessionId(sessionId)
-      store.currentFile = null
+      
+      // 设置当前活动的笔记本
+      store.setActiveNotebook(tabId)
+      store.clearNotebookState()
+      store.setSessionId(sessionId)
+      
+      // 添加一个代码单元格
       addCell('code')
       
-      // 更新当前标签页的标题
-      if (tabsStore.activeTabId) {
-        tabsStore.updateTabTitle(tabsStore.activeTabId, '未命名')
+      // 更新标签页的会话ID
+      const tab = tabsStore.tabs.find(t => t.id === tabId)
+      if (tab) {
+        tab.sessionId = sessionId
       }
       
       return sessionId
@@ -35,7 +41,6 @@ export function useNotebook() {
   const _refreshDataFrame = async (session_id) => {
     try {
       await dataframeStore.fetchDataFrames(session_id)
-      ElMessage.success('变量已刷新')
     } catch (error) {
       console.error(error.message)
     }
@@ -44,9 +49,21 @@ export function useNotebook() {
   // 打开笔记本
   const openNotebook = async (file) => {
     try {
-      const notebook = await store.loadNotebook(file)
+      // 检查笔记本是否已经打开
+      const existingTab = tabsStore.tabs.find(tab => tab.notebookFile === file.path)
+      if (existingTab) {
+        // 如果已经打开，直接激活该标签页
+        tabsStore.activateTab(existingTab.id)
+        return existingTab.id
+      }
       
-      if (!notebook) {
+      // 创建新标签页
+      const tabId = tabsStore.addTab(file, file.name.replace('.ipynb', ''))
+      
+      // 加载笔记本到新标签页
+      const success = await store.loadNotebook(file, tabId)
+      
+      if (!success) {
         throw new Error('加载笔记本失败')
       }
 
@@ -55,9 +72,6 @@ export function useNotebook() {
         addCell('code')
       }
 
-      // 创建新标签页并加载笔记本
-      const tabId = tabsStore.addTab(file, file.name.replace('.ipynb', ''))
-      
       // 更新标签页的会话ID
       const tab = tabsStore.tabs.find(t => t.id === tabId)
       if (tab) {
@@ -79,19 +93,29 @@ export function useNotebook() {
   // 添加单元格
   const addCell = (type = 'code') => {
     const newCellId = uuidv4()
-    store.cells.push(newCellId)
-    store.cellContents[newCellId] = ''
-    store.cellTypes[newCellId] = type
+    
+    // 获取当前cells数组的副本
+    const cells = [...store.cells]
+    cells.push(newCellId)
+    store.setCells(cells)
+    
+    // 设置单元格内容和类型
+    store.setCellContent(newCellId, '')
+    store.setCellType(newCellId, type)
+    
+    // 根据类型设置相应的状态
     if (type === 'code') {
-      store.cellOutputs[newCellId] = {
+      store.setCellOutput(newCellId, {
         output: '',
         plot: '',
         plotly_html: '',
         status: 'idle'
-      }
+      })
     } else if (type === 'markdown') {
-      store.markdownEditStates[newCellId] = true
+      store.setMarkdownEditState(newCellId, true)
     }
+    
+    return newCellId
   }
 
   // 处理执行完成
@@ -109,43 +133,45 @@ export function useNotebook() {
     const currentContent = store.cellContents[cellId] || ''
     
     // 更新单元格类型
-    store.cellTypes[cellId] = newType
+    store.setCellType(cellId, newType)
     
     // 根据新类型设置相应的状态
     if (newType === 'code') {
-      store.cellOutputs[cellId] = {
+      store.setCellOutput(cellId, {
         output: '',
         plot: '',
         plotly_html: '',
         status: 'idle'
-      }
-      delete store.markdownEditStates[cellId]
+      })
     } else if (newType === 'markdown') {
-      delete store.cellOutputs[cellId]
-      store.markdownEditStates[cellId] = true
+      store.setMarkdownEditState(cellId, true)
     }
 
     // 重置单元格内容
-    store.cellContents[cellId] = currentContent
+    store.setCellContent(cellId, currentContent)
   }
 
   // 向上移动单元格
   const moveCellUp = (cellId) => {
-    const currentIndex = store.cells.indexOf(cellId)
+    const cells = [...store.cells]
+    const currentIndex = cells.indexOf(cellId)
     if (currentIndex > 0) {
-      const temp = store.cells[currentIndex]
-      store.cells[currentIndex] = store.cells[currentIndex - 1]
-      store.cells[currentIndex - 1] = temp
+      const temp = cells[currentIndex]
+      cells[currentIndex] = cells[currentIndex - 1]
+      cells[currentIndex - 1] = temp
+      store.setCells(cells)
     }
   }
 
   // 向下移动单元格
   const moveCellDown = (cellId) => {
-    const currentIndex = store.cells.indexOf(cellId)
-    if (currentIndex < store.cells.length - 1) {
-      const temp = store.cells[currentIndex]
-      store.cells[currentIndex] = store.cells[currentIndex + 1]
-      store.cells[currentIndex + 1] = temp
+    const cells = [...store.cells]
+    const currentIndex = cells.indexOf(cellId)
+    if (currentIndex < cells.length - 1) {
+      const temp = cells[currentIndex]
+      cells[currentIndex] = cells[currentIndex + 1]
+      cells[currentIndex + 1] = temp
+      store.setCells(cells)
     }
   }
 
@@ -155,7 +181,9 @@ export function useNotebook() {
       if (!store.currentFile) {
         const fileName = prompt('请输入PDF文件名：')
         if (!fileName) return
-        store.currentFile = fileName
+        
+        // 保存笔记本文件名
+        await store.saveNotebook(fileName)
       }
 
       const notebook = {
@@ -184,18 +212,15 @@ export function useNotebook() {
 
   // 删除单元格
   const deleteCell = (cellId) => {
-    const index = store.cells.indexOf(cellId)
+    const cells = [...store.cells]
+    const index = cells.indexOf(cellId)
     if (index > -1) {
       // 从数组中移除单元格ID
-      store.cells.splice(index, 1)
-      // 删除相关的内容和状态
-      delete store.cellContents[cellId]
-      delete store.cellOutputs[cellId]
-      delete store.cellTypes[cellId]
-      delete store.markdownEditStates[cellId]
+      cells.splice(index, 1)
+      store.setCells(cells)
       
       // 如果删除后没有单元格了，添加一个新的代码单元格
-      if (store.cells.length === 0) {
+      if (cells.length === 0) {
         addCell('code')
       }
       
@@ -206,91 +231,129 @@ export function useNotebook() {
 
   // 在当前单元格上方添加新单元格
   const addCellAbove = (cellId) => {
-    const currentIndex = store.cells.indexOf(cellId)
+    const cells = [...store.cells]
+    const currentIndex = cells.indexOf(cellId)
     const newCellId = uuidv4()
     
     // 在当前单元格前插入新单元格
-    store.cells.splice(currentIndex, 0, newCellId)
-    store.cellContents[newCellId] = ''
-    store.cellTypes[newCellId] = 'code'
-    store.cellOutputs[newCellId] = {
+    cells.splice(currentIndex, 0, newCellId)
+    store.setCells(cells)
+    
+    // 设置单元格内容和类型
+    store.setCellContent(newCellId, '')
+    store.setCellType(newCellId, 'code')
+    store.setCellOutput(newCellId, {
       output: '',
       plot: '',
       plotly_html: '',
       status: 'idle'
-    }
+    })
+    
+    return newCellId
   }
 
   // 在当前单元格下方添加新单元格
   const addCellBelow = (cellId) => {
-    const currentIndex = store.cells.indexOf(cellId)
+    const cells = [...store.cells]
+    const currentIndex = cells.indexOf(cellId)
     const newCellId = uuidv4()
     
     // 在当前单元格后插入新单元格
-    store.cells.splice(currentIndex + 1, 0, newCellId)
-    store.cellContents[newCellId] = ''
-    store.cellTypes[newCellId] = 'code'
-    store.cellOutputs[newCellId] = {
+    cells.splice(currentIndex + 1, 0, newCellId)
+    store.setCells(cells)
+    
+    // 设置单元格内容和类型
+    store.setCellContent(newCellId, '')
+    store.setCellType(newCellId, 'code')
+    store.setCellOutput(newCellId, {
       output: '',
       plot: '',
       plotly_html: '',
       status: 'idle'
-    }
+    })
+    
+    return newCellId
   }
 
   // 新增插入代码函数
   const insertCode = (code) => {
-    const newCellId = uuidv4()
-
-    if (store.cells.length === 0 || store.cellContents[store.cells[store.cells.length - 1]] !== '') {
-      store.cells.push(newCellId)
+    const cells = [...store.cells]
+    
+    if (cells.length === 0 || store.cellContents[cells[cells.length - 1]] !== '') {
+      // 添加新单元格
+      const newCellId = addCell('code')
+      store.setCellContent(newCellId, code)
     } else {
-      store.cellContents[store.cells[store.cells.length - 1]] = code
-    }
-
-    store.cellContents[newCellId] = code
-    store.cellTypes[newCellId] = 'code'
-    store.cellOutputs[newCellId] = {
-      output: '',
-      plot: '',
-      plotly_html: '',
-      status: 'idle'
+      // 使用最后一个空单元格
+      store.setCellContent(cells[cells.length - 1], code)
     }
   }
 
-  // 添加复制功能
+  // 复制单元格
   const copyCell = (cellId) => {
-    const content = store.cellContents[cellId]
-    if (content) {
-      navigator.clipboard.writeText(content).then(() => {
-        ElMessage.success('内容已复制到剪贴板')
-      }).catch(() => {
-        ElMessage.error('复制失败')
+    const newCellId = uuidv4()
+    const cells = [...store.cells]
+    const currentIndex = cells.indexOf(cellId)
+    
+    // 在当前单元格后插入新单元格
+    cells.splice(currentIndex + 1, 0, newCellId)
+    store.setCells(cells)
+    
+    // 复制单元格内容和类型
+    const cellType = store.cellTypes[cellId]
+    store.setCellType(newCellId, cellType)
+    store.setCellContent(newCellId, store.cellContents[cellId] || '')
+    
+    // 根据类型设置相应的状态
+    if (cellType === 'code') {
+      store.setCellOutput(newCellId, {
+        output: '',
+        plot: '',
+        plotly_html: '',
+        status: 'idle'
       })
+    } else if (cellType === 'markdown') {
+      store.setMarkdownEditState(newCellId, true)
     }
+    
+    return newCellId
   }
 
   // 保存笔记本
   const saveNotebook = async (fileName = '') => {
     try {
-      const result = await store.saveNotebook(fileName)
+      const success = await store.saveNotebook(fileName)
       
-      if (result && tabsStore.activeTabId) {
-        // 更新标签页标题和修改状态
-        const title = fileName || store.currentFile.replace('.ipynb', '')
-        tabsStore.updateTabTitle(tabsStore.activeTabId, title)
-        tabsStore.markTabAsModified(tabsStore.activeTabId, false)
+      if (success) {
+        // 更新当前标签页的标题和修改状态
+        if (tabsStore.activeTabId) {
+          const displayName = fileName || store.currentFile?.replace('.ipynb', '') || '未命名'
+          tabsStore.updateTabTitle(tabsStore.activeTabId, displayName)
+          tabsStore.markTabAsModified(tabsStore.activeTabId, false)
+          
+          // 更新标签页的笔记本文件信息
+          tabsStore.updateTabNotebook(tabsStore.activeTabId, store.currentFile)
+        }
         
-        // 更新标签页的笔记本文件信息
-        tabsStore.updateTabNotebook(tabsStore.activeTabId, store.currentFile)
+        ElMessage.success('笔记本保存成功')
+        return true
+      } else {
+        throw new Error('保存笔记本失败')
       }
-      
-      return result
     } catch (error) {
       console.error('保存笔记本失败:', error)
-      ElMessage.error('保存笔记本失败')
+      ElMessage.error('保存笔记本失败: ' + error.message)
       return false
     }
+  }
+
+  // 关闭笔记本
+  const closeNotebook = (tabId) => {
+    // 关闭标签页
+    tabsStore.closeTab(tabId)
+    
+    // 关闭笔记本状态
+    store.closeNotebook(tabId)
   }
 
   return {
@@ -299,14 +362,15 @@ export function useNotebook() {
     addCell,
     handleExecutionComplete,
     changeCellType,
-    exportPDF,
     moveCellUp,
     moveCellDown,
+    exportPDF,
     deleteCell,
     addCellAbove,
     addCellBelow,
     insertCode,
     copyCell,
-    saveNotebook
+    saveNotebook,
+    closeNotebook
   }
 }

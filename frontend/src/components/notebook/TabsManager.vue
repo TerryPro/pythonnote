@@ -1,40 +1,43 @@
 <template>
   <div class="tabs-container">
-    <el-tabs 
-      v-model="activeTabId" 
-      type="card" 
-      closable 
-      @tab-click="handleTabClick"
-      @tab-remove="handleTabRemove"
-      class="notebook-tabs"
-    >
-      <el-tab-pane
-        v-for="tab in tabs"
-        :key="tab.id"
-        :label="tab.title"
-        :name="tab.id"
+    <!-- 左滚动按钮 -->
+    <div class="tabs-scroll-container" ref="tabsScrollContainer">
+      <el-tabs 
+        v-model="activeTabId" 
+        type="card" 
+        closable 
+        @tab-click="handleTabClick"
+        @tab-remove="handleTabRemove"
+        class="notebook-tabs"
       >
-        <template #label>
-          <div class="custom-tab-label">
-            <div class="title-row">
-              <span class="tab-title">{{ tab.title }}</span>
-              <span v-if="tab.isModified" class="modified-indicator">*</span>
+        <el-tab-pane
+          v-for="tab in tabs"
+          :key="tab.id"
+          :label="tab.title"
+          :name="tab.id"
+        >
+          <template #label>
+            <div class="custom-tab-label">
+              <div class="title-row">
+                <span class="tab-title">{{ tab.title }}</span>
+                <span v-if="tab.isModified" class="modified-indicator">*</span>
+              </div>
+              <div class="tab-tags">
+                <el-tag 
+                  v-for="tag in tab.tags" 
+                  :key="tag" 
+                  size="small" 
+                  closable 
+                  @close.stop="removeTag(tab.id, tag)"
+                >
+                  {{ tag }}
+                </el-tag>
+              </div>
             </div>
-            <div class="tab-tags">
-              <el-tag 
-                v-for="tag in tab.tags" 
-                :key="tag" 
-                size="small" 
-                closable 
-                @close.stop="removeTag(tab.id, tag)"
-              >
-                {{ tag }}
-              </el-tag>
-            </div>
-          </div>
-        </template>
-      </el-tab-pane>
-    </el-tabs>
+          </template>
+        </el-tab-pane>
+      </el-tabs>
+    </div>
     
     <div class="tabs-actions">
       <el-button 
@@ -45,6 +48,26 @@
         :icon="Plus"
         circle
         plain
+      />
+      <el-button 
+        type="success"
+        size="small" 
+        @click="saveCurrentNotebook"
+        title="保存笔记本"
+        :icon="Check"
+        circle
+        plain
+        v-if="activeTab"
+      />
+      <el-button 
+        type="warning"
+        size="small" 
+        @click="exportToPDF"
+        title="导出PDF"
+        :icon="Document"
+        circle
+        plain
+        v-if="activeTab"
       />
       <el-dropdown 
         trigger="click" 
@@ -61,8 +84,6 @@
         />
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item command="rename">重命名</el-dropdown-item>
-            <el-dropdown-item command="addTag">添加标签</el-dropdown-item>
             <el-dropdown-item command="closeOthers">关闭其他标签页</el-dropdown-item>
             <el-dropdown-item command="closeAll">关闭所有标签页</el-dropdown-item>
           </el-dropdown-menu>
@@ -70,17 +91,22 @@
       </el-dropdown>
     </div>
   </div>
+  
+  <!-- 添加保存笔记本处理组件 -->
+  <SaveNotebookHandler ref="saveNotebookRef" />
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useTabsStore } from '@/stores/tabsStore'
 import { useNotebook } from '@/composables/useNotebook'
 import { ElMessageBox } from 'element-plus'
-import { Plus, More } from '@element-plus/icons-vue'
+import { Plus, More, Check, Document} from '@element-plus/icons-vue'
+import SaveNotebookHandler from '@/components/notebook/SaveNotebookHandler.vue'
 
 const tabsStore = useTabsStore()
-const { createNewNotebook, saveNotebook } = useNotebook()
+const { createNewNotebook, saveNotebook, closeNotebook, exportPDF } = useNotebook()
+const saveNotebookRef = ref(null)
 
 // 从store获取标签页数据
 const tabs = computed(() => tabsStore.tabs)
@@ -150,18 +176,23 @@ const closeTab = async (tabId) => {
     }
   }
   
-  tabsStore.closeTab(tabId)
-  
-  // 如果没有标签页了，创建一个新的
-  if (tabsStore.tabCount === 0) {
-    createNewTab()
-  }
+  // 使用closeNotebook函数关闭笔记本，它会同时关闭标签页和笔记本状态
+  closeNotebook(tabId)
 }
 
 // 创建新标签页
 const createNewTab = () => {
-  tabsStore.addTab()
   createNewNotebook()
+}
+
+// 保存当前笔记本
+const saveCurrentNotebook = () => {
+  saveNotebookRef.value?.showSaveDialog()
+}
+
+// 导出PDF
+const exportToPDF = () => {
+  exportPDF()
 }
 
 // 移除标签
@@ -174,59 +205,12 @@ const handleCommand = (command) => {
   if (!activeTab.value) return
   
   switch (command) {
-    case 'rename':
-      renameTab()
-      break
-    case 'addTag':
-      addTagToTab()
-      break
     case 'closeOthers':
       closeOtherTabs()
       break
     case 'closeAll':
       closeAllTabs()
       break
-  }
-}
-
-// 重命名标签页
-const renameTab = async () => {
-  try {
-    const { value } = await ElMessageBox.prompt(
-      '请输入新的标签页名称',
-      '重命名标签页',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        inputValue: activeTab.value.title
-      }
-    )
-    
-    if (value) {
-      tabsStore.updateTabTitle(activeTab.value.id, value)
-    }
-  } catch (e) {
-    // 用户取消
-  }
-}
-
-// 添加标签
-const addTagToTab = async () => {
-  try {
-    const { value } = await ElMessageBox.prompt(
-      '请输入标签名称',
-      '添加标签',
-      {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消'
-      }
-    )
-    
-    if (value) {
-      tabsStore.addTag(activeTab.value.id, value)
-    }
-  } catch (e) {
-    // 用户取消
   }
 }
 
@@ -254,9 +238,9 @@ const closeOtherTabs = async () => {
   }
   
   // 关闭其他标签页
-  otherTabs.forEach(tab => {
-    tabsStore.closeTab(tab.id)
-  })
+  for (const tab of otherTabs) {
+    closeNotebook(tab.id)
+  }
 }
 
 // 关闭所有标签页
@@ -281,12 +265,9 @@ const closeAllTabs = async () => {
   }
   
   // 关闭所有标签页
-  [...tabs.value].forEach(tab => {
-    tabsStore.closeTab(tab.id)
-  })
-  
-  // 创建一个新的标签页
-  createNewTab()
+  for (const tab of [...tabs.value]) {
+    closeNotebook(tab.id)
+  }
 }
 </script>
 
@@ -298,10 +279,24 @@ const closeAllTabs = async () => {
   border-bottom: 1px solid var(--border-color);
   padding: 0 8px;
   user-select: none;
+  position: relative;
+}
+
+.tabs-scroll-container {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  position: relative;
+  
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
 }
 
 .notebook-tabs {
-  flex: 1;
+  width: 100%;
   
   :deep(.el-tabs__header) {
     margin-bottom: 0;
@@ -342,7 +337,6 @@ const closeAllTabs = async () => {
 }
 
 .tab-title {
-
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -372,6 +366,8 @@ const closeAllTabs = async () => {
   display: flex;
   align-items: center;
   margin-left: 8px;
+  position: sticky;
+  right: 8px;
   
   .el-button {
     margin-left: 4px;

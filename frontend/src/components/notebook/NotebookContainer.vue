@@ -2,7 +2,19 @@
   <div class="notebook-container">
     <TabsManager />
     <div class="notebooks-wrapper">
+      <!-- 当没有标签页时显示空白状态 -->
+      <div v-if="tabs.length === 0" class="empty-state">
+        <div class="empty-content">
+          <i class="el-icon-notebook"></i>
+          <h2>没有打开的笔记本</h2>
+          <p>点击标签栏上的"+"按钮创建新的笔记本，或者从左侧文件面板打开已有的笔记本。</p>
+          <el-button type="primary" @click="createNewNotebook">创建新笔记本</el-button>
+        </div>
+      </div>
+      
+      <!-- 有标签页时显示笔记本 -->
       <div 
+        v-else
         v-for="tab in tabs" 
         :key="tab.id" 
         class="notebook-wrapper"
@@ -25,9 +37,12 @@ import TabsManager from '@/components/notebook/TabsManager.vue'
 import NoteBook from '@/components/notebook/NoteBook.vue'
 import { useTabsStore } from '@/stores/tabsStore'
 import { useNotebookStore } from '@/stores/notebookStore'
+import { useNotebook } from '@/composables/useNotebook'
+import { ElButton } from 'element-plus'
 
 const tabsStore = useTabsStore()
 const notebookStore = useNotebookStore()
+const { createNewNotebook } = useNotebook()
 
 // 从store获取标签页数据
 const tabs = computed(() => tabsStore.tabs)
@@ -38,68 +53,23 @@ watch(activeTabId, (newTabId, oldTabId) => {
   if (newTabId && newTabId !== oldTabId) {
     const tab = tabs.value.find(t => t.id === newTabId)
     if (tab) {
-      // 保存当前笔记本状态
-      if (oldTabId) {
-        saveNotebookState(oldTabId)
-      }
+      // 使用新的notebookStore API切换活动笔记本
+      notebookStore.setActiveNotebook(newTabId)
       
-      // 加载新标签页的笔记本状态
-      loadNotebookState(newTabId)
+      // 如果是新标签页，设置session_id
+      if (!notebookStore.session_id) {
+        notebookStore.setSessionId(tab.sessionId)
+      }
     }
   }
 }, { immediate: true })
 
-// 保存笔记本状态
-const saveNotebookState = (tabId) => {
-  const tab = tabs.value.find(t => t.id === tabId)
-  if (!tab) return
-  
-  // 保存笔记本状态到标签页对象
-  tab.notebookState = {
-    cells: [...notebookStore.cells],
-    cellContents: { ...notebookStore.cellContents },
-    cellOutputs: { ...notebookStore.cellOutputs },
-    cellTypes: { ...notebookStore.cellTypes },
-    markdownEditStates: { ...notebookStore.markdownEditStates }
-  }
-}
-
-// 加载笔记本状态
-const loadNotebookState = (tabId) => {
-  const tab = tabs.value.find(t => t.id === tabId)
-  if (!tab) return
-  
-  // 如果标签页有保存的笔记本状态，恢复它
-  if (tab.notebookState) {
-    notebookStore.SetSessionId(tab.sessionId)
-    notebookStore.setCells(tab.notebookState.cells)
-    
-    // 恢复单元格内容和状态
-    Object.entries(tab.notebookState.cellContents).forEach(([cellId, content]) => {
-      notebookStore.setCellContent(cellId, content)
-    })
-    
-    Object.entries(tab.notebookState.cellOutputs).forEach(([cellId, output]) => {
-      notebookStore.setCellOutput(cellId, output)
-    })
-    
-    Object.entries(tab.notebookState.cellTypes).forEach(([cellId, type]) => {
-      notebookStore.setCellType(cellId, type)
-    })
-    
-    Object.entries(tab.notebookState.markdownEditStates).forEach(([cellId, state]) => {
-      notebookStore.setMarkdownEditState(cellId, state)
-    })
-  } else {
-    // 如果是新标签页，设置session_id
-    notebookStore.SetSessionId(tab.sessionId)
-  }
-}
-
 // 处理笔记本内容修改
 const handleNotebookModified = (tabId) => {
+  // 标记标签页为已修改
   tabsStore.markTabAsModified(tabId, true)
 }
+
 </script>
 
 <style lang="scss" scoped>
@@ -126,6 +96,39 @@ const handleNotebookModified = (tabId) => {
   
   &.active {
     display: block;
+  }
+}
+
+.empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  background-color: var(--background);
+  
+  .empty-content {
+    text-align: center;
+    max-width: 500px;
+    padding: 2rem;
+    
+    i {
+      font-size: 4rem;
+      color: var(--text-color-secondary);
+      margin-bottom: 1rem;
+    }
+    
+    h2 {
+      font-size: 1.5rem;
+      color: var(--text-color);
+      margin-bottom: 1rem;
+    }
+    
+    p {
+      color: var(--text-color-secondary);
+      margin-bottom: 2rem;
+      line-height: 1.5;
+    }
   }
 }
 </style> 

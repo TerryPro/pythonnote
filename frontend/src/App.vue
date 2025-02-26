@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <LoadingMask />
     <AppNavbar />
     <main class="main-container">
       <AppSidebar/>
@@ -16,17 +17,12 @@ import AppSidebar from '@/components/layout/AppSidebar.vue'
 import ResizeHandle from '@/components/layout/ResizeHandle.vue'
 import NotebookContainer from '@/components/notebook/NotebookContainer.vue'
 import { useNotebookStore } from '@/stores/notebookStore'
-import { useTabsStore } from '@/stores/tabsStore'
+import LoadingMask from '@/components/common/LoadingMask.vue'
 
 const notebookStore = useNotebookStore()
-const tabsStore = useTabsStore()
 
 onMounted(async () => {
   await notebookStore.fetchNotebooks()
-  // 创建初始标签页
-  if (tabsStore.tabCount === 0) {
-    tabsStore.addTab()
-  }
 })
 </script>
 

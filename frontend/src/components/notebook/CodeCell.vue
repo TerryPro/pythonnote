@@ -73,6 +73,7 @@ const currentTheme = inject('currentTheme', ref('light'))
 // 本地状态
 const localContent = ref(props.content)
 const isExecuting = ref(false)
+const isRefreshingDataframes = ref(false)
 
 // 在setup部分添加
 const dataframeStore = useDataFrameStore()
@@ -99,6 +100,7 @@ const executeCode = async (session_id) => {
   })
   
   isExecuting.value = true
+  isRefreshingDataframes.value = true
   try {
     const response = await fetch('http://127.0.0.1:8000/api/execution/execute', {
       method: 'POST',
@@ -124,7 +126,7 @@ const executeCode = async (session_id) => {
     
     // 如果有DataFrame变量，直接通过store刷新
     if (result.has_dataframes) {
-      dataframeStore.fetchDataFrames(session_id)
+      await dataframeStore.fetchDataFrames(session_id)
     }
     
     // 触发执行完成事件
@@ -141,6 +143,10 @@ const executeCode = async (session_id) => {
   } finally {
     isExecuting.value = false
     loading.close()
+    // 延迟重置刷新状态，确保不会因为变量刷新而标记为已修改
+    setTimeout(() => {
+      isRefreshingDataframes.value = false
+    }, 500)
   }
 }
 
