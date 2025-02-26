@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { v4 as uuidv4 } from 'uuid'
+import { useDataFrameStore } from '@/stores/dataframeStore'
 
 export const useTabsStore = defineStore('tabs', {
   state: () => ({
@@ -25,6 +26,11 @@ export const useTabsStore = defineStore('tabs', {
       
       this.tabs.push(newTab)
       this.activeTabId = tabId
+
+      // 刷新DataFrame数据
+      const dataframeStore = useDataFrameStore()
+      dataframeStore.fetchDataFrames(newTab.sessionId)
+      
       return tabId
     },
     
@@ -38,20 +44,35 @@ export const useTabsStore = defineStore('tabs', {
         if (this.tabs.length > 1) {
           // 如果有其他标签页，激活下一个或上一个
           const newActiveIndex = index === this.tabs.length - 1 ? index - 1 : index + 1
-          this.activeTabId = this.tabs[newActiveIndex].id
+          const newActiveTab = this.tabs[newActiveIndex]
+          this.activeTabId = newActiveTab.id
+          
+          // 刷新新激活标签页的DataFrame数据
+          if (newActiveTab.sessionId) {
+            const dataframeStore = useDataFrameStore()
+            dataframeStore.fetchDataFrames(newActiveTab.sessionId)
+          }
         } else {
           this.activeTabId = null
+          
+          // 清空DataFrame数据
+          const dataframeStore = useDataFrameStore()
+          dataframeStore.fetchDataFrames(null)
         }
       }
       
       // 移除标签页
       this.tabs.splice(index, 1)
     },
-    
     // 激活标签页
     activateTab(tabId) {
       if (this.tabs.some(tab => tab.id === tabId)) {
         this.activeTabId = tabId
+        const tab = this.tabs.find(tab => tab.id === tabId)
+        if (tab && tab.sessionId) {
+          const dataframeStore = useDataFrameStore()
+          dataframeStore.fetchDataFrames(tab.sessionId)
+        }
       }
     },
     
@@ -99,4 +120,4 @@ export const useTabsStore = defineStore('tabs', {
       }
     }
   }
-}) 
+})

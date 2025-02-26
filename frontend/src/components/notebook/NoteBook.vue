@@ -57,9 +57,9 @@
 
 <script setup>
 import { ref, watch, defineProps, defineEmits, onMounted } from 'vue'
-import CellToolsBar from '@/components/notebook/CellToolsBar.vue'
-import CodeCell from '@/components/notebook/CodeCell.vue'
-import MarkdownCell from '@/components/notebook/MarkdownCell.vue'
+import CellToolsBar from '@/components/notebook/cell/CellToolsBar.vue'
+import CodeCell from '@/components/notebook/cell/CodeCell.vue'
+import MarkdownCell from '@/components/notebook/cell/MarkdownCell.vue'
 import { useNotebook } from '@/composables/useNotebook'
 import CodeExampleUse from '../examples/CodeExampleUse.vue'
 import DeleteCellHandler from '@/components/notebook/DeleteCellHandler.vue'

@@ -1,5 +1,5 @@
 <template>
-  <SaveDialog
+  <SaveNotebookDialog
     v-model:visible="saveDialogVisible"
     :loading="saveDialogLoading"
     @cancel="cancelSave"
@@ -10,7 +10,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import SaveDialog from '@/components/notebook/SaveDialog.vue'
+import SaveNotebookDialog from '@/components/notebook/SaveNotebookDialog.vue'
 import { useTabsStore } from '@/stores/tabsStore'
 import { useNotebook } from '@/composables/useNotebook'
 

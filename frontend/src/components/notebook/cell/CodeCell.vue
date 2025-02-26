@@ -39,7 +39,7 @@
 
 <script setup>
 import { ref, inject, onMounted, watch, nextTick } from 'vue'
-import MonacoEditor from '@/components/notebook/MonacoEditor.vue'
+import MonacoEditor from './MonacoEditor.vue'
 import { ElLoading } from 'element-plus'
 import { useDataFrameStore } from '@/stores/dataframeStore'
 

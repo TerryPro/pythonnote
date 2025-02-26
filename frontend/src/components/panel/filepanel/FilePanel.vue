@@ -50,34 +50,25 @@
       style="display: none"
     />
 
-    <!-- 添加数据文件重命名对话框 -->
-    <el-dialog
-      v-model="renameDialogVisible"
-      title="重命名数据文件"
-      width="30%"
-      :close-on-click-modal="false"
-    >
-      <el-form :model="renameForm" label-width="0px">
-        <el-form-item>
-          <el-input
-            v-model="renameForm.newName"
-            placeholder="请输入新的文件名"
-            @keyup.enter="handleRename"
-          >
-            <template #append>{{ renameForm.extension }}</template>
-          </el-input>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <elData-button @click="renameDialogVisible = false">取消</elData-button>
-          <el-button type="primary" @click="handleRename">确认</el-button>
-        </span>
-      </template>
-    </el-dialog>
+    <!-- 重命名对话框 -->
+    <RenameDialog
+      v-model:visible="renameDialogVisible"
+      :current-name="renameForm.file?.name || ''"
+      :extension="renameForm.extension"
+      @confirm="handleRename"
+      @cancel="renameDialogVisible = false"
+    />
 
     <!-- 添加数据预览组件 -->
     <FileExplore ref="dataImportRef"/>
+
+    <!-- 删除确认对话框 -->
+    <DeleteDialog
+      v-model:visible="deleteDialogVisible"
+      :file-name="deleteFile?.name || ''"
+      @confirm="handleDelete"
+      @cancel="deleteDialogVisible = false"
+    />
   </div>
 </template>
 Data
@@ -86,18 +77,17 @@ import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useDataFileStore } from '@/stores/dataFileStore'
 import FileExplore from '@/components/panel/filepanel/FileExplore.vue'
+import RenameDialog from '@/components/common/RenameDialog.vue'
+import DeleteDialog from '@/components/common/DeleteDialog.vue'
+import { useFileDelete } from './useFileDelete'
+import { useFileRename } from './useFileRename'
 
 const store = useDataFileStore()
 const fileInput = ref(null)
 const dataImportRef = ref(null)
 
-// 重命名相关状态
-const renameDialogVisible = ref(false)
-const renameForm = ref({
-  newName: '',
-  file: null,
-  extension: ''
-})
+const { renameDialogVisible, renameForm, showRenameDialog, handleRename } = useFileRename(store)
+const { deleteDialogVisible, deleteFile, showDeleteDialog, handleDelete } = useFileDelete(store)
 
 // 添加右键菜单状态
 const contextMenu = ref({
@@ -142,45 +132,7 @@ const handleFileUpload = async (event) => {
   }
 }
 
-// 删除文件
-const handleDelete = async (file) => {
-  try {
-    await store.deleteFile(file.path)
-    ElMessage.success('文件删除成功')
-  } catch (error) {
-    ElMessage.error(error.message)
-  }
-}
 
-// 显示重命名对话框
-const showRenameDialog = (file) => {
-  const extension = '.' + file.name.split('.').pop()
-  renameForm.value = {
-    newName: file.name.replace(extension, ''),
-    file: file,
-    extension: extension
-  }
-  renameDialogVisible.value = true
-}
-
-// 执行重命名
-const handleRename = async () => {
-  if (!renameForm.value.newName.trim()) {
-    ElMessage.warning('文件名不能为空')
-    return
-  }
-  
-  try {
-    await store.renameFile(
-      renameForm.value.file.path, 
-      renameForm.value.newName
-    )
-    ElMessage.success('重命名成功')
-    renameDialogVisible.value = false
-  } catch (error) {
-    ElMessage.error(error.message)
-  }
-}
 
 // 预览文件
 const handlePreview = async (file) => {
@@ -223,7 +175,7 @@ const handleContextMenuAction = (action) => {
       showRenameDialog(file);
       break;
     case 'delete':
-      handleDelete(file);
+      showDeleteDialog(file);
       break;
   }
   closeContextMenu();
@@ -237,4 +189,4 @@ const closeContextMenu = () => {
 </script>
 
 <style scoped lang="scss">
-</style> 
+</style>

@@ -8,7 +8,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import SaveToExampleDialog from '@/components/examples/SaveToExampleDialog.vue'
+import SaveToExampleDialog from '@/components/notebook/SaveToExampleDialog.vue'
 import { ElMessage } from 'element-plus'
 
 // 保存示例相关的状态

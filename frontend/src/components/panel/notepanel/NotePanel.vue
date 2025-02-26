@@ -16,7 +16,7 @@
         :style="{ left: contextMenu.x + 'px', top: contextMenu.y + 'px' }"
       >
         <div class="menu-item" @click="handleContextMenuAction('open')">
-          <i class="fas fa-folder-open mr-2"></i>打开笔记
+          <i class="fas fa-folder-open mr-2"></i>打开
         </div>
         <div class="menu-item" @click="handleContextMenuAction('rename')">
           <i class="fas fa-edit mr-2"></i>重命名
@@ -45,6 +45,7 @@
     <RenameDialog
       v-model:visible="renameDialogVisible"
       :current-name="renameForm.file?.name || ''"
+      extension=".ipynb"
       @cancel="renameDialogVisible = false"
       @confirm="handleRename"
     />
@@ -62,30 +63,24 @@
 <script setup>
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { useNotebookStore } from '@/stores/notebookStore'
-import RenameDialog from '@/components/panel/notepanel/RenameDialog.vue'
-import DeleteDialog from '@/components/panel/notepanel/DeleteDialog.vue'
-import { api_renameNotebook } from '@/api/notebook_api'
-import { deleteNotebook } from '@/api/notebook_api'
+import RenameDialog from '@/components/common/RenameDialog.vue'
+import DeleteDialog from '@/components/common/DeleteDialog.vue'
 import { useNotebook } from '@/composables/useNotebook'
 import { useTabsStore } from '@/stores/tabsStore'
 import { useLoadingStore } from '@/stores/loadingStore'
+import { useNotebookStore } from '@/stores/notebookStore'
+import { useNoteDelete } from './useNoteDelete'
+import { useNoteRename } from './useNoteRename'
 
 const store = useNotebookStore()
 const tabsStore = useTabsStore()
-const { createNewNotebook } = useNotebook()
 const loadingStore = useLoadingStore()
 
-// 重命名相关的响应式变量
-const renameDialogVisible = ref(false)
-const renameForm = ref({
-  newName: '',
-  file: null
-})
+// 使用重命名笔记本的组合式API
+const { renameDialogVisible, renameForm, showRenameDialog, handleRename } = useNoteRename()
 
-// 删除相关的响应式变量
-const deleteDialogVisible = ref(false)
-const deleteFile = ref(null)
+// 使用删除笔记本的组合式API
+const { deleteDialogVisible, deleteFile, showDeleteDialog, handleDelete } = useNoteDelete()
 
 // 刷新笔记本文件列表
 const refreshNotebooks = async () => {
@@ -127,29 +122,6 @@ const showContextMenu = (event, file) => {
   document.addEventListener('click', closeContextMenu);
 };
 
-// 处理删除
-const handleDelete = async () => {
-  try {
-    const result = await deleteNotebook(deleteFile.value.path)
-    
-    if (result.status === 'success') {
-      // 如果删除的是当前打开的文件，创建新笔记本
-      if (store.currentFile === deleteFile.value.path) {
-        createNewNotebook()
-      }
-      // 重新加载文件列表
-      await store.fetchNotebooks()
-      deleteDialogVisible.value = false
-      ElMessage.success(result.message)
-    } else {
-      ElMessage.error(result.message || '删除失败')
-    }
-  } catch (error) {
-    console.error('删除失败:', error)
-    ElMessage.error('删除失败: ' + error.message)
-  }
-}
-
 // 打开笔记本到新标签页
 const openNotebookInTab = async (file) => {
   try {
@@ -182,11 +154,10 @@ const handleContextMenuAction = (action) => {
       openNotebookInTab(file);
       break;
     case 'rename':
-      renameNotebook(file);
+      showRenameDialog(file);
       break;
     case 'delete':
-      deleteFile.value = file;
-      deleteDialogVisible.value = true;
+      showDeleteDialog(file);
       break;
   }
   closeContextMenu();
@@ -197,45 +168,6 @@ const closeContextMenu = () => {
   contextMenu.value.visible = false;
   document.removeEventListener('click', closeContextMenu);
 };
-
-// 重命名笔记本
-const renameNotebook = (file) => {
-  renameForm.value.newName = file.name.replace('.ipynb', '')
-  renameForm.value.file = file
-  renameDialogVisible.value = true
-}
-
-// 处理重命名确认
-const handleRename = async (newName) => {
-  if (!newName.trim()) {
-    ElMessage.warning('文件名不能为空')
-    return
-  }
-  
-  const newFilename = newName.endsWith('.ipynb') 
-    ? newName 
-    : `${newName}.ipynb`
-  
-  try {
-    const result = await api_renameNotebook(renameForm.value.file.path, newFilename)
-    
-    if (result.status === 'success') {
-      // 如果当前打开的文件被重命名，更新currentFile
-      if (store.currentFile === renameForm.value.file.path) {
-        store.currentFile = newFilename
-      }
-      // 重新加载文件列表
-      await store.fetchNotebooks()
-      renameDialogVisible.value = false
-      ElMessage.success('重命名成功')
-    } else {
-      ElMessage.error(result.message || '重命名失败')
-    }
-  } catch (error) {
-    console.error('重命名失败:', error)
-    ElMessage.error('重命名失败: ' + error.message)
-  }
-}
 
 </script>
 

@@ -19,6 +19,7 @@
           <template #label>
             <div class="custom-tab-label">
               <div class="title-row">
+                <el-icon class="tab-icon"><Notebook /></el-icon>
                 <span class="tab-title">{{ tab.title }}</span>
                 <span v-if="tab.isModified" class="modified-indicator">*</span>
               </div>
@@ -44,7 +45,7 @@
         type="primary"
         size="small" 
         @click="createNewTab"
-        title="新建标签页"
+        title="新建笔记"
         :icon="Plus"
         circle
         plain
@@ -53,7 +54,7 @@
         type="success"
         size="small" 
         @click="saveCurrentNotebook"
-        title="保存笔记本"
+        title="保存笔记"
         :icon="Check"
         circle
         plain
@@ -63,8 +64,18 @@
         type="warning"
         size="small" 
         @click="exportToPDF"
-        title="导出PDF"
+        title="导出笔记"
         :icon="Document"
+        circle
+        plain
+        v-if="activeTab"
+      />
+      <el-button 
+        type="danger"
+        size="small" 
+        @click="handleResetNotebook"
+        title="重置笔记本"
+        :icon="RefreshRight"
         circle
         plain
         v-if="activeTab"
@@ -101,9 +112,12 @@ import { computed, ref } from 'vue'
 import { useTabsStore } from '@/stores/tabsStore'
 import { useNotebook } from '@/composables/useNotebook'
 import { ElMessageBox } from 'element-plus'
-import { Plus, More, Check, Document} from '@element-plus/icons-vue'
+import { Plus, More, Check, Document, Notebook, RefreshRight } from '@element-plus/icons-vue'
 import SaveNotebookHandler from '@/components/notebook/SaveNotebookHandler.vue'
+import { useDataFrameStore } from '@/stores/dataframeStore'
+import { resetNotebook} from '@/api/notebook_api'
 
+const dataframeStore = useDataFrameStore()
 const tabsStore = useTabsStore()
 const { createNewNotebook, saveNotebook, closeNotebook, exportPDF } = useNotebook()
 const saveNotebookRef = ref(null)
@@ -269,6 +283,12 @@ const closeAllTabs = async () => {
     closeNotebook(tab.id)
   }
 }
+const handleResetNotebook = () => {
+  if (activeTab.value && activeTab.value.sessionId) {
+    resetNotebook(activeTab.value.sessionId)
+    dataframeStore.fetchDataFrames(activeTab.value.sessionId)
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -334,6 +354,12 @@ const closeAllTabs = async () => {
 .title-row {
   display: flex;
   align-items: center;
+  
+  .tab-icon {
+    margin-right: 4px;
+    font-size: 14px;
+    color: var(--text-color-secondary);
+  }
 }
 
 .tab-title {

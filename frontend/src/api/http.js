@@ -55,7 +55,8 @@ export const API_ENDPOINTS = {
   },
 
   EXECUTION: {
-    RESET_CONTEXT: '/api/execution/reset_context'
+    EXECUTE: '/api/execution/execute',
+    RESET_CONTEXT: '/api/execution/reset_context',
   },
 
   // 数据框相关

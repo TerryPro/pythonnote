@@ -108,4 +108,27 @@ export const loadNotebook = async (filename) => {
     console.error('加载笔记本失败:', error)
     throw error
   }
-} 
+}
+
+/**
+ * 重置笔记本执行上下文
+ * @param {string} session_id 会话ID
+ * @returns {Promise<Object>} 重置结果
+ */
+export const resetNotebook = async (session_id) => {
+  try {
+    const result = await apiCall(API_ENDPOINTS.EXECUTION.RESET_CONTEXT, {
+      method: 'POST',
+      body: { session_id: session_id }
+    })
+    if (result.status === 'success') {
+      return result
+    } else {
+      throw new Error(result.message || '重置笔记本失败')
+    }
+  } catch (error) {
+    console.error('重置笔记本失败:', error)
+    throw error
+  }
+}
+

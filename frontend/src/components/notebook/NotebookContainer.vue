@@ -1,6 +1,6 @@
 <template>
   <div class="notebook-container">
-    <TabsManager />
+    <TabsBar />
     <div class="notebooks-wrapper">
       <!-- 当没有标签页时显示空白状态 -->
       <div v-if="tabs.length === 0" class="empty-state">
@@ -33,7 +33,7 @@
 
 <script setup>
 import { computed, watch } from 'vue'
-import TabsManager from '@/components/notebook/TabsManager.vue'
+import TabsBar from '@/components/notebook/TabsBar.vue'
 import NoteBook from '@/components/notebook/NoteBook.vue'
 import { useTabsStore } from '@/stores/tabsStore'
 import { useNotebookStore } from '@/stores/notebookStore'

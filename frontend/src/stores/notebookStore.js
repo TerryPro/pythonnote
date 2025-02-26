@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 import { listNotebooks, saveNotebook as apiSaveNotebook, loadNotebook as apiLoadNotebook } from '@/api/notebook_api'
-
 export const useNotebookStore = defineStore('notebook', {
   state: () => ({
     notebookFiles: [], // 所有可用的笔记本文件列表
@@ -117,19 +116,6 @@ export const useNotebookStore = defineStore('notebook', {
         fileName: null,
       }
     },
-    
-    // 重置笔记本
-    async resetNotebook() {
-      try {
-        // await apiCall(API_ENDPOINTS.EXECUTION.RESET_CONTEXT, { method: 'POST' })
-        this.clearNotebookState()
-        return true
-      } catch (error) {
-        console.error('重置笔记本失败:', error)
-        return false
-      }
-    },
-    
     // 保存笔记本
     async saveNotebook(fileName = '') {
       if (!this.activeNotebookId) return false

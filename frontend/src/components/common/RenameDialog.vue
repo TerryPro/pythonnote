@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     v-model="dialogVisible"
-    title="重命名笔记本"
+    title="重命名"
     width="30%"
     :close-on-click-modal="false"
     :close-on-press-escape="false"
@@ -13,7 +13,7 @@
           placeholder="请输入新的文件名"
           @keyup.enter="handleConfirm"
         >
-          <template #append>.ipynb</template>
+          <template #append>{{ extension }}</template>
         </el-input>
       </el-form-item>
     </el-form>
@@ -38,6 +38,10 @@ const props = defineProps({
   currentName: {
     type: String,
     default: ''
+  },
+  extension: {
+    type: String,
+    default: ''
   }
 })
 
@@ -50,7 +54,7 @@ const dialogVisible = ref(props.visible)
 watch(() => props.visible, (newVal) => {
   dialogVisible.value = newVal
   if (newVal) {
-    newName.value = props.currentName.replace('.ipynb', '')
+    newName.value = props.currentName.replace(props.extension, '')
   }
 })
 
@@ -82,4 +86,4 @@ const handleCancel = () => {
   justify-content: flex-end;
   gap: 12px;
 }
-</style> 
+</style>

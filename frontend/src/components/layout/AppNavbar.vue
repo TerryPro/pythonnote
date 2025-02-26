@@ -95,7 +95,7 @@ import SystemPromptConfig from '@/components/config/SystemPromptConfig.vue'
 import PromptPanel from '@/components/prompts/PromptPanel.vue'
 import { useNotebook } from '@/composables/useNotebook'
 import CodeExampleManage from '@/components/examples/CodeExampleManage.vue'
-import VersionDisplay from '@/components/layout/VersionDisplay.vue'
+import VersionDisplay from '@/components/common/VersionDisplay.vue'
 
 const { currentTheme, themes, applyTheme, provideTheme } = useThemeManager()
 provideTheme() // 为子组件提供主题上下文
