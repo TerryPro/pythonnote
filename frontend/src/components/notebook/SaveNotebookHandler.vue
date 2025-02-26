@@ -10,7 +10,7 @@
 <script setup>
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import SaveDialog from '@/components/dialogs/SaveDialog.vue'
+import SaveDialog from '@/components/notebook/SaveDialog.vue'
 import { useNotebookStore } from '@/stores/notebookStore'
 
 const store = useNotebookStore()

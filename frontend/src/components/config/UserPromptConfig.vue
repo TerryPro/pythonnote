@@ -68,7 +68,7 @@
 <script setup>
 import { ref, defineExpose } from 'vue'
 import { ElMessage } from 'element-plus'
-import { API_ENDPOINTS, apiCall } from '@/api/http'
+import { fetchUserPrompts, saveUserPrompts, resetUserPrompts } from '@/api/ai_api'
 
 const dialogVisible = ref(false)
 const requirements = ref([])
@@ -77,7 +77,7 @@ const saving = ref(false)
 // 加载代码生成要求
 const loadRequirements = async () => {
   try {
-    const result = await apiCall(API_ENDPOINTS.AI.USER_PROMPTS)
+    const result = await fetchUserPrompts()
     requirements.value = result
   } catch (error) {
     console.error('加载代码生成要求失败:', error)
@@ -89,10 +89,7 @@ const loadRequirements = async () => {
 const saveRequirements = async () => {
   saving.value = true
   try {
-    const result = await apiCall(API_ENDPOINTS.AI.USER_PROMPTS, {
-      method: 'PUT',
-      body: JSON.stringify({ requirements: requirements.value })
-    })
+    const result = await saveUserPrompts(requirements.value)
     
     if (result.status === 'success') {
       ElMessage.success('代码生成要求已保存')
@@ -111,9 +108,7 @@ const saveRequirements = async () => {
 // 重置代码生成要求
 const resetRequirements = async () => {
   try {
-    const result = await apiCall(API_ENDPOINTS.AI.RESET_USER_PROMPTS, {
-      method: 'POST'
-    })
+    const result = await resetUserPrompts()
     
     if (result.status === 'success') {
       ElMessage.success('代码生成要求已重置为默认值')

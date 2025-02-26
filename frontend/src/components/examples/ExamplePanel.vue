@@ -253,7 +253,15 @@ import {
   Refresh,
   Document
 } from '@element-plus/icons-vue'
-import { API_ENDPOINTS, apiCall } from '@/api/http'
+import { 
+  fetchCategories, 
+  fetchExamplesByCategory, 
+  createCategory, 
+  updateCategory, 
+  createExample, 
+  updateExample, 
+  deleteExample 
+} from '../../api/example_api'
 
 const props = defineProps({
   mode: {
@@ -335,7 +343,7 @@ const examples = ref([])
 // 加载分类列表
 const loadCategories = async () => {
   try {
-    const result = await apiCall(API_ENDPOINTS.CODE_EXAMPLES.CATEGORIES)
+    const result = await fetchCategories()
     categories.value = result
   } catch (error) {
     ElMessage.error('加载分类失败')
@@ -347,7 +355,7 @@ const loadCategories = async () => {
 // 加载分类下的示例
 const loadExamples = async (categoryId) => {
   try {
-    const result = await apiCall(API_ENDPOINTS.CODE_EXAMPLES.CATEGORIES_ID(categoryId))
+    const result = await fetchExamplesByCategory(categoryId)
     examples.value = result
   } catch (error) {
     console.error('加载示例失败:', error)
@@ -433,9 +441,7 @@ const handleEdit = () => {
 const handleDelete = async () => {
   if (!selectedExample.value) return
   try {
-    await apiCall(API_ENDPOINTS.CODE_EXAMPLES.CODE_EXAMPLES_ID(selectedExample.value.id), {
-      method: 'DELETE'
-    })
+    await deleteExample(selectedExample.value.id)
     ElMessage.success('删除成功')
     selectedExample.value = null
     selectedExampleId.value = ''
@@ -479,20 +485,12 @@ const handleReload = async () => {
 
 const saveCategoryForm = async () => {
   try {
-    const endpoint = editingCategory.value 
-      ? API_ENDPOINTS.CODE_EXAMPLES.CATEGORIES_ID(editingCategory.value.id)
-      : API_ENDPOINTS.CODE_EXAMPLES.CATEGORIES
-    
-    const result = await apiCall(endpoint, {
-      method: editingCategory.value ? 'PUT' : 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        id: editingCategory.value?.id || undefined,
-        ...categoryForm.value
-      })
-    })
+    let result
+    if (editingCategory.value) {
+      result = await updateCategory(editingCategory.value.id, categoryForm.value)
+    } else {
+      result = await createCategory(categoryForm.value)
+    }
     
     console.log(result)
 
@@ -511,21 +509,18 @@ const saveExampleForm = async () => {
   }
   
   try {
-    const endpoint = editingExample.value
-      ? API_ENDPOINTS.CODE_EXAMPLES.CODE_EXAMPLES_ID(editingExample.value.id)
-      : API_ENDPOINTS.CODE_EXAMPLES.CODE_EXAMPLES
-   
-    const result = await apiCall(endpoint, {
-      method: editingExample.value ? 'PUT' : 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        id: editingExample.value?.id || undefined,
-        category_id: selectedCategory.value,
-        ...exampleForm.value
+    let result
+    if (editingExample.value) {
+      result = await updateExample(editingExample.value.id, {
+        ...exampleForm.value,
+        category_id: selectedCategory.value
       })
-    })
+    } else {
+      result = await createExample({
+        ...exampleForm.value,
+        category_id: selectedCategory.value
+      })
+    }
     
     console.log(result)
     ElMessage.success(editingExample.value ? '更新成功' : '添加成功')

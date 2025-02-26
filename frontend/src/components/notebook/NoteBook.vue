@@ -2,7 +2,7 @@
   <div class="notebook" v-if="cells.length">
     <div class="notebook-cells">
       <div v-for="cellId in cells" :key="cellId" class="cell-wrapper">
-        <CellHeader
+        <CellToolsBar
           :type="cellTypes[cellId]"
           :is-editing="markdownEditStates[cellId]"
           :is-first="cells.indexOf(cellId) === 0"
@@ -57,7 +57,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import CellHeader from '@/components/notebook/CellHeader.vue'
+import CellToolsBar from '@/components/notebook/CellToolsBar.vue'
 import CodeCell from '@/components/notebook/CodeCell.vue'
 import MarkdownCell from '@/components/notebook/MarkdownCell.vue'
 import { useNotebook } from '@/composables/useNotebook'

@@ -68,7 +68,7 @@
 <script setup>
 import { ref, defineExpose } from 'vue'
 import { ElMessage } from 'element-plus'
-import { API_ENDPOINTS, apiCall } from '@/api/http'
+import { fetchSystemPrompts, saveSystemPrompts, resetSystemPrompts } from '@/api/ai_api'
 
 const dialogVisible = ref(false)
 const prompts = ref([])
@@ -77,7 +77,7 @@ const saving = ref(false)
 // 加载系统提示词
 const loadPrompts = async () => {
   try {
-    const result = await apiCall(API_ENDPOINTS.AI.SYSTEM_PROMPTS)
+    const result = await fetchSystemPrompts()
     prompts.value = result
   } catch (error) {
     console.error('加载系统提示词失败:', error)
@@ -89,10 +89,7 @@ const loadPrompts = async () => {
 const savePrompts = async () => {
   saving.value = true
   try {
-    const result = await apiCall(API_ENDPOINTS.AI.SYSTEM_PROMPTS, {
-      method: 'PUT',
-      body: JSON.stringify({ prompts: prompts.value }),
-    })
+    const result = await saveSystemPrompts(prompts.value)
     
     if (result.status === 'success') {
       ElMessage.success('系统提示词已保存')
@@ -111,9 +108,7 @@ const savePrompts = async () => {
 // 重置系统提示词
 const resetPrompts = async () => {
   try {
-    const result = await apiCall(API_ENDPOINTS.AI.SYSTEM_PROMPTS_RESET, {
-      method: 'POST'
-    })
+    const result = await resetSystemPrompts()
     
     if (result.status === 'success') {
       ElMessage.success('系统提示词已重置为默认值')

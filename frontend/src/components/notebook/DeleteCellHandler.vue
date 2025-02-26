@@ -11,7 +11,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import DeleteCellDialog from '@/components/dialogs/DeleteCellDialog.vue'
+import DeleteCellDialog from '@/components/notebook/DeleteCellDialog.vue'
 import { ElMessage } from 'element-plus'
 import { useNotebook } from '@/composables/useNotebook'
 

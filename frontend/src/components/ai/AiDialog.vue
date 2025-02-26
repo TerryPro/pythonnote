@@ -136,12 +136,12 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { apiCall, API_ENDPOINTS } from '@/api/http'
 import { Loading } from '@element-plus/icons-vue'
 import UserPromptConfig from '@/components/config/UserPromptConfig.vue'
 import PromptPanel from '../prompts/PromptPanel.vue'
 import { useDataFrameStore } from '@/stores/dataframeStore'
 import { useNotebookStore } from '@/stores/notebookStore'
+import { generateCode } from '@/api/ai_api'
 
 const props = defineProps({
   modelValue: {
@@ -263,14 +263,11 @@ const handleGenerate = async () => {
   startWaitTimer()
   
   try {
-    const response = await apiCall(API_ENDPOINTS.AI.GENERATE_CODE, {
-      body: {
-        prompt: prompt.value,
-        notebook_context: props.notebookContext,
-        dataframe_info: dataFrameInfo.value,
-        dataframe_name: selectedDataFrame.value
-      },
-      method: 'POST'
+    const response = await generateCode({
+      prompt: prompt.value,
+      notebook_context: props.notebookContext,
+      dataframe_info: dataFrameInfo.value,
+      dataframe_name: selectedDataFrame.value
     })
     
     emit('code-generated', response.code)

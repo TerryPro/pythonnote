@@ -35,6 +35,12 @@
       "name": "时序分析",
       "description": "时间序列数据分析示例",
       "icon": "Timer"
+    },
+    {
+      "id": "019f3f5e-d712-45a4-95ab-41b8840c24b7",
+      "name": "test",
+      "description": "test",
+      "icon": "Document"
     }
   ]
 }

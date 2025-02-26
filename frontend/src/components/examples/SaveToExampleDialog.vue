@@ -63,7 +63,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { API_ENDPOINTS, apiCall } from '@/api/http'
+import { fetchCategories, saveFromCell } from '../../api/example_api'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -113,9 +113,9 @@ const dialogVisible = computed({
 })
 
 // 获取分类列表
-const fetchCategories = async () => {
+const fetchCategoriesList = async () => {
   try {
-    const result = await apiCall(API_ENDPOINTS.CODE_EXAMPLES.CATEGORIES)
+    const result = await fetchCategories()
     categories.value = result
   } catch (error) {
     console.error('获取分类失败:', error)
@@ -130,15 +130,9 @@ const handleSave = async () => {
     if (!valid) return
     saving.value = true
     try {
-      const result = await apiCall(API_ENDPOINTS.CODE_EXAMPLES.SAVE_FROM_CELL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...form.value,
-          code: props.code
-        })
+      const result = await saveFromCell({
+        ...form.value,
+        code: props.code
       })
       ElMessage.success('保存成功')
       emit('saved', result)
@@ -160,7 +154,7 @@ const handleClose = () => {
 
 // 组件挂载时获取分类列表
 onMounted(() => {
-  fetchCategories()
+  fetchCategoriesList()
 })
 </script>
 
